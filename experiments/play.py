@@ -159,6 +159,24 @@ def main() -> None:
     env.close()
 
 
+def _hard_exit(code: int = 0) -> None:
+    """Terminate immediately after Kit shutdown.
+
+    Isaac Sim frequently hangs inside simulation_app.close() on Windows and
+    leaves a python.exe spinning at 100% CPU forever. Three such orphans from
+    one night's runs were burning ~57,000 CPU-seconds each and starving a
+    training job. Results are already on disk by this point, so flush and use
+    os._exit to skip the wedged interpreter teardown.
+    """
+    try:
+        sys.stdout.flush()
+        sys.stderr.flush()
+    except Exception:
+        pass
+    os._exit(code)
+
+
 if __name__ == "__main__":
     main()
     simulation_app.close()
+    _hard_exit(0)
