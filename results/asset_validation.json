@@ -1,0 +1,99 @@
+{
+  "checks": {
+    "A_dofs": {
+      "pass": true,
+      "joints": [
+        "cart_slide",
+        "joint1",
+        "joint2",
+        "joint3"
+      ]
+    },
+    "B_passive_joints": {
+      "pass": true,
+      "detail": {
+        "joint1": {
+          "stiffness": 0.0,
+          "damping": 0.0
+        },
+        "joint2": {
+          "stiffness": 0.0,
+          "damping": 0.0
+        },
+        "joint3": {
+          "stiffness": 0.0,
+          "damping": 0.0
+        }
+      }
+    },
+    "C_masses": {
+      "pass": true,
+      "detail": {
+        "cart": {
+          "sim": 0.7905319929122925,
+          "cad": 0.7905319973662757,
+          "rel_err": 5.6341592713666415e-09
+        },
+        "link1": {
+          "sim": 0.1775161325931549,
+          "cad": 0.17751613672615582,
+          "rel_err": 2.3282395561066988e-08
+        },
+        "link2": {
+          "sim": 0.10025589168071747,
+          "cad": 0.1002558879516728,
+          "rel_err": 3.7195268492089895e-08
+        },
+        "link3": {
+          "sim": 0.07746758311986923,
+          "cad": 0.0774675826043994,
+          "rel_err": 6.6540069556125215e-09
+        }
+      }
+    },
+    "D1_upright_short": {
+      "pass": true,
+      "horizon_s": 0.05,
+      "max_abs_err_rad": 3.06800848550344e-05,
+      "max_abs_angle_rad": 0.021523152952759788,
+      "rel": 0.0014254456548430778
+    },
+    "D2_hanging_long": {
+      "pass": true,
+      "horizon_s": 3.0,
+      "max_abs_err_rad": 0.005610989806582367,
+      "osc_amplitude_rad": 0.3922506637218386,
+      "rel": 0.014304602453295925
+    },
+    "D3_energy": {
+      "pass": true,
+      "E0_J": -1.0879025666843045,
+      "max_drift_J": 0.0003536363452776303,
+      "rel_drift": 0.00032506251580547205
+    },
+    "D4_growth_rate": {
+      "pass": true,
+      "analytic_lambda_max": 15.537796148216595,
+      "isaac_fitted_rate": 15.52226064361717,
+      "rel": 0.0009998525177721779,
+      "log_fit_r2": 0.9999998451059822,
+      "eigvec_consistency": 1.6746810095483703e-15,
+      "n_fit_points": 350
+    }
+  },
+  "dt": 0.001,
+  "joint_names": [
+    "cart_slide",
+    "joint1",
+    "joint2",
+    "joint3"
+  ],
+  "body_names": [
+    "base_link",
+    "cart",
+    "link1",
+    "link2",
+    "link3"
+  ],
+  "all_passed": true
+}

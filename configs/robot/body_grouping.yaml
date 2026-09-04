@@ -1,0 +1,106 @@
+# ==============================================================================
+# Grouping of the 130 CAD leaf bodies into the 5 rigid bodies of the
+# triple inverted pendulum on a cart.
+#
+# Inferred from assets/triple_pendulum/cad/bodies_raw.csv, not hand-typed:
+#   * three MT6701 magnetic encoders mark the three revolute joints
+#   * each joint also carries a ball bearing + set-screw collar cluster
+#   * pivot spacing came out at 0.249995 m and 0.249998 m -- i.e. 250 mm by
+#     design, which is strong evidence the joint locations are right
+#
+# Assembly frame (SolidWorks global, metres):
+#   x  : out of the swing plane (rail-to-rail width)
+#   y  : VERTICAL, up      -> gravity acts along -y
+#   z  : along the linear rail, cart travel, span 1.524 m (= 60 in)
+# Links swing in the y-z plane; all three revolute axes are parallel to x.
+#
+# EVERY mass/inertia number downstream is derived from this file plus the CAD
+# dump. Nothing hard-codes a link mass.
+# ==============================================================================
+
+frame:
+  gravity_axis: -y
+  swing_plane: yz
+  revolute_axis: x
+  rail_axis: z
+
+# Joint locations in the assembly frame (y, z), from the encoder/bearing clusters.
+joints:
+  J1:
+    kind: revolute
+    parent: cart
+    child: link1
+    pos_yz: [0.05300, 0.06407]
+    encoder: R6MT6701-2
+  J2:
+    kind: revolute
+    parent: link1
+    child: link2
+    pos_yz: [0.11784, -0.17737]
+    encoder: R6PEndulum assembly-1/R6MT6701-1
+  J3:
+    kind: revolute
+    parent: link2
+    child: link3
+    pos_yz: [0.34488, -0.07272]
+    encoder: R6PEndulum assembly-2/R6MT6701-1
+
+# Cart prismatic joint travels along z. Usable stroke is set in the robot cfg,
+# not here -- rail span is 1.524 m but hard stops and the belt clamp reduce it.
+prismatic:
+  axis: z
+  rail_span: 1.524
+
+# --- body membership -------------------------------------------------------
+# Rules match against the component's full path name (`name` column).
+# `prefix` matches name.startswith(...), `exact` matches the whole name.
+# Joint hardware (bearing / collar / encoder casing) is assigned to the PROXIMAL
+# body by convention; the pieces involved total ~25 g, so the choice moves the
+# link inertias very little, but it is recorded explicitly so it can be flipped
+# and the sensitivity measured.
+bodies:
+
+  base:                       # static frame + both belt-drive motors
+    static: true
+    prefix:
+      - "R6Base Assembly-1"
+      - "Assem4-1"            # motor at z = +0.68
+      - "Assem4-2"            # motor at z = -0.68
+
+  cart:                       # rides the rail; the ONLY actuated DOF
+    prefix:
+      - "R6Cart Assembly v2-1"
+      # The linear-bearing carriages. They are nested under R6Base Assembly-1
+      # in the CAD tree, but they RIDE THE RAIL WITH THE CART: their z sits at
+      # 0.0641 (the cart's position) with zero spread across instances, whereas
+      # genuinely static parts straddle the whole 1.5 m rail. Worth 0.2818 kg
+      # against a 0.1448 kg CAD cart, so leaving them in the base understated
+      # the moving mass by a factor of ~3.
+      # Resolution against the base's own "R6Base Assembly-1" prefix is by
+      # longest match -- see tools/grouping.py.
+      - "R6Base Assembly-1/R6Linear_Bearings"
+    exact:
+      - "R6Part3^Major Assembly-1"
+      - "Part15-1"
+      - "R6MT6701-2"          # J1 encoder, mounted on the cart
+
+  link1:                      # J1 -> J2, 250 mm
+    exact:
+      - "Part2-2"
+      - "casing-2"            # J2 encoder casing
+      - "Part14-2"
+    prefix:
+      - "R6PEndulum assembly-1"   # J2 bearing + collar + encoder
+
+  link2:                      # J2 -> J3, 250 mm
+    exact:
+      - "Major Assembly parts - R6PEndulum_Med-1.step-1"
+      - "block-2"
+      - "casing-3"            # J3 encoder casing
+      - "Part14-1"
+    prefix:
+      - "R6PEndulum assembly-2"   # J3 bearing + collar + encoder
+
+  link3:                      # distal link, hangs from J3
+    prefix:
+      - "R6PEndulum assembly3-1"

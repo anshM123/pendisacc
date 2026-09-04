@@ -1,0 +1,108 @@
+<?xml version="1.0" ?>
+<robot name="triple_pendulum">
+  <link name="base_link">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="C:/Users/anshm/Downloads/pendisaac/assets/triple_pendulum/meshes/visual/base.obj" scale="1 1 1"/>
+      </geometry>
+      <material name="base">
+        <color rgba="0.55 0.56 0.60 1"/>
+      </material>
+    </visual>
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="7.34087816"/>
+      <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
+    </inertial>
+  </link>
+  <link name="cart">
+    <inertial>
+      <origin xyz="-1.82911913e-05 0.0429064408 -0.0378931739" rpy="0 0 0"/>
+      <mass value="0.790531997"/>
+      <inertia ixx="0.000779271325" ixy="-1.54871662e-07" ixz="8.52081493e-08" iyy="0.00022969682" iyz="1.70624046e-05" izz="0.000725234195"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="C:/Users/anshm/Downloads/pendisaac/assets/triple_pendulum/meshes/visual/cart.obj" scale="1 1 1"/>
+      </geometry>
+      <material name="cart">
+        <color rgba="0.62 0.62 0.66 1"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="cart_slide" type="prismatic">
+    <parent link="base_link"/>
+    <child link="cart"/>
+    <origin xyz="0 -0.04125 0.053" rpy="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="-0.62" upper="0.62" effort="400" velocity="20"/>
+  </joint>
+  <link name="link1">
+    <inertial>
+      <origin xyz="0 0 0.107942893" rpy="0 0 0"/>
+      <mass value="0.177516137"/>
+      <inertia ixx="0.00186411178" ixy="-1.563051e-08" ixz="-8.56561027e-07" iyy="0.00187701767" iyz="-8.55470937e-05" izz="4.29031714e-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="C:/Users/anshm/Downloads/pendisaac/assets/triple_pendulum/meshes/visual/link1.obj" scale="1 1 1"/>
+      </geometry>
+      <material name="link1">
+        <color rgba="0.78 0.16 0.16 1"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="joint1" type="continuous">
+    <parent link="cart"/>
+    <child link="link1"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+  <link name="link2">
+    <inertial>
+      <origin xyz="0 0 0.165245539" rpy="0 0 0"/>
+      <mass value="0.100255888"/>
+      <inertia ixx="0.000878374301" ixy="-5.17200369e-08" ixz="-3.33668683e-07" iyy="0.000890591192" iyz="-2.53151874e-05" izz="2.13748964e-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="C:/Users/anshm/Downloads/pendisaac/assets/triple_pendulum/meshes/visual/link2.obj" scale="1 1 1"/>
+      </geometry>
+      <material name="link2">
+        <color rgba="0.08 0.43 0.78 1"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="joint2" type="continuous">
+    <parent link="link1"/>
+    <child link="link2"/>
+    <origin xyz="0 0 0.249994998" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+  <link name="link3">
+    <inertial>
+      <origin xyz="0 0 0.157873376" rpy="0 0 0"/>
+      <mass value="0.0774675826"/>
+      <inertia ixx="0.000897415443" ixy="-3.43174376e-08" ixz="5.38988245e-07" iyy="0.000909480035" iyz="-1.03909031e-06" izz="1.31701233e-05"/>
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="C:/Users/anshm/Downloads/pendisaac/assets/triple_pendulum/meshes/visual/link3.obj" scale="1 1 1"/>
+      </geometry>
+      <material name="link3">
+        <color rgba="0.08 0.59 0.24 1"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="joint3" type="continuous">
+    <parent link="link2"/>
+    <child link="link3"/>
+    <origin xyz="0 0 0.249997568" rpy="0 0 0"/>
+    <axis xyz="0 1 0"/>
+  </joint>
+</robot>

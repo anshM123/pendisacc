@@ -1,0 +1,116 @@
+# Physical hardware. FROZEN 2026-09-03 by the builder.
+#
+# Bridges the CAD-derived geometry (triple_pendulum_params.yaml) to the things
+# CAD cannot express: actuation limits, sensing, latency.
+#
+# Values marked MEASURE are deliberately left null. They are not guesses waiting
+# to be refined -- they are the parameters this project exists to study, and
+# inventing them would poison the sim-to-real comparison.
+
+drive:
+  # ---- FROZEN: architecture (b), direct torque control -------------------
+  # Teensy --UART--> Waveshare RS485 --Modbus RTU--> A6-RS CN3 --> TORQUE MODE
+  # The CNC4PC C34SOA6-RS is BYPASSED for motor command. It emits STEP/DIR,
+  # which would force the drive into position mode and make the RL action
+  # something the analytical model does not contain.
+  #
+  # Torque mode on the A6-RS:
+  #   C00.00 = 2   torque control
+  #   C03.40 = 0   internal digital torque reference
+  #   C03.41       the reference itself, writable DURING operation,
+  #                units 0.1% of rated torque, range +-400% rated
+  #
+  # Consequence for simulation: the RL action maps to motor torque, hence cart
+  # force, hence exactly the B*F_cart term of the analytical model. Isaac uses
+  # JointEffortActionCfg.
+  architecture: "b_direct_rs485_torque"
+  command_mode: torque
+  c34_bypassed: true
+  controller: Teensy
+  bus: Waveshare RS485 transceiver, Modbus RTU
+  interface_unused: CNC4PC C34SOA6-RS   # present in the BOM, not in the command path
+
+  # ---- FROZEN: motor --------------------------------------------------
+  servo: StepperOnline A6-RS400H2A1-M17
+  rated_power_W: 400
+  frame_mm: 60
+  shaft_mm: 14
+  rated_torque_Nm: 1.27
+  peak_torque_Nm: 4.45
+  rated_speed_rpm: 3000
+  peak_speed_rpm: 6000
+  rotor_inertia_kgm2: 5.9e-5      # from the exact motor datasheet
+  encoder_bits_motor: 17          # absolute
+
+  # The 750 W (A6-RS750H2A1-M17) was considered and rejected: it gives 2.39 /
+  # 8.36 N.m but its rotor inertia is 1.72e-4 kg.m^2, ~2.9x larger, which would
+  # nearly triple the drivetrain's contribution to the cart's translating
+  # inertia. Not worth it unless 400 W is shown to be insufficient.
+
+  # ---- FROZEN: transmission -------------------------------------------
+  belt: GT2, 2 mm tooth pitch
+  pulley: HomeDIYer 40T
+  teeth: 40
+  # r = N * pitch / (2*pi) = 40 * 0.002 / (2*pi)
+  pitch_radius_m: 0.0127324
+  pitch_diameter_m: 0.0254648
+
+  # ---- derived: cart-side limits --------------------------------------
+  # F = tau / r ; v = omega * r
+  rated_cart_force_N: 99.7        # 1.27 / 0.0127324
+  peak_cart_force_N: 349.5        # 4.45 / 0.0127324
+  max_cart_speed_ms: 4.0          # 3000 rpm
+  peak_cart_speed_ms: 8.0         # 6000 rpm
+
+  # What the policy is allowed to command continuously. Set at the RATED
+  # region, not the peak: peak torque is a short-duration rating and swing-up
+  # pumping is a sustained, repeated demand, so training against 350 N would
+  # promise the policy authority the hardware cannot hold.
+  # TODO: a duty-cycle / thermal model that allows brief excursions toward peak.
+  action_scale_force_N: 100.0
+  drive_clamp_force_N: 349.5      # hard current limit, should not normally bind
+
+  # Reflected drivetrain inertia: the rotor seen from the cart is an added mass
+  #   m = J_r / r^2 = 5.9e-5 / 1.6211e-4 = 0.364 kg
+  # against a 0.1448 kg CAD cart. Not negligible -- it is 2.5x the cart itself,
+  # and it exists nowhere in the CAD.
+  reflected_mass_kg: 0.36394
+  # pulleys, idler and belt add a little more; not yet accounted for
+
+  braking_resistor: yes           # regen capable -> hard reversals supported
+  supply: VEVOR ST-2000VA transformer + AutomationDirect PSU
+
+  # ---- MEASURE on hardware; do not invent -----------------------------
+  rs485_latency_s: null           # MEASURE  Teensy -> Waveshare -> A6
+  command_rate_hz: null           # MEASURE  deterministic Modbus update rate
+  command_jitter_s: null          # MEASURE
+  # If Modbus proves too slow or jittery for the required control rate, keep
+  # TORQUE mode and move the transport to the A6's analog torque input (AI1/AI2)
+  # rather than retreating to step/dir position control.
+
+sensing:
+  joint_encoders: 3x MT6701 magnetic, one per revolute joint
+  encoder_bits: 14                # 16384 counts/rev -> 3.83e-4 rad quantisation
+  cart_position: from the A6 17-bit absolute encoder via the drive
+  cart_electronics: Seeed XIAO ESP32-C3 + 3x LiPo, on the cart
+  encoder_latency_s: null         # MEASURE  a prime sim-to-real suspect (tau_delay in xi)
+
+motion:
+  rail: 2x SBR20, 1.524 m (60 in) span
+  usable_travel_m: 1.2            # sim soft bound +-0.60 m
+  carriage: LM20 / SBR20 blocks
+  limit_switches: yes             # hardware end stops beyond the soft bound
+  # Two R6Linear_Bearings instances are suppressed in the CAD, so the extracted
+  # cart mass (0.1448 kg) is missing its carriage bearings.
+  cart_mass_incomplete: true
+
+structure:
+  extrusion: AutomationDirect
+  shafts: MISUMI NSFMR8-80, 2x NSFMR8-35 (8 mm)
+  joint_bearings: 608 + McMaster ball bearings, set-screw collars
+  links: PETG printed
+
+safety:
+  estop: yes
+  contactor: yes
+  breaker: yes

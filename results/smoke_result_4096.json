@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "task": "Isaac-Cartpole-v0",
+  "num_envs": 4096,
+  "steps": 100,
+  "device": "cuda:0",
+  "fabric": true,
+  "seconds": 1.5179053000001659,
+  "env_steps_per_s": 269845.5562411932,
+  "torch": "2.7.0+cu128",
+  "gpu": "NVIDIA GeForce RTX 5070 Ti Laptop GPU"
+}

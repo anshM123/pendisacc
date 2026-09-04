@@ -1,0 +1,48 @@
+# NOTE: git does not support trailing comments on pattern lines -- a comment
+# after a pattern becomes part of the pattern and silently matches nothing.
+# Every comment here is therefore on its own line.
+
+# ---- environments --------------------------------------------------------
+# 15.6 GB + 186 MB. Rebuild with tools/install_isaaclab.ps1
+env_isaaclab/
+env_cad/
+
+# ---- training output -----------------------------------------------------
+# Checkpoints are large and numerous; the two that matter are force-added.
+# Everything else is reproducible from experiments/train.py.
+logs/
+
+# ---- generated / vendored tooling ----------------------------------------
+# 41 MB binary
+tools/uv.exe
+# 6 MB, regenerate with makepy against sldworks.tlb
+tools/swconst_gen.py
+# captured run logs, up to 4 MB each
+tools/*.txt
+tools/_docs.py
+tools/probe2.py
+tools/probe3.py
+
+# ---- CAD intermediates ---------------------------------------------------
+# Per-part STLs are 66 MB and regenerable from the SolidWorks assembly via
+# tools/sw_export_stl.py. The MERGED per-body meshes under meshes/visual/ ARE
+# tracked: they are what the URDF references and what Isaac needs for the USD.
+assets/triple_pendulum/meshes/*.STL
+assets/triple_pendulum/meshes/*.stl
+
+# ---- Isaac / Omniverse caches --------------------------------------------
+**/kit/logs/
+**/kit/cache/
+**/kit/data/
+*.dmp
+
+# ---- python --------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.ipynb_checkpoints/
+
+# ---- os ------------------------------------------------------------------
+Thumbs.db
+desktop.ini
+~$*

@@ -1,0 +1,10 @@
+{
+  "checkpoint": "logs\\rsl_rl\\tip_swingup\\2026-09-03_19-12-54_su2\\model_2700.pt",
+  "num_envs": 1,
+  "steps": 26562,
+  "sim_seconds": 106.248,
+  "episodes_ended": 8,
+  "mean_survival_s": 11.999859809875488,
+  "episode_cap_s": 12.0,
+  "still_balancing": 1
+}

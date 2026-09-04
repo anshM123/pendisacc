@@ -1,0 +1,15 @@
+assembly: C:/Users/anshm/Downloads/Major Assembly/Major Assembly.SLDASM
+solidworks_revision: '34.3.2'
+units: {mass: kg, length: m, inertia: kg*m^2}
+frame: assembly_global
+inertia_about: center_of_mass
+rotation_convention: transpose_of_ArrayData
+n_bodies: 130
+n_unique_parts: 69
+n_skipped: 7
+assembly_mass_solidworks: 8.122671127
+assembly_mass_summed: 8.122709767
+assembly_com_solidworks: [0.003089185, -0.011644029, 0.000162335]
+assembly_com_summed: [0.003088758, -0.011642872, 0.000161738]
+com_match_error_m: 1.370e-06
+mass_match_rel_error: 4.757e-06
