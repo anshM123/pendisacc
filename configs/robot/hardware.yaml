@@ -8,27 +8,40 @@
 # inventing them would poison the sim-to-real comparison.
 
 drive:
-  # ---- FROZEN: architecture (b), direct torque control -------------------
-  # Teensy --UART--> Waveshare RS485 --Modbus RTU--> A6-RS CN3 --> TORQUE MODE
-  # The CNC4PC C34SOA6-RS is BYPASSED for motor command. It emits STEP/DIR,
-  # which would force the drive into position mode and make the RL action
-  # something the analytical model does not contain.
+  # ---- FROZEN: architecture (a), STEP/DIR position mode -------------------
+  # Teensy --STEP/DIR--> CNC4PC C34SOA6-RS --> A6-RS in POSITION mode
   #
-  # Torque mode on the A6-RS:
-  #   C00.00 = 2   torque control
-  #   C03.40 = 0   internal digital torque reference
-  #   C03.41       the reference itself, writable DURING operation,
-  #                units 0.1% of rated torque, range +-400% rated
-  #
-  # Consequence for simulation: the RL action maps to motor torque, hence cart
-  # force, hence exactly the B*F_cart term of the analytical model. Isaac uses
-  # JointEffortActionCfg.
-  architecture: "b_direct_rs485_torque"
-  command_mode: torque
-  c34_bypassed: true
+  # Chosen over direct RS485 torque control (which was briefly frozen and then
+  # reversed) because the real-time path has to carry a fresh command every few
+  # milliseconds:
+  #   * STEP/DIR is a bare pulse train the A6-RS accepts up to 4 MHz --
+  #     deterministic, no packet framing, no reply, negligible latency.
+  #   * Modbus RTU means register write + CRC + reply per command. Fine for
+  #     configuration and telemetry, poor for a balancing loop.
+  #   * The A6-RS does have a torque mode, but its documented CONTINUOUS torque
+  #     reference path is the analog input; the Modbus guide covers
+  #     position/speed/profile commands.
+  # It also needs no hardware change: the C34SOA6-RS is already in the BOM and
+  # is built for exactly this.
+  architecture: "a_stepdir_position"
+  command_mode: step_dir_position
+  c34_bypassed: false
   controller: Teensy
-  bus: Waveshare RS485 transceiver, Modbus RTU
-  interface_unused: CNC4PC C34SOA6-RS   # present in the BOM, not in the command path
+  interface: CNC4PC C34SOA6-RS
+  max_pulse_rate_hz: 4.0e6
+  bus: Waveshare RS485 -- CONFIGURATION AND DIAGNOSTICS ONLY, not the control path
+
+  # ---- what the RL action must therefore be ------------------------------
+  # Pulse frequency advances the commanded position, so the natural command is
+  # a signed cart VELOCITY:
+  #
+  #   a_t -> v_cmd -> pulse frequency + DIR -> integrated position reference
+  #       -> A6 position loop -> motor torque (saturated) -> GT2 -> cart force
+  #
+  # Isaac therefore uses JointVelocityActionCfg with the servo modelled as a
+  # stiff inner velocity loop under a force clamp. Training against raw torque
+  # would produce a policy the hardware cannot execute.
+  rl_action: cart_velocity
 
   # ---- FROZEN: motor --------------------------------------------------
   servo: StepperOnline A6-RS400H2A1-M17
@@ -62,13 +75,14 @@ drive:
   max_cart_speed_ms: 4.0          # 3000 rpm
   peak_cart_speed_ms: 8.0         # 6000 rpm
 
-  # What the policy is allowed to command continuously. Set at the RATED
-  # region, not the peak: peak torque is a short-duration rating and swing-up
-  # pumping is a sustained, repeated demand, so training against 350 N would
-  # promise the policy authority the hardware cannot hold.
-  # TODO: a duty-cycle / thermal model that allows brief excursions toward peak.
-  action_scale_force_N: 100.0
+  # Action scale is now a SPEED, at the rated 3000 rpm. Force still bounds what
+  # the inner loop can deliver: rated 99.7 N, clamped at the peak 349.5 N.
+  action_scale_speed_ms: 4.0
+  rated_cart_force_used_N: 99.7
   drive_clamp_force_N: 349.5      # hard current limit, should not normally bind
+  # inner velocity-loop gain used in sim [N.s/m]; ~2 ms loop time constant
+  # against the 0.79 kg effective translating mass. ASSUMED pending drive tuning.
+  velocity_loop_gain_Nsm: 400.0
 
   # Reflected drivetrain inertia: the rotor seen from the cart is an added mass
   #   m = J_r / r^2 = 5.9e-5 / 1.6211e-4 = 0.364 kg
@@ -81,12 +95,11 @@ drive:
   supply: VEVOR ST-2000VA transformer + AutomationDirect PSU
 
   # ---- MEASURE on hardware; do not invent -----------------------------
-  rs485_latency_s: null           # MEASURE  Teensy -> Waveshare -> A6
-  command_rate_hz: null           # MEASURE  deterministic Modbus update rate
+  control_loop_rate_hz: null      # MEASURE  Teensy update rate for v_cmd
+  step_dir_latency_s: null        # MEASURE  command -> motion onset
   command_jitter_s: null          # MEASURE
-  # If Modbus proves too slow or jittery for the required control rate, keep
-  # TORQUE mode and move the transport to the A6's analog torque input (AI1/AI2)
-  # rather than retreating to step/dir position control.
+  position_loop_bandwidth_hz: null  # MEASURE  the A6's inner loop; sets the
+                                    # velocity-servo gain used in simulation
 
 sensing:
   joint_encoders: 3x MT6701 magnetic, one per revolute joint

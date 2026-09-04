@@ -29,7 +29,7 @@ from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.utils import configclass
 
 import triple_project.mdp as mdp
-from triple_project.assets import CART_JOINT, LINK_JOINTS, MAX_CART_FORCE, TRIPLE_PENDULUM_CFG
+from triple_project.assets import CART_JOINT, LINK_JOINTS, MAX_CART_SPEED, TRIPLE_PENDULUM_CFG
 
 
 @configclass
@@ -46,11 +46,12 @@ class TriplePendulumSceneCfg(InteractiveSceneCfg):
 class ActionsCfg:
     """The cart force is the only actuation, exactly as on the real machine."""
 
-    # Cart FORCE. The drive runs in torque mode over RS485 (architecture (b),
-    # C34 bypassed), so a force command is exactly what the hardware accepts and
-    # exactly what the analytical model's B*F_cart term expects.
-    cart_force = mdp.JointEffortActionCfg(
-        asset_name="robot", joint_names=[CART_JOINT], scale=MAX_CART_FORCE
+    # Signed cart VELOCITY. The drive runs STEP/DIR into the A6's position
+    # loop, so pulse rate -- i.e. commanded velocity -- is what the hardware
+    # actually accepts. A force action would not be executable.
+    cart_velocity = mdp.JointVelocityActionCfg(
+        asset_name="robot", joint_names=[CART_JOINT], scale=MAX_CART_SPEED,
+        use_default_offset=False,
     )
 
 

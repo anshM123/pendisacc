@@ -28,23 +28,33 @@ LINK_JOINTS = ["joint1", "joint2", "joint3"]
 # Drivetrain, FROZEN: StepperOnline A6-RS400H2A1-M17 (400 W) driving the cart
 # through a GT2 2 mm / 40 T pulley, r = 0.0127324 m.
 #
-# COMMAND MODE: direct torque. Teensy -> Waveshare RS485 -> A6-RS in torque mode
-# (C00.00 = 2, internal digital reference C03.41, writable during operation).
-# The CNC4PC C34SOA6-RS step/dir path is bypassed. So the RL action maps to
-# motor torque -> cart force, which is exactly the B*F_cart term of the
-# analytical model:  a_t -> tau_cmd -> F_cart = tau / r.
+# COMMAND PATH: Teensy -> STEP/DIR -> CNC4PC C34SOA6-RS -> A6-RS POSITION mode.
+# Pulse frequency advances the commanded position, so the natural real-time
+# command is a signed cart VELOCITY. A direct torque action is NOT executable
+# on this path -- see configs/robot/hardware.yaml for why STEP/DIR beat direct
+# RS485 torque control (Modbus framing is too slow for a per-millisecond loop).
 #
-# FORCE. F = tau / r:
-#   rated 1.27 N.m -> 99.7 N        peak 4.45 N.m -> 349.5 N
-# The policy is scaled to the RATED force, not the peak. Peak torque is a
-# short-duration rating; swing-up pumping is a sustained repeated demand, so
-# training against 350 N would hand the policy authority the drive cannot hold.
-# TODO: duty-cycle/thermal model permitting brief excursions toward peak.
-MAX_CART_FORCE = 100.0        # action scale, ~rated
-DRIVE_CLAMP_FORCE = 349.5     # drive current limit; should not normally bind
-
-# omega * r: 4.0 m/s at rated 3000 rpm, 8.0 m/s at peak 6000 rpm
+#   a_t -> v_cmd -> pulse rate + DIR -> position reference -> A6 inner loop
+#       -> motor torque (saturated) -> GT2 -> cart force
+#
+# The inner loop is modelled first-order as a stiff velocity servo under a force
+# clamp:   F = clamp( D * (v_cmd - v_cart), +-F_clamp )
+#
+# SPEED. omega * r: 4.0 m/s at rated 3000 rpm, 8.0 m/s at peak 6000 rpm. The
+# action is scaled to the rated figure. The 4 MHz pulse ceiling is not the
+# binding limit -- motor speed is.
 MAX_CART_SPEED = 4.0
+
+# FORCE. F = tau / r: rated 1.27 N.m -> 99.7 N, peak 4.45 N.m -> 349.5 N.
+# The clamp is the drive's current limit; it should rarely bind because the
+# velocity loop, not the policy, decides the force.
+DRIVE_CLAMP_FORCE = 349.5
+RATED_CART_FORCE = 99.7
+
+# Inner velocity-loop gain [N.s/m]. ~2 ms loop time constant against the
+# 0.79 kg effective translating mass (cart + carriages + reflected rotor).
+# ASSUMED: replace once the A6's position-loop bandwidth is measured.
+CART_VELOCITY_GAIN = 400.0
 
 TRIPLE_PENDULUM_CFG = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
@@ -68,14 +78,14 @@ TRIPLE_PENDULUM_CFG = ArticulationCfg(
         joint_vel={".*": 0.0},
     ),
     actuators={
-        # pure torque source: no position or velocity loop in the drive, so no
-        # stiffness and no damping. The only limit is the current clamp.
+        # velocity servo standing in for the A6 position loop: no stiffness,
+        # damping = velocity-loop gain, force bounded by the drive's clamp
         "cart": ImplicitActuatorCfg(
             joint_names_expr=[CART_JOINT],
             effort_limit_sim=DRIVE_CLAMP_FORCE,
             velocity_limit_sim=MAX_CART_SPEED,
             stiffness=0.0,
-            damping=0.0,
+            damping=CART_VELOCITY_GAIN,
         ),
         "passive": ImplicitActuatorCfg(
             joint_names_expr=LINK_JOINTS,
