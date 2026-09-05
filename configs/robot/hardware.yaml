@@ -96,10 +96,23 @@ drive:
 
   # ---- MEASURE on hardware; do not invent -----------------------------
   control_loop_rate_hz: null      # MEASURE  Teensy update rate for v_cmd
-  step_dir_latency_s: null        # MEASURE  command -> motion onset
   command_jitter_s: null          # MEASURE
-  position_loop_bandwidth_hz: null  # MEASURE  the A6's inner loop; sets the
-                                    # velocity-servo gain used in simulation
+
+  # ---- servo response: PESSIMISTIC PLACEHOLDER, still to be measured ------
+  # Published settling figures for drives of this class land around 50 ms, so
+  # the worst case assumed here is 100 ms -- roughly double -- rather than the
+  # ~2 ms an ideal loop would give.
+  #
+  # This is a severe assumption and deliberately so: the upright equilibrium
+  # has lambda_max = 15.5 rad/s, a 64 ms divergence time constant. An actuator
+  # lag of 100 ms is LONGER than the time the pendulum takes to run away, so if
+  # control survives it, it survives anything the real drive will do.
+  #
+  # Split into two effects because they hurt differently -- see
+  # source/triple_project/actuators/servo_action.py.
+  servo_time_constant_s: 0.100    # ASSUMED WORST CASE  (MEASURE)
+  servo_transport_delay_s: 0.0    # MEASURE separately; dead time is worse than lag
+  servo_time_constant_measured_s: null   # MEASURE -> replace the assumption
 
 sensing:
   joint_encoders: 3x MT6701 magnetic, one per revolute joint

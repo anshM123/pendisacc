@@ -47,6 +47,7 @@ from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.utils import configclass
 
 import triple_project.mdp as mdp
+from triple_project.actuators import LaggedJointVelocityActionCfg
 from triple_project.assets import CART_JOINT, LINK_JOINTS, MAX_CART_SPEED, TRIPLE_PENDULUM_CFG
 
 
@@ -64,9 +65,14 @@ class ActionsCfg:
     # Signed cart VELOCITY. The drive runs STEP/DIR into the A6's position
     # loop, so pulse rate -- i.e. commanded velocity -- is what the hardware
     # actually accepts. A force action would not be executable.
-    cart_velocity = mdp.JointVelocityActionCfg(
+    # Servo response is NOT instantaneous. time_constant_s is a deliberately
+    # pessimistic 100 ms -- about 1.5x the pendulum's own 64 ms divergence time
+    # constant -- pending measurement of the real drive. See hardware.yaml.
+    cart_velocity = LaggedJointVelocityActionCfg(
         asset_name="robot", joint_names=[CART_JOINT], scale=MAX_CART_SPEED,
         use_default_offset=False,
+        time_constant_s=0.100,
+        delay_s=0.0,
     )
 
 
