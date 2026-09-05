@@ -85,9 +85,9 @@ drive:
   velocity_loop_gain_Nsm: 400.0
 
   # Reflected drivetrain inertia: the rotor seen from the cart is an added mass
-  #   m = J_r / r^2 = 5.9e-5 / 1.6211e-4 = 0.364 kg
-  # against a 0.1448 kg CAD cart. Not negligible -- it is 2.5x the cart itself,
-  # and it exists nowhere in the CAD.
+  #   m = J_r / r^2 = 5.9e-5 / 1.6211e-4 = 0.36394 kg
+  # against the 0.42659 kg CAD cart, i.e. 85% of it again, for a translating
+  # total of 0.79053 kg. Not negligible, and it exists nowhere in the CAD.
   reflected_mass_kg: 0.36394
   # pulleys, idler and belt add a little more; not yet accounted for
 
@@ -126,9 +126,14 @@ motion:
   usable_travel_m: 1.2            # sim soft bound +-0.60 m
   carriage: LM20 / SBR20 blocks
   limit_switches: yes             # hardware end stops beyond the soft bound
-  # Two R6Linear_Bearings instances are suppressed in the CAD, so the extracted
-  # cart mass (0.1448 kg) is missing its carriage bearings.
-  cart_mass_incomplete: true
+  # RESOLVED. The carriages were previously being assigned to the base instead
+  # of the cart -- a first-match-wins bug in the body grouping, since the
+  # bearings live under the "R6Base Assembly-1/" prefix but ride on the cart.
+  # tools/grouping.py now resolves by LONGEST matching prefix, which puts the
+  # 0.28178 kg of R6Linear_Bearings (10 bodies) on the cart where they belong:
+  #   0.14481 (old, wrong) + 0.28178 = 0.42659 kg, as in
+  #   configs/robot/triple_pendulum_params.yaml
+  cart_mass_incomplete: false
 
 structure:
   extrusion: AutomationDirect
