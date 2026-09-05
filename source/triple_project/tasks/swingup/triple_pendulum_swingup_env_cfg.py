@@ -91,7 +91,11 @@ class ObservationsCfg:
         cart = ObsTerm(func=mdp.cart_state)
         link_sincos = ObsTerm(func=mdp.link_angles_sincos)
         link_vel = ObsTerm(func=mdp.link_vels)
-        last_action = ObsTerm(func=mdp.last_action)
+        # Clamped to +-1. Under the old wrapper clipping the policy observed a
+        # clipped action; clamping here keeps that distribution identical now
+        # that the raw action reaches the manager, so removing clip_actions
+        # changes the COST on std and nothing else.
+        last_action = ObsTerm(func=mdp.last_action_clipped)
 
         def __post_init__(self) -> None:
             self.enable_corruption = False
@@ -180,8 +184,15 @@ class RewardsCfg:
     # clear margin, while staying small next to a successful episode's ~+235,
     # so it does not distort the value function.
     terminating = RewTerm(func=mdp.is_terminated, weight=-2500.0)
-    # keep the control smooth, but weakly -- pumping needs large forces
-    effort = RewTerm(func=mdp.action_l2, weight=-0.004)
+    # This term now sees the RAW policy output (no wrapper clipping), so it is
+    # what bounds the action std. Sized to be negligible at a sane std and
+    # punitive at a runaway one -- episodic cost is weight * E[a^2] * 12:
+    #   std 0.5 -> -0.30 (0.1% of a successful episode's ~235)
+    #   std 1.0 -> -0.60
+    #   std 5.0 -> -15    (6%)
+    #   std 47  -> -1325
+    # so exploration is free and saturation is not.
+    effort = RewTerm(func=mdp.action_l2, weight=-0.05)
     action_rate = RewTerm(func=mdp.action_rate_l2, weight=-0.002)
 
 

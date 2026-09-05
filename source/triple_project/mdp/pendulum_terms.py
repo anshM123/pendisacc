@@ -48,6 +48,23 @@ def abs_link_vels(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg = SceneEntit
 # ---------------------------------------------------------------- observations
 
 
+def last_action_clipped(
+    env: ManagerBasedRLEnv, clip: float = 1.0, action_name: str | None = None
+) -> torch.Tensor:
+    """The previous action, clamped to +-`clip`.
+
+    The swing-up task deliberately runs without RslRlVecEnvWrapper's action
+    clipping, so that mdp.action_l2 can see -- and charge for -- the raw policy
+    output; see the note in the swing-up PPO config. That would otherwise also
+    change what the policy OBSERVES, since last_action reads the same
+    action_manager.action. Clamping here keeps the observation distribution
+    exactly as it was under wrapper clipping, so only the cost changes.
+    """
+    action = env.action_manager.action if action_name is None else env.action_manager.get_term(action_name).raw_actions
+    return torch.clamp(action, -clip, clip)
+
+
+
 def link_angles_sincos(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")) -> torch.Tensor:
     """sin/cos of the three absolute link angles, shape (N, 6).
 

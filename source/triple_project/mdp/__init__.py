@@ -16,6 +16,7 @@ from .pendulum_terms import (  # noqa: F401
     link_angles_sincos,
     link_vel_l2,
     link_vels,
+    last_action_clipped,
     tip_height,
     tip_height_pos,
     upright_capture,
