@@ -14,6 +14,8 @@ class TriplePendulumBalancePPORunnerCfg(RslRlOnPolicyRunnerCfg):
     num_steps_per_env = 64
     max_iterations = 1200
     save_interval = 50
+    # see the note in the swing-up config: bounds mdp.action_l2
+    clip_actions = 1.0
     experiment_name = "tip_balance"
     empirical_normalization = False
     policy = RslRlPpoActorCriticCfg(
@@ -32,7 +34,7 @@ class TriplePendulumBalancePPORunnerCfg(RslRlOnPolicyRunnerCfg):
         value_loss_coef=1.0,
         use_clipped_value_loss=True,
         clip_param=0.2,
-        entropy_coef=0.002,
+        entropy_coef=0.002,   # lowered: a growing std was what ran away
         num_learning_epochs=5,
         num_mini_batches=4,
         learning_rate=3.0e-4,

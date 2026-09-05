@@ -1,0 +1,39 @@
+{
+  "task": "TIP-SwingUp-Play-v0",
+  "num_envs": 64,
+  "upright_threshold": 0.9,
+  "results": [
+    {
+      "checkpoint": "model_1000.pt",
+      "success_rate": 0.03125,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.24549999833106995,
+      "mean_tip_height": 0.13141612708568573
+    },
+    {
+      "checkpoint": "model_2999.pt",
+      "success_rate": 0.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.18020834028720856,
+      "mean_tip_height": 0.056220926344394684
+    },
+    {
+      "checkpoint": "model_2000.pt",
+      "success_rate": 0.0,
+      "early_termination_rate": 0.046875,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.1678541600704193,
+      "mean_tip_height": 0.079668790102005
+    },
+    {
+      "checkpoint": "model_0.pt",
+      "success_rate": 0.0,
+      "early_termination_rate": 1.0,
+      "ever_reached_upright": 0.0,
+      "mean_hold_fraction": 0.0,
+      "mean_tip_height": -0.9499685764312744
+    }
+  ]
+}

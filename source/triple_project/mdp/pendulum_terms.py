@@ -112,6 +112,51 @@ def _link_lengths(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg) -> torch.Te
     return _LENGTH_CACHE[key]
 
 
+def tip_height_pos(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")) -> torch.Tensor:
+    """`tip_height` shifted into [0, 1]: 0 hanging, 1 upright.
+
+    This shift is NOT cosmetic. Isaac Lab multiplies every reward by step_dt, so
+    with the signed version a hanging episode paid
+        4.0 * (-1) * 0.004 * 3000 steps = -48
+    while ending the episode by driving into the rail cost only -250*0.004 = -1.
+    Terminating was therefore ~50x cheaper than surviving, and PPO found that.
+    Measured: seed 2 ended 100% of episodes on the rail for 550 consecutive
+    iterations, mean episode length 63 of 3000 steps, reward pinned at -2.0.
+    Seed 1 escaped only because its exploration noise was still wide (std 0.17)
+    when it stumbled into pumping -- i.e. reliability was down to the seed.
+
+    An affine shift leaves the gradient toward upright untouched; it changes
+    only what a TERMINATED episode is worth relative to one that survives, which
+    is exactly the quantity that was wrong. Every per-step task reward is now
+    non-negative, so timing out always beats crashing.
+    """
+    return 0.5 * (1.0 + tip_height(env, asset_cfg))
+
+
+def uprightness_pos(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")) -> torch.Tensor:
+    """`uprightness` shifted into [0, 1]. Same reasoning as `tip_height_pos`."""
+    return (3.0 + uprightness(env, asset_cfg)) / 6.0
+
+
+def cart_rail_margin(
+    env: ManagerBasedRLEnv,
+    bound: float = 0.60,
+    margin: float = 0.10,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+) -> torch.Tensor:
+    """Soft wall: 0 until `margin` from the rail limit, rising to 1 at `bound`.
+
+    The quadratic centring term is far too flat to act as a wall -- at x = 0.5 m
+    it is worth -0.125/s, which a policy mid-swing simply pays. This term is
+    zero over the whole region the swing-up actually uses and only bites in the
+    last 10 cm, so it discourages the excursion without suppressing pumping.
+    """
+    asset: Articulation = env.scene[asset_cfg.name]
+    cart, _ = _indices(asset)
+    over = (torch.abs(asset.data.joint_pos[:, cart]) - (bound - margin)) / margin
+    return torch.square(torch.clamp(over, 0.0, 1.0))
+
+
 def upright_capture(
     env: ManagerBasedRLEnv,
     angle_std: float = 0.25,

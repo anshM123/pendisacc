@@ -17,6 +17,10 @@ class TriplePendulumSwingUpPPORunnerCfg(RslRlOnPolicyRunnerCfg):
     num_steps_per_env = 96
     max_iterations = 3000
     save_interval = 100
+    # Bound the RAW policy output. mdp.action_l2 penalises the raw action,
+    # so an unbounded Gaussian makes the penalty quadratic in a runaway std.
+    # Measured collapse: std 0.8 -> 2.52, effort reward -133, value loss 72,625.
+    clip_actions = 1.0
     experiment_name = "tip_swingup"
     empirical_normalization = False
     policy = RslRlPpoActorCriticCfg(
@@ -31,7 +35,11 @@ class TriplePendulumSwingUpPPORunnerCfg(RslRlOnPolicyRunnerCfg):
         value_loss_coef=1.0,
         use_clipped_value_loss=True,
         clip_param=0.2,
-        entropy_coef=0.008,   # pumping must be discovered; no free near-upright starts
+        # Raised from 0.003. With clip_actions the old runaway (std 0.8 -> 2.52)
+        # cannot recur, and 0.003 was collapsing too early instead: seed 1 hit
+        # std 0.00 by iteration 1500 and its reward then drifted 8.06 -> 6.97,
+        # with no exploration left to recover.
+        entropy_coef=0.006,
         num_learning_epochs=5,
         num_mini_batches=4,
         learning_rate=3.0e-4,

@@ -17,6 +17,9 @@ from .pendulum_terms import (  # noqa: F401
     link_vel_l2,
     link_vels,
     tip_height,
+    tip_height_pos,
     upright_capture,
     uprightness,
+    uprightness_pos,
+    cart_rail_margin,
 )

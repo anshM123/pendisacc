@@ -58,6 +58,9 @@ class ActionsCfg:
         use_default_offset=False,
         time_constant_s=0.100,
         delay_s=0.0,
+        # hard bound in PHYSICAL units: the drive cannot be commanded past its
+        # rated speed no matter what the policy emits
+        clip={CART_JOINT: (-MAX_CART_SPEED, MAX_CART_SPEED)},
     )
 
 

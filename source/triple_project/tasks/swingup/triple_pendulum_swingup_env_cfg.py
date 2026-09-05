@@ -6,7 +6,12 @@ cart force, four DOFs), the target is an unstable equilibrium with lambda_max =
 16.3 rad/s, and reaching it requires pumping energy in over several swings while
 staying inside a 1.28 m rail.
 
-Three design choices carry most of the weight:
+Four design choices carry most of the weight:
+
+0. EVERY per-step task reward is non-negative, so that surviving an episode is
+   never worse than ending it. With signed rewards the policy learned to crash
+   on purpose; see the RewardsCfg docstring for the arithmetic and the measured
+   failure. This is the single change that made training seed-independent.
 
 1. NO "link fallen" termination. Swing-up necessarily passes through large
    angles, so the balance task's termination would kill every useful episode.
@@ -73,6 +78,9 @@ class ActionsCfg:
         use_default_offset=False,
         time_constant_s=0.100,
         delay_s=0.0,
+        # hard bound in PHYSICAL units: the drive cannot be commanded past its
+        # rated speed no matter what the policy emits
+        clip={CART_JOINT: (-MAX_CART_SPEED, MAX_CART_SPEED)},
     )
 
 
@@ -128,26 +136,50 @@ class EventCfg:
 
 @configclass
 class RewardsCfg:
-    # primary: get the tip up. -1 hanging, +1 fully upright.
-    tip = RewTerm(func=mdp.tip_height, weight=4.0)
+    """Every task term is NON-NEGATIVE. That is the load-bearing property.
+
+    Isaac Lab scales each term by step_dt, so with the old signed terms a
+    hanging episode accumulated
+        (4.0 * -1 + 0.6 * -3) * 0.004 * 3000 = -69.6
+    while driving off the rail cost a one-shot -250 * 0.004 = -1.0. Ending the
+    episode was ~70x cheaper than living through it, so the optimal policy for a
+    net that had not yet found pumping was to crash immediately -- and PPO found
+    exactly that. Seed 2 spent 550 consecutive iterations ending 100% of
+    episodes on the rail at a mean length of 63 of 3000 steps. Seed 1 escaped
+    only because it was still exploring widely when it stumbled into a pump.
+    Which seed worked was a coin flip, which is what "not reliable" meant.
+
+    Weights are chosen so the SPAN of each term is unchanged (tip was 4.0 over
+    [-1,1], a span of 8, so it is now 8.0 over [0,1]); only the offset moves,
+    and an affine shift leaves the shaping gradient identical.
+    """
+
+    # primary: get the tip up. 0 hanging, +1 fully upright.
+    tip = RewTerm(func=mdp.tip_height_pos, weight=8.0)
     # secondary: all links up, not just the tip (rules out folded configurations
     # that happen to put the tip high)
-    upright = RewTerm(func=mdp.uprightness, weight=0.6)
+    upright = RewTerm(func=mdp.uprightness_pos, weight=3.6)
     # the catch: upright AND slow
     capture = RewTerm(func=mdp.upright_capture, weight=8.0)
-    # stay on the rail.
-    #
-    # NOTE on scale: Isaac Lab's RewardManager multiplies EVERY term by step_dt
-    # (reward_manager.py: value = func * weight * dt). With dt = 4 ms a
-    # one-shot termination weight of -5 is worth -0.02, i.e. nothing next to a
-    # capture reward that accumulates to ~1.2 per episode. Measured effect:
-    # 83% of episodes ended by running off the rail, because doing so was free.
-    # A one-shot penalty therefore needs weight ~ desired_cost / dt.
-    # Only a whisper of centring. There is ~1.2 m of usable rail and pumping a
-    # triple pendulum REQUIRES using it; a strong centring penalty pays the
-    # policy to stand still, which is the opposite of swing-up.
-    cart_pos = RewTerm(func=mdp.cart_pos_l2, weight=-0.10)
-    terminating = RewTerm(func=mdp.is_terminated, weight=-250.0)   # -> -1.0 actual
+
+    # ---- costs, all small enough that no survivable episode accumulates more
+    # ---- negative reward than the one-shot termination penalty below
+    # Centring, weak enough not to suppress pumping. At -0.10 the policy reached
+    # upright in 100% of episodes yet HELD it in ~3%: it got up wherever it
+    # happened to be and then drifted into the rail.
+    cart_pos = RewTerm(func=mdp.cart_pos_l2, weight=-0.50)
+    # The quadratic above is far too flat to act as a wall (-0.125/s at x=0.5).
+    # This one is exactly zero over the +-0.50 m the swing-up actually uses and
+    # rises steeply through the last 10 cm.
+    rail_wall = RewTerm(func=mdp.cart_rail_margin, weight=-0.5,
+                        params={"bound": 0.60, "margin": 0.10})
+    # Explicitly reward staying slow while up, so holding beats re-swinging.
+    cart_vel = RewTerm(func=mdp.cart_vel_l2, weight=-0.02)
+    # -> -10.0 actual after the dt scaling. Sized to dominate the worst
+    # accumulation of the shaping costs above (~-3.6 over a full episode) by a
+    # clear margin, while staying small next to a successful episode's ~+235,
+    # so it does not distort the value function.
+    terminating = RewTerm(func=mdp.is_terminated, weight=-2500.0)
     # keep the control smooth, but weakly -- pumping needs large forces
     effort = RewTerm(func=mdp.action_l2, weight=-0.004)
     action_rate = RewTerm(func=mdp.action_rate_l2, weight=-0.002)
