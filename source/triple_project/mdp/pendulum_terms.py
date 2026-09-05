@@ -176,15 +176,37 @@ def cart_rail_margin(
 
 def upright_capture(
     env: ManagerBasedRLEnv,
-    angle_std: float = 0.25,
-    vel_std: float = 3.0,
+    angle_std: float = 1.0,
+    vel_std: float = 6.0,
     asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
 ) -> torch.Tensor:
     """Bonus for being upright AND slow -- the "catch" at the top of a swing-up.
 
     Product of two Gaussians so it only pays out when both conditions hold. A
     pure height reward is maximised by whipping through the top at speed, which
-    is exactly the wrong behaviour; this term is what makes the policy stop there.
+    is exactly the wrong behaviour; this term is what makes the policy stop.
+
+    WIDTHS. These were 0.25 and 3.0, which made the term unreachable by
+    anything but luck. Evaluated on the state the policy is actually in while
+    swinging through the top:
+
+        each link at   |   old (0.25, 3.0)   |   now (1.0, 6.0)
+        20 deg, 2 rad/s|        0.128        |       0.598
+        30 deg, 3 rad/s|        0.010        |       0.316
+        45 deg, 4 rad/s|        0.00014      |       0.109
+
+    At 0.00014 there is no gradient telling the policy to slow down until it is
+    already within ~20 degrees of upright -- a region it can only enter by
+    accident. Measured consequence on two seeds of an otherwise identical
+    config: seed 1 stumbled into it near iteration 400 and reached 100% success;
+    seed 2 never found it in 2000 iterations, logged capture reward of exactly
+    0.0000 throughout, and settled into a limit cycle -- swinging the tip up
+    through the top and back down forever, hold fraction pinned at 14.0% and
+    mean tip height -0.02. Which seed worked was luck, again.
+
+    Widening changes only the BASIN, not the optimum: the product is still
+    maximised at zero tilt and zero rate, so what the policy is asked to do is
+    unchanged; there is now a continuous path in from where it starts.
     """
     th = abs_link_angles(env, asset_cfg)
     w = abs_link_vels(env, asset_cfg)
