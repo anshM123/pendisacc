@@ -4,12 +4,12 @@
   "upright_threshold": 0.9,
   "results": [
     {
-      "checkpoint": "model_800.pt",
+      "checkpoint": "model_700.pt",
       "success_rate": 1.0,
       "early_termination_rate": 0.0,
       "ever_reached_upright": 1.0,
       "mean_hold_fraction": 0.9986666440963745,
-      "mean_tip_height": 0.8287211656570435
+      "mean_tip_height": 0.7771626710891724
     }
   ]
 }

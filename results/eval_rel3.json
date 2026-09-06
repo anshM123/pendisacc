@@ -1,0 +1,95 @@
+{
+  "task": "TIP-SwingUp-Play-v0",
+  "num_envs": 256,
+  "upright_threshold": 0.9,
+  "results": [
+    {
+      "checkpoint": "model_500.pt",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.7856468558311462
+    },
+    {
+      "checkpoint": "model_600.pt",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.8212485909461975
+    },
+    {
+      "checkpoint": "model_700.pt",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.8265540599822998
+    },
+    {
+      "checkpoint": "model_900.pt",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.784903883934021
+    },
+    {
+      "checkpoint": "model_800.pt",
+      "success_rate": 0.99609375,
+      "early_termination_rate": 0.00390625,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986718893051147,
+      "mean_tip_height": 0.7929370403289795
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "success_rate": 0.1328125,
+      "early_termination_rate": 0.00390625,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.8527551889419556,
+      "mean_tip_height": 0.7143946886062622
+    },
+    {
+      "checkpoint": "model_200.pt",
+      "success_rate": 0.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.32925522327423096,
+      "mean_tip_height": 0.27033859491348267
+    },
+    {
+      "checkpoint": "model_400.pt",
+      "success_rate": 0.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.693026065826416,
+      "mean_tip_height": 0.5741366744041443
+    },
+    {
+      "checkpoint": "model_100.pt",
+      "success_rate": 0.0,
+      "early_termination_rate": 0.0078125,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.132666677236557,
+      "mean_tip_height": 0.08438971638679504
+    },
+    {
+      "checkpoint": "model_300.pt",
+      "success_rate": 0.0,
+      "early_termination_rate": 0.05078125,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.31506770849227905,
+      "mean_tip_height": 0.3083072900772095
+    },
+    {
+      "checkpoint": "model_0.pt",
+      "success_rate": 0.0,
+      "early_termination_rate": 1.0,
+      "ever_reached_upright": 0.0,
+      "mean_hold_fraction": 0.0,
+      "mean_tip_height": -0.9888814091682434
+    }
+  ]
+}

@@ -4,36 +4,76 @@
   "upright_threshold": 0.9,
   "results": [
     {
+      "checkpoint": "model_700.pt",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.7816135287284851
+    },
+    {
+      "checkpoint": "model_900.pt",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.8322710990905762
+    },
+    {
+      "checkpoint": "model_600.pt",
+      "success_rate": 0.98828125,
+      "early_termination_rate": 0.01171875,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9980937242507935,
+      "mean_tip_height": 0.7096238732337952
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "success_rate": 0.2421875,
+      "early_termination_rate": 0.5859375,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.5162604451179504,
+      "mean_tip_height": 0.3347482979297638
+    },
+    {
+      "checkpoint": "model_800.pt",
+      "success_rate": 0.23046875,
+      "early_termination_rate": 0.01171875,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.7031718492507935,
+      "mean_tip_height": 0.573161244392395
+    },
+    {
+      "checkpoint": "model_300.pt",
+      "success_rate": 0.0,
+      "early_termination_rate": 0.00390625,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.3699374794960022,
+      "mean_tip_height": 0.34088706970214844
+    },
+    {
       "checkpoint": "model_500.pt",
       "success_rate": 0.0,
-      "early_termination_rate": 0.0,
+      "early_termination_rate": 0.0078125,
       "ever_reached_upright": 1.0,
-      "mean_hold_fraction": 0.14048437774181366,
-      "mean_tip_height": -0.018380483612418175
+      "mean_hold_fraction": 0.551281213760376,
+      "mean_tip_height": 0.48018425703048706
     },
     {
-      "checkpoint": "model_1000.pt",
+      "checkpoint": "model_100.pt",
       "success_rate": 0.0,
-      "early_termination_rate": 0.0,
-      "ever_reached_upright": 1.0,
-      "mean_hold_fraction": 0.14186978340148926,
-      "mean_tip_height": -0.017643950879573822
+      "early_termination_rate": 0.17578125,
+      "ever_reached_upright": 0.9921875,
+      "mean_hold_fraction": 0.11093229055404663,
+      "mean_tip_height": 0.04147087782621384
     },
     {
-      "checkpoint": "model_1500.pt",
+      "checkpoint": "model_400.pt",
       "success_rate": 0.0,
-      "early_termination_rate": 0.0,
-      "ever_reached_upright": 1.0,
-      "mean_hold_fraction": 0.14046353101730347,
-      "mean_tip_height": -0.015277818776667118
-    },
-    {
-      "checkpoint": "model_1999.pt",
-      "success_rate": 0.0,
-      "early_termination_rate": 0.0,
-      "ever_reached_upright": 1.0,
-      "mean_hold_fraction": 0.1399010419845581,
-      "mean_tip_height": -0.024574676528573036
+      "early_termination_rate": 0.4765625,
+      "ever_reached_upright": 0.9921875,
+      "mean_hold_fraction": 0.567692756652832,
+      "mean_tip_height": 0.3133975863456726
     },
     {
       "checkpoint": "model_0.pt",
@@ -41,7 +81,15 @@
       "early_termination_rate": 1.0,
       "ever_reached_upright": 0.0,
       "mean_hold_fraction": 0.0,
-      "mean_tip_height": -0.973609447479248
+      "mean_tip_height": -0.9839285016059875
+    },
+    {
+      "checkpoint": "model_200.pt",
+      "success_rate": 0.0,
+      "early_termination_rate": 1.0,
+      "ever_reached_upright": 0.0,
+      "mean_hold_fraction": 0.0,
+      "mean_tip_height": -0.8697202205657959
     }
   ]
 }
