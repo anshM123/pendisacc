@@ -17,22 +17,22 @@ Four design choices carry most of the weight:
    angles, so the balance task's termination would kill every useful episode.
    Only the time limit and the rail limit end an episode.
 
-2. Starts are always BELOW HORIZONTAL. The first attempt sampled joint1 over
-   the full circle, reasoning that this gives a curriculum for free. It did the
-   opposite: the policy harvested almost all its reward from episodes that
-   already started near the top, never needed to pump, and the rising reward
-   curve measured better catching rather than swing-up. Measured outcome: max
-   tip height -0.334, i.e. it never even reached horizontal, and 0.0% of time
-   near upright.
-   Restricting joint1 to pi +- 1.5 rad removes the easy episodes entirely, so
-   pumping is the only way to earn the height and capture rewards.
+2. Starts are UNIFORM OVER THE CIRCLE, a reverse curriculum. Restricting them
+   to below horizontal was tried and made the catch undiscoverable: every
+   failing seed logged capture reward of essentially zero for 2000 iterations.
+   The earlier objection to near-upright starts -- that they inflate the reward
+   curve -- was really an objection to using reward as the metric, and
+   evaluate.py now scores only from dead hang, so it no longer applies.
 
 3. A separate "capture" bonus that requires upright AND slow. A pure height
    reward is maximised by whipping through the top at speed, which is the
    opposite of what we want.
 
-The link-velocity penalty from the balance task is deliberately absent: swinging
-fast is required here, and penalising it directly suppresses the pumping motion.
+A link-velocity penalty IS present, unlike the first version of this task. It
+was left out on the reasoning that swinging fast is required, but with link
+energy unbounded the policy converged on spinning the chain at ~62 rad/s per
+link instead of ever stopping. The penalty is quadratic and small enough to be
+free during pumping; see the note on the term.
 """
 
 from __future__ import annotations
@@ -121,9 +121,22 @@ class EventCfg:
         mode="reset",
         params={
             "asset_cfg": SceneEntityCfg("robot", joint_names=["joint1"]),
-            # pi +- 1.5 rad -> always starts below horizontal, so there are no
-            # free near-upright episodes to harvest
-            "position_range": (math.pi - 1.5, math.pi + 1.5),
+            # Uniform over the full circle, so ~17% of episodes start within
+            # 30 degrees of upright and the CATCH is learned directly instead
+            # of stumbled into. Every failing run logs capture reward of
+            # essentially zero for its whole life; the catch is a narrow target
+            # that dead-hang exploration reaches only by luck, which is what
+            # made success seed-dependent.
+            #
+            # This was previously restricted to pi +- 1.5 for a good reason
+            # that no longer applies: near-upright starts let the policy
+            # harvest easy episodes and inflated the reward curve while the tip
+            # never rose above -0.334. That was a MEASUREMENT failure -- reward
+            # was the metric. evaluate.py now always scores from dead hang, so
+            # an easier training distribution can no longer flatter the
+            # reported number. If the policy learns only to balance and not to
+            # swing up, the dead-hang success rate says so immediately.
+            "position_range": (-math.pi, math.pi),
             "velocity_range": (-0.5, 0.5),
         },
     )
@@ -179,6 +192,26 @@ class RewardsCfg:
                         params={"bound": 0.60, "margin": 0.10})
     # Explicitly reward staying slow while up, so holding beats re-swinging.
     cart_vel = RewTerm(func=mdp.cart_vel_l2, weight=-0.02)
+    # Bound the link energy. This was deliberately ABSENT, on the reasoning
+    # that penalising link speed suppresses the pumping swing-up needs. With
+    # nothing bounding it, the policy found a rotational limit cycle instead:
+    # measured on a stuck checkpoint, median sum(omega^2) = 11660, i.e. ~62
+    # rad/s per link, a 46 m/s tip. It passes THROUGH upright 15.3% of the
+    # time and never stops -- mean tip height 0, worth 8.0*0.49 = 3.9, and it
+    # requires no precision at all. No capture width can compete with that,
+    # because exp(-sum(omega^2)/vel_std^2) is annihilated at 11660 for any
+    # sane vel_std; widening the ANGLE axis (0.25 -> 1.0) moved the capture
+    # reward from 0.0000 to 0.0006 and changed nothing.
+    #
+    # Quadratic, so it separates the two regimes by itself:
+    #   pumping   sum(omega^2) ~ 600    -> episodic cost  2.9   (vs ~235 earned)
+    #   spinning  sum(omega^2) ~ 11660  -> episodic cost 56     (vs 48 earned)
+    # a ~175x ratio, so pumping stays essentially free and spinning stops
+    # paying for itself.
+    #
+    # This is also a hardware requirement, not only a shaping one: a 46 m/s tip
+    # would destroy PETG links and their bearings.
+    link_vel = RewTerm(func=mdp.link_vel_l2, weight=-0.0004)
     # -> -10.0 actual after the dt scaling. Sized to dominate the worst
     # accumulation of the shaping costs above (~-3.6 over a full episode) by a
     # clear margin, while staying small next to a successful episode's ~+235,
