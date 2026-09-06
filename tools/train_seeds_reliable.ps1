@@ -9,7 +9,7 @@ $ROOT = "C:\Users\anshm\Downloads\pendisaac"
 foreach ($s in 1, 2, 3) {
     Write-Output "########## swing-up seed $s ##########"
     & "$ROOT\run.cmd" "$ROOT\experiments\train.py" --task TIP-SwingUp-v0 `
-        --num_envs 4096 --max_iterations 2000 --seed $s --run_name "rel$s" --headless `
+        --num_envs 4096 --max_iterations 1000 --seed $s --run_name "rel$s" --headless `
         *> "$ROOT\tools\train_swing_rel$s.txt"
     Write-Output "seed $s exit=$LASTEXITCODE"
 }

@@ -217,15 +217,26 @@ class RewardsCfg:
     # clear margin, while staying small next to a successful episode's ~+235,
     # so it does not distort the value function.
     terminating = RewTerm(func=mdp.is_terminated, weight=-2500.0)
-    # This term now sees the RAW policy output (no wrapper clipping), so it is
-    # what bounds the action std. Sized to be negligible at a sane std and
-    # punitive at a runaway one -- episodic cost is weight * E[a^2] * 12:
-    #   std 0.5 -> -0.30 (0.1% of a successful episode's ~235)
-    #   std 1.0 -> -0.60
-    #   std 5.0 -> -15    (6%)
-    #   std 47  -> -1325
-    # so exploration is free and saturation is not.
-    effort = RewTerm(func=mdp.action_l2, weight=-0.05)
+    # This term sees the RAW policy output (no wrapper clipping), so it is what
+    # bounds the action std. Raised from -0.05, which slowed the runaway but did
+    # not stop it. Measured on the probe: std sat at 0.70-0.72 through iteration
+    # 500 -- reward 212, capture 6.91, rail exits 1.9%, and 99.2% success from
+    # dead hang -- then broke loose to 1.80 by iteration 800, taking reward to
+    # 122, capture to 3.42, rail exits to 26.9% and success to 30.5%. The std
+    # drift is not cosmetic; it is what destroys the policy.
+    #
+    # At equilibrium the entropy gradient (proportional to 1/std) balances the
+    # effort gradient (proportional to 2*w*std), so std* scales as 1/sqrt(w).
+    # Observed std* ~ 2.0 at w = 0.05, so holding std* ~ 0.7 needs
+    #   w = 0.05 * (2.0/0.7)^2 = 0.41.
+    # Cost at that operating point is 0.4 * E[a^2] * 12 = 3.6 per episode
+    # against ~212 earned, i.e. 1.7%; at std 2.0 it is 20.4, a real deterrent.
+    #
+    # Raising this was previously unsafe because tightening std suppresses
+    # exploration, and exploration was how the catch got discovered. The
+    # curriculum now supplies the catch directly, so the two are no longer in
+    # tension.
+    effort = RewTerm(func=mdp.action_l2, weight=-0.4)
     action_rate = RewTerm(func=mdp.action_rate_l2, weight=-0.002)
 
 

@@ -1,0 +1,15 @@
+{
+  "task": "TIP-SwingUp-Play-v0",
+  "num_envs": 256,
+  "upright_threshold": 0.9,
+  "results": [
+    {
+      "checkpoint": "model_800.pt",
+      "success_rate": 0.3046875,
+      "early_termination_rate": 0.5,
+      "ever_reached_upright": 0.9921875,
+      "mean_hold_fraction": 0.6978020668029785,
+      "mean_tip_height": 0.3338002562522888
+    }
+  ]
+}
