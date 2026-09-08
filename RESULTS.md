@@ -1,8 +1,9 @@
 # Swing-up results
 
 **A learned policy swings the triple pendulum up from dead hang and holds it, in
-3072 of 3072 attempts, on every seed tried — under a deliberately pessimistic
-actuator model whose bandwidth is *lower* than the instability it has to catch.**
+3072 of 3072 nominal simulations, on every seed tried — under a deliberately
+pessimistic 100 ms first-order actuator time constant whose pole magnitude is
+smaller than the plant's dominant open-loop unstable eigenvalue.**
 
 Date: 2026-09-05. Commit: `1c0d509`.
 
@@ -17,9 +18,14 @@ Date: 2026-09-05. Commit: `1c0d509`.
 | 3 | `model_700` | 1024 | 1024 | 100.00% | 0.00% | 99.87% |
 | | **pooled** | **3072** | **3072** | **100.00%** | **0.00%** | **99.87%** |
 
-The figure to quote is the **minimum across seeds**, which is also 100.00%. The
-pooled rate has a 95% confidence lower bound of **99.90%** (rule of three:
-3 failures would be the upper limit consistent with observing none in 3072).
+The figure to quote is the **minimum across seeds**, which is also 100.00%.
+
+> **Do not attach a binomial confidence interval to this.** The evaluation start
+> is near-fixed (§2), so 1024 parallel environments are close to 1024 replicas of
+> one trajectory rather than 1024 independent Bernoulli trials. "3072/3072
+> nominal simulations succeeded" is the defensible claim; a rule-of-three lower
+> bound is not, because the independence assumption fails. For a rate with a
+> distribution behind it, see the randomised evaluation in §4.
 
 The three runs are independently seeded and reach an identical hold fraction to
 four decimal places, which suggests the metric is measuring a property of the
@@ -37,11 +43,16 @@ success. Success is therefore defined physically and counted
 3. the tip is **still** upright over the final quarter of the 12 s episode,
    for more than 95% of that window.
 
-Every evaluation episode starts from **dead hang** with the cart centred and at
-rest. There are no easy starts in the measurement, regardless of what the
-training distribution contains. That separation is deliberate: it is what lets
-an easier *training* curriculum be used without it flattering the *reported*
-number.
+Every evaluation episode starts from **dead hang**. There are no easy starts in
+the measurement, regardless of what the training distribution contains. That
+separation is deliberate: it is what lets an easier *training* curriculum be
+used without it flattering the *reported* number.
+
+The nominal start is deliberately narrow — joint 1 at `pi ± 0.05` rad, joints 2
+and 3 at `± 0.02` rad, all joint rates zero, cart exactly centred and at rest,
+and no sensor noise. That is a **capability** test, not a robustness test, and
+it is why the numbers in §1 carry no confidence interval. §4 repeats the
+measurement over an actual distribution.
 
 ## 3. A representative trajectory
 
@@ -56,12 +67,49 @@ From `results/rollout_success.npz` (seed 3, `model_700`), rendered in
 | cart travel used | 0.919 m | 1.2 m usable |
 | peak cart speed | 3.47 m/s | 4.0 m/s rated |
 
-The swing-up works the drive close to its rated speed (87%) and uses 77% of the
-available rail. **The rail, not the motor, is the binding constraint** — the
-peak force required is an order of magnitude inside the drive's capability
-(see §6).
+Both figures are one-off swing-up transients. Once caught, the cart settles into
+a 0.247 m band at under 0.91 m/s, and **no episode in any evaluation ever hit the
+rail limit** (0 terminations in 3072). Peak speed is the tighter of the two
+margins (87% vs 77%), and required force is an order of magnitude inside the
+drive's capability (§7).
 
-## 4. Conditions
+## 4. Robustness — over an actual distribution
+
+§1 is a capability test from a near-fixed start. This is the same policy
+measured over **independent random draws**, which is what a rate with a
+confidence interval requires:
+
+| perturbation | range (uniform) |
+|---|---|
+| every link angle | ± 0.10 rad (±5.7°) |
+| every link rate | ± 0.20 rad/s |
+| cart position | ± 0.10 m |
+| cart velocity | ± 0.10 m/s |
+| sensor noise on every observation | Gaussian, σ = 0.01 |
+
+| seed | checkpoint | success | failures | early termination | ever upright | hold |
+|-----:|---|---:|---:|---:|---:|---:|
+| 1 | `model_800` | 99.80% | 2 | 0.20% | 100.00% | 99.87% |
+| 2 | `model_700` | 99.71% | 3 | 0.29% | 100.00% | 99.87% |
+| 3 | `model_700` | **99.02%** | 10 | 0.98% | 100.00% | 99.87% |
+| | **pooled** | **99.51%** | **15 / 3072** | | | |
+
+**Pooled 3057/3072 = 99.51%, Wilson 95% CI [99.20%, 99.70%].** These draws are
+independent, so that interval is meaningful in a way the §1 numbers are not.
+The figure to quote for robustness is the **worst seed, 99.02%**.
+
+Two things the failure mode makes clear. **Every failure is a rail excursion** —
+`ever reached upright` is 100.00% in all three seeds, so the policy never fails
+to swing up or to catch; the 15 losses are all cart-bound terminations during
+the transient. And **hold fraction is unchanged at 99.87%**, identical to the
+nominal case, so once caught the capture is not degraded by the perturbation or
+the sensor noise at all.
+
+Reading this against §1: perfect nominal success and ~99.5% perturbed success
+is the expected shape. The gap is the honest measure of margin, and it points at
+rail headroom during swing-up rather than at the controller.
+
+## 5. Conditions
 
 These are not idealised-actuator results.
 
@@ -70,9 +118,18 @@ These are not idealised-actuator results.
 | servo lag `tau` | **100 ms**, first-order, on the commanded cart velocity |
 | actuator bandwidth | 10 rad/s |
 | plant instability `lambda_max` | **15.54 rad/s** (64.4 ms divergence time) |
-| bandwidth / lambda_max | **0.64** — the drive is *slower than the fall* |
+| actuator pole / `lambda_max` | **0.64** — see the note below |
 | control rate | 250 Hz (sim dt 2 ms, decimation 2) |
 | action | commanded cart velocity, clipped to ±4.0 m/s in physical units |
+
+> **On the 0.64 ratio.** Comparing `1/tau` against `lambda_max` is a useful
+> heuristic, not a stabilisability threshold — a first-order lag is minimum
+> phase and adds no fundamental obstruction, so nothing forbids control at
+> ratios below 1. The defensible statement is: *the policy succeeds despite a
+> deliberately pessimistic 100 ms first-order actuator time constant, whose pole
+> magnitude is smaller than the plant's dominant open-loop unstable eigenvalue.*
+> §7 shows an LQR achieving the same thing with modest authority, which is what
+> makes the claim concrete rather than rhetorical.
 
 The 100 ms figure is a deliberate worst case, roughly double the ~50 ms typical
 for drives of this class, adopted because the real drive has not been measured.
@@ -81,7 +138,7 @@ unmeasured. A first-order lag contributes at most 90° of phase and is
 compensable with full state feedback; a dead time is not. **If one thing is
 measured on the real drive, it should be dead time, not settling time.**
 
-## 5. The plant these results are about
+## 6. The plant these results are about
 
 Derived from the CAD by `tools/sw_dump_assembly.py` and validated end-to-end by
 `tools/validate_asset.py` (`results/asset_validation.json`, all checks pass):
@@ -101,14 +158,15 @@ from the CAD entirely). Links 0.17752 / 0.10026 / 0.07747 kg, joint spacing
 
 > **Caveat on the link masses.** Every link body in the CAD carries density
 > exactly 1000 kg/m³, which is SolidWorks' default for a part with no material
-> assigned. These are placeholders, not a real material. Metal links would be
-> 2.7× (aluminium) to 7.9× (steel) heavier. `tools/material_sensitivity.py`
-> shows the *control* consequence is small — `lambda_max` moves only 6.7% even
-> for steel, because a pendulum's divergence rate is set by geometry rather than
-> mass — but the recorded numbers should be corrected before they are published
-> as the plant.
+> assigned. These are placeholders, not a real material, and the link material
+> is not yet settled in this repo. `tools/material_sensitivity.py` sweeps it:
+> `lambda_max` moves only 6.7% even for steel, because a pendulum's divergence
+> rate is set by geometry rather than mass, and required force stays far inside
+> the drive. So the *control* consequence is small — but the published plant
+> parameters should come from **weighing the actual links once built**, with COM
+> and inertia measured or estimated per link, not from any assumed density.
 
-## 6. Actuator headroom
+## 7. Actuator headroom
 
 `tools/actuator_bandwidth.py` designs an LQR on the augmented plant (link
 states + drive lag state, commanded cart velocity as input) and asks what it
@@ -124,7 +182,7 @@ Against a drive rated at **99.7 N** (349.5 N peak) and **4.0 m/s**. The
 requirement degrades gently with lag because holding a lean needs only ~1 m/s²
 and `v_cmd − v_ref = a·tau`. Force is not the constraint at any plausible lag.
 
-## 7. What it took — four defects, each found by measurement
+## 8. What it took — four defects, each found by measurement
 
 Every one of these was diagnosed only after the reward curve had already lied
 about it. The order matters: each fix was necessary and none was sufficient.
@@ -143,7 +201,7 @@ and `exp(−Σω²/σ_v²)` is annihilated at `Σω²` = 11660 for any sane `σ_
 failures came from the same mistake — sizing a reward term against an *assumed*
 operating point (4 rad/s) instead of a measured one (62 rad/s).
 
-## 8. Known limitations
+## 9. Known limitations
 
 **Checkpoint selection is required, not a convenience.** Within a single run,
 performance oscillates violently:
@@ -175,7 +233,7 @@ on selection. Not done.
 results. The simulator population, nonlinear fingerprints, twin search and
 pseudo-realities are all still empty.
 
-## 9. Reproducing
+## 10. Reproducing
 
 ```powershell
 # three seeds, 1000 iterations each (~35 min per seed on an RTX 5070 Ti)

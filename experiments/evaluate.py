@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import sys
 
@@ -39,6 +40,14 @@ parser.add_argument("--num_envs", type=int, default=256)
 parser.add_argument("--upright", type=float, default=0.9, help="tip height counting as upright")
 parser.add_argument("--hold_frac", type=float, default=0.25, help="final fraction that must stay up")
 parser.add_argument("--out", type=str, default=None)
+parser.add_argument("--perturb", action="store_true",
+                    help="randomise the initial condition instead of evaluating a near-fixed one")
+parser.add_argument("--angle_sigma", type=float, default=0.10, help="rad, half-width on each link angle")
+parser.add_argument("--rate_sigma", type=float, default=0.20, help="rad/s, half-width on each link rate")
+parser.add_argument("--cart_sigma", type=float, default=0.10, help="m, half-width on cart position")
+parser.add_argument("--cart_rate_sigma", type=float, default=0.10, help="m/s, half-width on cart velocity")
+parser.add_argument("--obs_noise", type=float, default=0.0,
+                    help="std of Gaussian sensor noise added to every observation")
 parser.add_argument("--vulkan", action="store_true")
 AppLauncher.add_app_launcher_args(parser)
 args_cli = parser.parse_args()
@@ -95,6 +104,28 @@ def main() -> int:
     agent_cfg = gym.spec(args_cli.task).kwargs["rsl_rl_cfg_entry_point"]()
     agent_cfg = handle_deprecated_rsl_rl_cfg(agent_cfg, metadata.version("rsl-rl-lib"))
     agent_cfg.device = args_cli.device if args_cli.device is not None else agent_cfg.device
+
+    # A near-fixed initial condition makes N parallel environments N replicas of
+    # one trajectory, not N independent trials, so a binomial confidence
+    # interval over them is not meaningful. --perturb turns the evaluation into
+    # a genuine distribution: independent uniform draws on every initial state,
+    # plus optional Gaussian sensor noise on the observation the policy sees.
+    if args_cli.perturb:
+        ev = env_cfg.events
+        a, w = args_cli.angle_sigma, args_cli.rate_sigma
+        ev.reset_link1.params["position_range"] = (math.pi - a, math.pi + a)
+        ev.reset_link1.params["velocity_range"] = (-w, w)
+        ev.reset_links23.params["position_range"] = (-a, a)
+        ev.reset_links23.params["velocity_range"] = (-w, w)
+        ev.reset_cart.params["position_range"] = (-args_cli.cart_sigma, args_cli.cart_sigma)
+        ev.reset_cart.params["velocity_range"] = (-args_cli.cart_rate_sigma, args_cli.cart_rate_sigma)
+    if args_cli.obs_noise > 0.0:
+        from isaaclab.utils.noise import GaussianNoiseCfg
+        n = GaussianNoiseCfg(mean=0.0, std=args_cli.obs_noise, operation="add")
+        pol = env_cfg.observations.policy
+        for name in ("cart", "link_sincos", "link_vel", "last_action"):
+            getattr(pol, name).noise = n
+        pol.enable_corruption = True
 
     env = gym.make(args_cli.task, cfg=env_cfg)
     env = RslRlVecEnvWrapper(env, clip_actions=getattr(agent_cfg, "clip_actions", None))
@@ -168,6 +199,13 @@ def main() -> int:
     os.makedirs(os.path.dirname(out), exist_ok=True)
     with open(out, "w", encoding="utf-8") as fh:
         json.dump({"task": args_cli.task, "num_envs": args_cli.num_envs,
+                   "perturbed": bool(args_cli.perturb),
+                   "init_ranges": ({"link_angle_rad": args_cli.angle_sigma,
+                                    "link_rate_rad_s": args_cli.rate_sigma,
+                                    "cart_pos_m": args_cli.cart_sigma,
+                                    "cart_vel_m_s": args_cli.cart_rate_sigma}
+                                   if args_cli.perturb else "PLAY default (near-fixed dead hang)"),
+                   "obs_noise_std": args_cli.obs_noise,
                    "upright_threshold": args_cli.upright, "results": results}, fh, indent=2)
     print("[out]", out)
     env.close()
