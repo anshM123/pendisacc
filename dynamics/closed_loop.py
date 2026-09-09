@@ -281,3 +281,72 @@ def stability_weighted_gap(loop_s: ClosedLoop, loop_r: ClosedLoop,
         "Zs": Zs,
         "D": D,
     }
+
+
+# --------------------------------------------------------- task-margin risk
+RAIL_LIMIT = 0.60          # |cart| beyond this terminates the episode
+LINK_LENGTHS = np.array([0.24999, 0.25000, 0.31575])
+
+
+def task_margins(z: np.ndarray) -> tuple:
+    """Task/safety margins g_j(x) > 0, and their gradients w.r.t. the state.
+
+    A generic Euclidean state norm throws away the thing that actually decides
+    the episode. Every measured failure of this policy is a rail excursion --
+    under randomised conditions it reaches upright in 100.00% of trials and
+    every loss is |cart| > 0.60 m during the transient -- so the margin that
+    matters is distance to that boundary, and the component of a predicted
+    deviation that matters is the part pointing across it.
+
+    Returns (g, grad) with g shape (m,) and grad shape (m, NZ).
+    """
+    x = z[0]
+    g = np.array([RAIL_LIMIT - abs(x)])
+    grad = np.zeros((1, NZ))
+    grad[0, 0] = -np.sign(x) if x != 0.0 else 0.0
+    return g, grad
+
+
+def transfer_critical_risk(loop_s: "ClosedLoop", loop_r: "ClosedLoop",
+                           z0: np.ndarray, n: int, eps: float = 1e-3) -> dict:
+    """R_TC: what fraction of the task margin does the model error consume?
+
+    The deviation obeys the same first-order recursion as everything else,
+
+        e_{t+1} = A_t e_t + d_t ,   e_0 = 0,
+
+    so no O(N^2) accumulation of transition matrices is needed -- this is
+    CHEAPER than D_SW, not more expensive. Projecting onto the margin gives
+
+        dg_j(t) = grad g_j(x_t)^T e_t
+
+    and the risk is the worst fraction of remaining margin that a predicted
+    deviation eats, over margins and over time:
+
+        R_TC = max_{j,t}  [ -grad g_j(x_t)^T e_t ]_+ / ( g_j(x_t) + eps )
+
+    R_TC < 1 predicts margin left; R_TC > 1 predicts a boundary crossing under
+    the local approximation. The point of the projection is orientation: a large
+    deviation parallel to the boundary is harmless, a small one across it is not,
+    and a norm cannot tell the difference.
+    """
+    Zs = loop_s.rollout(z0, n)
+    e = np.zeros(NZ)
+    worst, worst_t, erosion = 0.0, -1, np.zeros(n + 1)
+    margin_min = np.inf
+    for k in range(n):
+        g, grad = task_margins(Zs[k])
+        proj = -(grad @ e)
+        r = np.max(np.maximum(proj, 0.0) / (np.maximum(g, 0.0) + eps))
+        erosion[k] = r
+        margin_min = min(margin_min, float(g.min()))
+        if r > worst:
+            worst, worst_t = r, k
+        e = loop_s.jacobian(Zs[k]) @ e + (loop_r.step(Zs[k]) - Zs[k + 1])
+    g, grad = task_margins(Zs[n])
+    erosion[n] = np.max(np.maximum(-(grad @ e), 0.0) / (np.maximum(g, 0.0) + eps))
+    if erosion[n] > worst:
+        worst, worst_t = float(erosion[n]), n
+    return {"R_TC": float(worst), "t_worst": worst_t,
+            "erosion": erosion, "min_margin": float(margin_min),
+            "e_final_norm": float(np.linalg.norm(e))}
