@@ -1,0 +1,16 @@
+joint properties read back from the running articulation:
+  cart damping (kv)        asked 150          got 150          OK
+  passive damping          asked 0.004        got 0.004        OK
+  passive friction         asked 0.004        got 0.004        OK
+
+action term:
+  deadband                 asked 0.05         got 0.05         OK
+
+body masses (physx view), before any scaling event:
+  base_link                7.340878 kg
+  cart                     0.790532 kg
+  link1                    0.177516 kg
+  link2                    0.100256 kg
+  link3                    0.077468 kg
+
+event manager terms: ['reset']

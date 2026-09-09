@@ -1,0 +1,6 @@
+{
+ "order": 2,
+ "omega_n": 32.0,
+ "zeta": 0.9,
+ "joint_friction": 0.004
+}

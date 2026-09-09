@@ -23,4 +23,5 @@ from .pendulum_terms import (  # noqa: F401
     uprightness,
     uprightness_pos,
     cart_rail_margin,
+    scale_body_masses,
 )

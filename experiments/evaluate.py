@@ -42,6 +42,11 @@ parser.add_argument("--hold_frac", type=float, default=0.25, help="final fractio
 parser.add_argument("--out", type=str, default=None)
 parser.add_argument("--servo_tau", type=float, default=None,
                     help="override the actuator time constant [s] -- an xi perturbation")
+parser.add_argument("--xi", type=str, default=None,
+                    help="simulator perturbations: a path to a JSON file, or an inline JSON "
+                         "dict. Prefer the FILE form -- PowerShell strips the quotes out of "
+                         "an inline JSON argument before python sees it, which fails as a "
+                         "decode error rather than as anything obvious.")
 parser.add_argument("--servo_order", type=int, default=None, help="1 or 2")
 parser.add_argument("--servo_wn", type=float, default=None, help="rad/s, second order")
 parser.add_argument("--servo_zeta", type=float, default=0.9)
@@ -74,6 +79,7 @@ from rsl_rl.runners import OnPolicyRunner  # noqa: E402
 from isaaclab_rl.rsl_rl import RslRlVecEnvWrapper, handle_deprecated_rsl_rl_cfg  # noqa: E402
 from isaaclab_tasks.utils import parse_env_cfg  # noqa: E402
 
+APPLIED: dict = {}   # what actually reached the sim, written to the output JSON
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "source"))
@@ -128,6 +134,39 @@ def main() -> int:
         # cross-check point for the standalone analysis: does Isaac agree with
         # dynamics/closed_loop.py about an actuator the policy never saw?
         env_cfg.actions.cart_velocity.time_constant_s = float(args_cli.servo_tau)
+    # ---- xi: one JSON blob so a suite entry maps to exactly one Isaac run ----
+    if not args_cli.xi:
+        xi = {}
+    elif args_cli.xi.strip().startswith("{"):
+        xi = json.loads(args_cli.xi)
+    else:
+        with open(args_cli.xi, encoding="utf-8") as _fh:
+            xi = json.load(_fh)
+    if xi:
+        act = env_cfg.actions.cart_velocity
+        for k, attr in (("order", "order"), ("zeta", "zeta"), ("omega_n", "omega_n"),
+                        ("tau", "time_constant_s"), ("delay_s", "delay_s"),
+                        ("deadband", "deadband")):
+            if k in xi:
+                setattr(act, attr, float(xi[k]) if k != "order" else int(xi[k]))
+        rob = env_cfg.scene.robot
+        if "kv" in xi:
+            rob.actuators["cart"].damping = float(xi["kv"])
+        if "f_clamp" in xi:
+            # ImplicitActuatorCfg refuses effort_limit when effort_limit_sim is
+            # already set, and the asset sets the latter.
+            rob.actuators["cart"].effort_limit_sim = float(xi["f_clamp"])
+        if "joint_damping" in xi:
+            rob.actuators["passive"].damping = float(xi["joint_damping"])
+        if "joint_friction" in xi:
+            rob.actuators["passive"].friction = float(xi["joint_friction"])
+        if "gravity" in xi:
+            env_cfg.sim.gravity = (0.0, 0.0, -float(xi["gravity"]))
+        # NOTE: mass scaling is applied after gym.make, not as an event term.
+        # Assigning a new EventTermCfg onto env_cfg.events after the config is
+        # instantiated does NOT register it -- the event manager reported only
+        # ['reset'] and the perturbation silently did nothing, which reads as
+        # "this xi does not matter" rather than as an error.
     if args_cli.servo_order is not None:
         env_cfg.actions.cart_velocity.order = int(args_cli.servo_order)
         env_cfg.actions.cart_velocity.zeta = float(args_cli.servo_zeta)
@@ -142,6 +181,24 @@ def main() -> int:
         pol.enable_corruption = True
 
     env = gym.make(args_cli.task, cfg=env_cfg)
+    if xi and any(k in xi for k in ("mass_scale", "cart_mass_scale")):
+        _robot = env.unwrapped.scene["robot"]
+        _view = _robot.root_physx_view
+        _names = list(_robot.body_names)
+        _m, _I = _view.get_masses().clone(), _view.get_inertias().clone()
+        _want = {"cart": float(xi.get("cart_mass_scale", 1.0))}
+        for _i, _s in enumerate(xi.get("mass_scale", [1.0, 1.0, 1.0])):
+            _want["link%d" % (_i + 1)] = float(_s)
+        for _n, _sc in _want.items():
+            if _n in _names and _sc != 1.0:
+                _b = _names.index(_n)
+                _m[:, _b] *= _sc          # inertia scaled by the same factor:
+                _I[:, _b] *= _sc          # a density error at fixed geometry
+        _idx = torch.arange(_view.count, dtype=torch.int32)
+        _view.set_masses(_m, _idx)
+        _view.set_inertias(_I, _idx)
+        APPLIED["masses"] = {n: round(float(_view.get_masses()[0, i]), 6)
+                             for i, n in enumerate(_names)}
     env = RslRlVecEnvWrapper(env, clip_actions=getattr(agent_cfg, "clip_actions", None))
     runner = OnPolicyRunner(env, agent_cfg.to_dict(), log_dir=None, device=agent_cfg.device)
 
@@ -221,7 +278,8 @@ def main() -> int:
                                    if args_cli.perturb else "PLAY default (near-fixed dead hang)"),
                    "obs_noise_std": args_cli.obs_noise,
                    "servo_tau_override": args_cli.servo_tau,
-                   "servo_order": args_cli.servo_order,
+                   "servo_order": args_cli.servo_order, "xi": xi,
+                   "applied": APPLIED,
                    "servo_wn": args_cli.servo_wn, "servo_zeta": args_cli.servo_zeta,
                    "upright_threshold": args_cli.upright, "results": results}, fh, indent=2)
     print("[out]", out)

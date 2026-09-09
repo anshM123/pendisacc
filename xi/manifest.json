@@ -1,0 +1,348 @@
+[
+ {
+  "name": "nominal",
+  "xi": {},
+  "family": "none",
+  "plausible": true
+ },
+ {
+  "name": "act_tau_50",
+  "xi": {
+   "tau": 0.05
+  },
+  "family": "actuation",
+  "plausible": true
+ },
+ {
+  "name": "act_tau_70",
+  "xi": {
+   "tau": 0.07
+  },
+  "family": "actuation",
+  "plausible": true
+ },
+ {
+  "name": "act_tau_130",
+  "xi": {
+   "tau": 0.13
+  },
+  "family": "actuation",
+  "plausible": true
+ },
+ {
+  "name": "act_tau_160",
+  "xi": {
+   "tau": 0.16
+  },
+  "family": "actuation",
+  "plausible": true
+ },
+ {
+  "name": "act_2nd_wn28",
+  "xi": {
+   "order": 2,
+   "omega_n": 28.0,
+   "zeta": 0.9
+  },
+  "family": "actuation",
+  "plausible": true
+ },
+ {
+  "name": "act_2nd_wn40",
+  "xi": {
+   "order": 2,
+   "omega_n": 40.0,
+   "zeta": 0.9
+  },
+  "family": "actuation",
+  "plausible": true
+ },
+ {
+  "name": "act_2nd_wn20",
+  "xi": {
+   "order": 2,
+   "omega_n": 20.0,
+   "zeta": 0.9
+  },
+  "family": "actuation",
+  "plausible": true
+ },
+ {
+  "name": "act_2nd_z05",
+  "xi": {
+   "order": 2,
+   "omega_n": 28.0,
+   "zeta": 0.5
+  },
+  "family": "actuation",
+  "plausible": true
+ },
+ {
+  "name": "act_delay_4ms",
+  "xi": {
+   "delay_s": 0.004
+  },
+  "family": "actuation",
+  "plausible": true
+ },
+ {
+  "name": "act_delay_12ms",
+  "xi": {
+   "delay_s": 0.012
+  },
+  "family": "actuation",
+  "plausible": true
+ },
+ {
+  "name": "act_delay_16ms",
+  "xi": {
+   "delay_s": 0.016
+  },
+  "family": "actuation",
+  "plausible": true
+ },
+ {
+  "name": "act_db_040",
+  "xi": {
+   "deadband": 0.4
+  },
+  "family": "actuation",
+  "plausible": false
+ },
+ {
+  "name": "act_db_050",
+  "xi": {
+   "deadband": 0.5
+  },
+  "family": "actuation",
+  "plausible": false
+ },
+ {
+  "name": "dis_jfric_004",
+  "xi": {
+   "joint_friction": 0.004
+  },
+  "family": "dissipation",
+  "plausible": true
+ },
+ {
+  "name": "dis_jfric_008",
+  "xi": {
+   "joint_friction": 0.008
+  },
+  "family": "dissipation",
+  "plausible": true
+ },
+ {
+  "name": "dis_jfric_012",
+  "xi": {
+   "joint_friction": 0.012
+  },
+  "family": "dissipation",
+  "plausible": true
+ },
+ {
+  "name": "dis_jfric_016",
+  "xi": {
+   "joint_friction": 0.016
+  },
+  "family": "dissipation",
+  "plausible": true
+ },
+ {
+  "name": "dis_jdamp_004",
+  "xi": {
+   "joint_damping": 0.004
+  },
+  "family": "dissipation",
+  "plausible": true
+ },
+ {
+  "name": "drv_kv_100",
+  "xi": {
+   "kv": 100.0
+  },
+  "family": "actuation",
+  "plausible": true
+ },
+ {
+  "name": "drv_kv_70",
+  "xi": {
+   "kv": 70.0
+  },
+  "family": "actuation",
+  "plausible": true
+ },
+ {
+  "name": "drv_kv_50",
+  "xi": {
+   "kv": 50.0
+  },
+  "family": "actuation",
+  "plausible": false
+ },
+ {
+  "name": "rb_mass_130",
+  "xi": {
+   "mass_scale": [
+    1.3,
+    1.3,
+    1.3
+   ]
+  },
+  "family": "rigidbody",
+  "plausible": true
+ },
+ {
+  "name": "rb_mass_link1_150",
+  "xi": {
+   "mass_scale": [
+    1.5,
+    1.0,
+    1.0
+   ]
+  },
+  "family": "rigidbody",
+  "plausible": true
+ },
+ {
+  "name": "rb_cart_130",
+  "xi": {
+   "cart_mass_scale": 1.3
+  },
+  "family": "rigidbody",
+  "plausible": true
+ },
+ {
+  "name": "rb_grav_990",
+  "xi": {
+   "gravity": 9.9
+  },
+  "family": "rigidbody",
+  "plausible": true
+ },
+ {
+  "name": "rb_grav_1050",
+  "xi": {
+   "gravity": 10.5
+  },
+  "family": "rigidbody",
+  "plausible": false
+ },
+ {
+  "name": "rb_grav_1100",
+  "xi": {
+   "gravity": 11.0
+  },
+  "family": "rigidbody",
+  "plausible": false
+ },
+ {
+  "name": "neg_mass_250",
+  "xi": {
+   "mass_scale": [
+    2.5,
+    2.5,
+    2.5
+   ]
+  },
+  "family": "control",
+  "plausible": false
+ },
+ {
+  "name": "neg_jdamp_080",
+  "xi": {
+   "joint_damping": 0.08
+  },
+  "family": "control",
+  "plausible": false
+ },
+ {
+  "name": "neg_fclamp_40",
+  "xi": {
+   "f_clamp": 40.0
+  },
+  "family": "control",
+  "plausible": false
+ },
+ {
+  "name": "neg_kv_150",
+  "xi": {
+   "kv": 150.0
+  },
+  "family": "control",
+  "plausible": true
+ },
+ {
+  "name": "mix_delay_fric",
+  "xi": {
+   "delay_s": 0.008,
+   "joint_friction": 0.006
+  },
+  "family": "combination",
+  "plausible": true
+ },
+ {
+  "name": "mix_tau_mass",
+  "xi": {
+   "tau": 0.07,
+   "mass_scale": [
+    1.3,
+    1.3,
+    1.3
+   ]
+  },
+  "family": "combination",
+  "plausible": true
+ },
+ {
+  "name": "mix_2nd_fric",
+  "xi": {
+   "order": 2,
+   "omega_n": 32.0,
+   "zeta": 0.9,
+   "joint_friction": 0.004
+  },
+  "family": "combination",
+  "plausible": true
+ },
+ {
+  "name": "mix_kv_delay",
+  "xi": {
+   "kv": 100.0,
+   "delay_s": 0.008
+  },
+  "family": "combination",
+  "plausible": true
+ },
+ {
+  "name": "mix_heavy_benign",
+  "xi": {
+   "mass_scale": [
+    2.0,
+    2.0,
+    2.0
+   ],
+   "joint_damping": 0.04,
+   "f_clamp": 60.0
+  },
+  "family": "combination",
+  "plausible": false
+ },
+ {
+  "name": "mix_realistic",
+  "xi": {
+   "tau": 0.085,
+   "joint_friction": 0.003,
+   "delay_s": 0.004,
+   "mass_scale": [
+    1.15,
+    1.1,
+    1.12
+   ],
+   "cart_mass_scale": 1.08
+  },
+  "family": "combination",
+  "plausible": true
+ }
+]

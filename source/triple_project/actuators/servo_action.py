@@ -90,6 +90,9 @@ class LaggedJointVelocityAction(JointVelocityAction):
     def process_actions(self, actions: torch.Tensor) -> None:
         super().process_actions(actions)
         cmd = self._processed_actions
+        if self.cfg.deadband > 0.0:
+            # commands below the deadband produce no motion at all
+            cmd = torch.sign(cmd) * torch.clamp(cmd.abs() - self.cfg.deadband, min=0.0)
         if self._delay_steps > 0:
             # push the newest command, pop the one from `delay_steps` ago
             self._queue[self._head] = cmd
@@ -125,6 +128,9 @@ class LaggedJointVelocityActionCfg(actions_cfg.JointVelocityActionCfg):
 
     delay_s: float = 0.0
     """Pure transport dead time: Teensy -> STEP/DIR -> drive acting on it."""
+
+    deadband: float = 0.0
+    """Commanded velocity below this magnitude produces no motion [m/s]."""
 
     order: int = 1
     """1 = first-order lag, 2 = second-order. A MODEL-FORM change, not a

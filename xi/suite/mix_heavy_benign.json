@@ -1,0 +1,9 @@
+{
+ "mass_scale": [
+  2.0,
+  2.0,
+  2.0
+ ],
+ "joint_damping": 0.04,
+ "f_clamp": 60.0
+}

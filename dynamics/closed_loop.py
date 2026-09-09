@@ -308,7 +308,8 @@ def task_margins(z: np.ndarray) -> tuple:
 
 
 def transfer_critical_risk(loop_s: "ClosedLoop", loop_r: "ClosedLoop",
-                           z0: np.ndarray, n: int, eps: float = 1e-3) -> dict:
+                           z0: np.ndarray, n: int, eps: float = 1e-3,
+                           A=None, Zs=None) -> dict:
     """R_TC: what fraction of the task margin does the model error consume?
 
     The deviation obeys the same first-order recursion as everything else,
@@ -330,7 +331,10 @@ def transfer_critical_risk(loop_s: "ClosedLoop", loop_r: "ClosedLoop",
     deviation parallel to the boundary is harmless, a small one across it is not,
     and a norm cannot tell the difference.
     """
-    Zs = loop_s.rollout(z0, n)
+    if Zs is None:
+        Zs = loop_s.rollout(z0, n)
+    if A is None:
+        A = transition_matrices(loop_s, Zs)
     e = np.zeros(NZ)
     worst, worst_t, erosion = 0.0, -1, np.zeros(n + 1)
     margin_min = np.inf
@@ -342,7 +346,7 @@ def transfer_critical_risk(loop_s: "ClosedLoop", loop_r: "ClosedLoop",
         margin_min = min(margin_min, float(g.min()))
         if r > worst:
             worst, worst_t = r, k
-        e = loop_s.jacobian(Zs[k]) @ e + (loop_r.step(Zs[k]) - Zs[k + 1])
+        e = A[k] @ e + (loop_r.step(Zs[k]) - Zs[k + 1])
     g, grad = task_margins(Zs[n])
     erosion[n] = np.max(np.maximum(-(grad @ e), 0.0) / (np.maximum(g, 0.0) + eps))
     if erosion[n] > worst:

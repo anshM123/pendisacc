@@ -256,3 +256,43 @@ def cart_out_of_bounds(
     asset: Articulation = env.scene[asset_cfg.name]
     cart, _ = _indices(asset)
     return torch.abs(asset.data.joint_pos[:, cart]) > bound
+
+
+# ------------------------------------------------------- xi perturbations
+
+
+def scale_body_masses(
+    env: ManagerBasedEnv,
+    env_ids,
+    link_scales=(1.0, 1.0, 1.0),
+    cart_scale: float = 1.0,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+) -> None:
+    """Startup event: scale the rigid-body masses of the cart and the links.
+
+    The rigid-body family of the xi suite. Applied through the PhysX view
+    because the masses live in the USD asset, not in the articulation config,
+    so there is no cfg field to override.
+
+    Scaling mass alone leaves the inertia tensor untouched, which would be a
+    different (and unphysical) perturbation, so the inertias are scaled by the
+    same factor -- equivalent to changing material density with the geometry
+    fixed, which is exactly how a real link mass error arises.
+    """
+    asset = env.scene[asset_cfg.name]
+    view = asset.root_physx_view
+    names = list(asset.body_names)
+    masses = view.get_masses().clone()
+    inertias = view.get_inertias().clone()
+    wanted = {"cart": float(cart_scale)}
+    for i, s in enumerate(link_scales):
+        wanted["link%d" % (i + 1)] = float(s)
+    for name, scale in wanted.items():
+        if name not in names or scale == 1.0:
+            continue
+        b = names.index(name)
+        masses[:, b] *= scale
+        inertias[:, b] *= scale
+    idx = torch.arange(view.count, dtype=torch.int32)
+    view.set_masses(masses, idx)
+    view.set_inertias(inertias, idx)
