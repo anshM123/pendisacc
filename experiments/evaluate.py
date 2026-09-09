@@ -40,6 +40,8 @@ parser.add_argument("--num_envs", type=int, default=256)
 parser.add_argument("--upright", type=float, default=0.9, help="tip height counting as upright")
 parser.add_argument("--hold_frac", type=float, default=0.25, help="final fraction that must stay up")
 parser.add_argument("--out", type=str, default=None)
+parser.add_argument("--servo_tau", type=float, default=None,
+                    help="override the actuator time constant [s] -- an xi perturbation")
 parser.add_argument("--perturb", action="store_true",
                     help="randomise the initial condition instead of evaluating a near-fixed one")
 parser.add_argument("--angle_sigma", type=float, default=0.10, help="rad, half-width on each link angle")
@@ -119,6 +121,10 @@ def main() -> int:
         ev.reset_links23.params["velocity_range"] = (-w, w)
         ev.reset_cart.params["position_range"] = (-args_cli.cart_sigma, args_cli.cart_sigma)
         ev.reset_cart.params["velocity_range"] = (-args_cli.cart_rate_sigma, args_cli.cart_rate_sigma)
+    if args_cli.servo_tau is not None:
+        # cross-check point for the standalone analysis: does Isaac agree with
+        # dynamics/closed_loop.py about an actuator the policy never saw?
+        env_cfg.actions.cart_velocity.time_constant_s = float(args_cli.servo_tau)
     if args_cli.obs_noise > 0.0:
         from isaaclab.utils.noise import GaussianNoiseCfg
         n = GaussianNoiseCfg(mean=0.0, std=args_cli.obs_noise, operation="add")
@@ -206,6 +212,7 @@ def main() -> int:
                                     "cart_vel_m_s": args_cli.cart_rate_sigma}
                                    if args_cli.perturb else "PLAY default (near-fixed dead hang)"),
                    "obs_noise_std": args_cli.obs_noise,
+                   "servo_tau_override": args_cli.servo_tau,
                    "upright_threshold": args_cli.upright, "results": results}, fh, indent=2)
     print("[out]", out)
     env.close()

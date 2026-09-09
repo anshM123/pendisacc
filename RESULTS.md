@@ -109,7 +109,68 @@ Reading this against §1: perfect nominal success and ~99.5% perturbed success
 is the expected shape. The gap is the honest measure of margin, and it points at
 rail headroom during swing-up rather than at the controller.
 
-## 5. Conditions
+## 5. Sensitivity to the simulator itself
+
+Section 4 randomises the initial condition and the sensors. It does **not**
+randomise `xi`, the simulator. Doing so changes the picture, and not
+flatteringly.
+
+**The policy is tuned to the actuator it trained on.** Evaluated in Isaac at
+actuator time constants it never saw, 256 episodes each:
+
+| actuator `tau` | 20 ms | 50 ms | 80 ms | **100 ms** | 
+|---|---:|---:|---:|---:|
+| success | 1.6% | 57.0% | 93.8% | **100.0%** |
+
+Success falls away in *both* directions from the trained value, including
+toward a **faster and objectively better drive**: at 20 ms, a servo five times
+quicker than the one assumed, the policy fails 98.4% of the time. This is not a
+robustness curve with a comfortable plateau; it is evidence that the policy
+exploits the particular lag it was trained against. Whatever the real drive
+turns out to be, it will not be exactly 100 ms.
+
+**Model form matters more than parameters.** Replacing the first-order lag with
+a second-order actuator of the *same* time constant collapses success to 0%,
+while adding Stribeck friction, a 20 mm/s deadband, an 8 ms transport delay and
++-4% mass errors on top of a first-order drive changes nothing:
+
+| pseudo-reality | success |
+|---|---:|
+| nominal | 100% |
+| + Stribeck friction (cart and joints) | 100% |
+| + Stribeck **and a second-order drive, same tau** | **0%** |
+
+A first-order lag contributes at most 90 degrees of phase; a second-order one
+reaches 180. Same nominal bandwidth, different closed loop. No amount of
+domain randomisation *over tau* covers a change in the actuator's order, which
+is exactly why a simulator population built from parameter noise alone would be
+misleading.
+
+These two results are the reason the project exists, and they say the baseline
+in Sections 1 and 4 should be read as a *nominal* capability result, not as
+evidence of transferable control.
+
+### Status of the standalone analysis tool
+
+`dynamics/closed_loop.py` reproduces the control path outside Isaac so the
+variational analysis runs on a CPU. Cross-checked against Isaac at actuator
+settings the policy never trained on:
+
+| `tau` | standalone (n=48) | Isaac (n=256) | difference |
+|---|---:|---:|---:|
+| 20 ms | 4.2% | 1.6% | +2.6 pts |
+| 50 ms | 37.5% | 57.0% | -19.5 pts |
+| 80 ms | 66.7% | 93.8% | -27.1 pts |
+| 100 ms | 100.0% | 100.0% | 0.0 pts |
+
+The **ordering is exact** -- all four points rank as Isaac ranks them -- but the
+tool is **systematically pessimistic** by 20-27 points in the middle of the
+range, agreeing only at the extremes. It is therefore sound for *ranking*
+simulators, which is what twin-finding and `D_SW` comparison require, and must
+not be quoted as a calibrated predictor of absolute success. The bias persists
+at n=48, so it is not sampling noise.
+
+## 6. Conditions
 
 These are not idealised-actuator results.
 
@@ -138,7 +199,7 @@ unmeasured. A first-order lag contributes at most 90° of phase and is
 compensable with full state feedback; a dead time is not. **If one thing is
 measured on the real drive, it should be dead time, not settling time.**
 
-## 6. The plant these results are about
+## 7. The plant these results are about
 
 Derived from the CAD by `tools/sw_dump_assembly.py` and validated end-to-end by
 `tools/validate_asset.py` (`results/asset_validation.json`, all checks pass):
@@ -166,7 +227,7 @@ from the CAD entirely). Links 0.17752 / 0.10026 / 0.07747 kg, joint spacing
 > parameters should come from **weighing the actual links once built**, with COM
 > and inertia measured or estimated per link, not from any assumed density.
 
-## 7. Actuator headroom
+## 8. Actuator headroom
 
 `tools/actuator_bandwidth.py` designs an LQR on the augmented plant (link
 states + drive lag state, commanded cart velocity as input) and asks what it
@@ -182,7 +243,7 @@ Against a drive rated at **99.7 N** (349.5 N peak) and **4.0 m/s**. The
 requirement degrades gently with lag because holding a lean needs only ~1 m/s²
 and `v_cmd − v_ref = a·tau`. Force is not the constraint at any plausible lag.
 
-## 8. What it took — four defects, each found by measurement
+## 9. What it took — four defects, each found by measurement
 
 Every one of these was diagnosed only after the reward curve had already lied
 about it. The order matters: each fix was necessary and none was sufficient.
@@ -201,7 +262,7 @@ and `exp(−Σω²/σ_v²)` is annihilated at `Σω²` = 11660 for any sane `σ_
 failures came from the same mistake — sizing a reward term against an *assumed*
 operating point (4 rad/s) instead of a measured one (62 rad/s).
 
-## 9. Known limitations
+## 10. Known limitations
 
 **Checkpoint selection is required, not a convenience.** Within a single run,
 performance oscillates violently:
@@ -233,7 +294,7 @@ on selection. Not done.
 results. The simulator population, nonlinear fingerprints, twin search and
 pseudo-realities are all still empty.
 
-## 10. Reproducing
+## 11. Reproducing
 
 ```powershell
 # three seeds, 1000 iterations each (~35 min per seed on an RTX 5070 Ti)

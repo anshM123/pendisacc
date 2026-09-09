@@ -9,11 +9,13 @@ Write the closed loop as a discrete map at the control rate,
 
     z_{k+1} = F(z_k ; xi)
 
-with z the FULL closed-loop state -- not just the plant, because the servo lag
-and the policy's own action memory are states too:
+with z the FULL closed-loop state. Not just the plant: the servo lag, its rate
+(for a second-order drive), the policy's own action memory and the transport
+delay line are all states, and leaving any of them out silently changes what is
+being linearised.
 
-    z = [ s, th1, th2, th3, sdot, w1, w2, w3, v_ref, a_prev ]   (10)
-        |------- plant (absolute angles) -------| |lag| |policy|
+    z = [ s th1 th2 th3 | sdot w1 w2 w3 | v_ref v_refdot | a_prev | queue(4) ]
+        |--- plant, ABSOLUTE angles ---| |--- actuator ---| |policy| |delay|
 
 Then for a simulator S and a reality R driven by the same policy from the same
 initial condition, the first-order error obeys
@@ -25,34 +27,33 @@ so that
 
     e_N = Phi(N,0) e_0 + sum_k Phi(N,k+1) d_k ,   Phi(N,j) = A_{N-1} ... A_j.
 
-Two quantities follow directly and are what the analysis uses:
+Two quantities follow directly:
 
   G_T   = sigma_max(Phi(N,0))
-          finite-time amplification of the closed loop. How much an initial
-          discrepancy is magnified over the horizon, worst case over directions.
+          finite-time amplification. How much an initial discrepancy is
+          magnified over the horizon, worst case over directions.
 
   D_SW  = sum_k || Phi(N,k+1) d_k ||
           the STABILITY-WEIGHTED model discrepancy: per-step model error
           weighted by how much the closed loop will amplify it before the
-          horizon ends. This is the quantity that ordinary trajectory error
-          fails to capture -- two models with the same ||d|| can have wildly
-          different D_SW.
+          horizon ends. This is what ordinary trajectory error misses -- two
+          models with the same ||d|| can have wildly different D_SW.
 
   e_pred = || sum_k Phi(N,k+1) d_k ||
-          the same sum WITHOUT taking norms term by term, i.e. the actual
-          predicted end-state discrepancy including cancellation. D_SW is its
-          triangle-inequality upper bound. Reporting both is honest: if they
-          differ by orders of magnitude, cancellation matters and the bound is
-          loose.
+          the same sum without per-term norms, i.e. the predicted end-state
+          discrepancy including cancellation. D_SW is its triangle-inequality
+          upper bound; reporting both shows whether the bound is loose.
 
-Jacobians are taken by central differences on the closed-loop map. That is
-deliberate: it differentiates THROUGH the policy network, the action clip, the
-servo filter and the integrator together, so nothing about the real control
-path is quietly linearised away.
+Jacobians are central differences on the closed-loop map, which differentiates
+THROUGH the policy network, the deadband, the clip, the actuator and the
+integrator together. Nothing about the real control path is linearised away by
+hand.
 
-Self-check: `validate()` compares the first-order prediction e_N against a
-directly simulated R trajectory. If the variational machinery is wrong, that is
-where it shows.
+Model-form variation is first-class here, not just parameter scaling: friction
+can be absent, viscous, viscous+Coulomb or Stribeck; the drive can be first- or
+second-order, with deadband and transport delay. A simulator population built
+only from parameter randomisation would let a reviewer object that reality was
+drawn from the training distribution.
 """
 
 from __future__ import annotations
@@ -63,29 +64,51 @@ import numpy as np
 
 from .policy import Actor, observation
 
-NZ = 10                       # closed-loop state dimension
-IQ = slice(0, 4)              # q  = cart, th1, th2, th3
-IQD = slice(4, 8)             # qd = cart_vel, w1, w2, w3
-IV = 8                        # servo filter state (commanded cart velocity)
-IA = 9                        # previous action, as the policy observes it
+DMAX = 4                      # delay line length, i.e. up to 16 ms at 250 Hz
+NZ = 15
+IQ = slice(0, 4)              # cart, th1, th2, th3   (absolute angles)
+IQD = slice(4, 8)             # cart_vel, w1, w2, w3  (absolute rates)
+IV = 8                        # actuator state: commanded cart velocity
+IVD = 9                       # its rate; inert for a first-order drive
+IA = 10                       # previous action, as the policy observes it
+IDLY = slice(11, 11 + DMAX)   # transport delay line, newest first
+
+
+@dataclass
+class FrictionCfg:
+    """Dissipation. `model` selects the FORM, not merely the coefficients."""
+
+    model: str = "none"          # none | viscous | coulomb | stribeck
+    b_cart: float = 0.0          # viscous, N s/m
+    fc_cart: float = 0.0         # Coulomb, N
+    fs_cart: float = 0.0         # static/breakaway, N  (stribeck only)
+    vs_cart: float = 0.02        # Stribeck velocity, m/s
+    b_joint: float = 0.0         # N m s/rad, applied per joint
+    fc_joint: float = 0.0        # N m
+    fs_joint: float = 0.0        # N m  (stribeck only)
+    vs_joint: float = 0.05       # rad/s
+    tanh_k: float = 100.0        # smoothing of the sign function
 
 
 @dataclass
 class DriveCfg:
     """Everything between the policy output and the cart force."""
 
-    action_scale: float = 4.0        # action 1.0 -> 4.0 m/s commanded
-    v_max: float = 4.0               # physical clip on the commanded velocity
-    tau: float = 0.100               # first-order servo lag [s]
-    delay_steps: int = 0             # pure transport delay, in control steps
-    kv: float = 400.0                # inner velocity-loop gain [N s/m]
-    f_clamp: float = 349.5           # drive current limit, at the cart [N]
-    obs_action_clip: float = 1.0     # what last_action_clipped reports
+    action_scale: float = 4.0    # action 1.0 -> 4.0 m/s commanded
+    v_max: float = 4.0           # physical clip on the commanded velocity
+    order: int = 1               # 1 = first-order lag, 2 = second-order
+    tau: float = 0.100           # first-order time constant [s]
+    zeta: float = 0.9            # damping ratio, second-order only
+    deadband: float = 0.0        # m/s of commanded velocity ignored
+    delay_steps: int = 0         # pure transport delay, in control steps
+    kv: float = 400.0            # inner velocity-loop gain [N s/m]
+    f_clamp: float = 349.5       # drive current limit, at the cart [N]
+    obs_action_clip: float = 1.0
 
 
 @dataclass
 class SimCfg:
-    """One simulator: a plant, a drive, and a control rate. This is `xi`."""
+    """One simulator. This is `xi`."""
 
     name: str = "nominal"
     dt_ctrl: float = 1.0 / 250.0
@@ -94,36 +117,65 @@ class SimCfg:
     # The inner velocity loop has time constant m_cart / k_v = 0.79 / 400 =
     # 2.0 ms, exactly Isaac's physics step. Isaac survives that because
     # ImplicitActuatorCfg solves the damping term implicitly and is stable at
-    # any step size; the explicit integration here is not. Measured: at
-    # substeps = 2 the reproduced loop swings up and then fails to hold at all
-    # (0% of the final quarter upright, tip oscillating -0.99 to +0.93), while
-    # at substeps >= 5 it holds 100% with tip +1.000. 10 gives h = 0.4 ms, a
-    # 5x margin on the stiff mode, for 5x the cost of a step that was never the
-    # bottleneck.
+    # any step size; explicit integration here is not. Measured: at substeps =
+    # 2 the reproduced loop swings up and then fails to hold at all (0% of the
+    # final quarter upright, tip oscillating -0.99 to +0.93), while at
+    # substeps >= 5 it holds 100% with tip +1.000. 10 gives h = 0.4 ms.
     substeps: int = 10
     drive: DriveCfg = field(default_factory=DriveCfg)
-    # plant overrides applied to the CAD-derived PendulumParams
-    mass_scale: tuple = (1.0, 1.0, 1.0)     # per link
-    inertia_scale: tuple = (1.0, 1.0, 1.0)  # per link
+    friction: FrictionCfg = field(default_factory=FrictionCfg)
+    mass_scale: tuple = (1.0, 1.0, 1.0)
+    inertia_scale: tuple = (1.0, 1.0, 1.0)
     cart_mass_scale: float = 1.0
-    b_cart: float = 0.0              # viscous cart friction [N s/m]
-    fc_cart: float = 0.0             # Coulomb cart friction [N]
-    b_joint: tuple = (0.0, 0.0, 0.0)
-    fc_joint: tuple = (0.0, 0.0, 0.0)
     gravity: float = 9.80665
 
 
 def build_model(cfg: SimCfg):
-    """Instantiate the analytical plant for one simulator config."""
+    """Analytical plant for one simulator. Friction is handled OUTSIDE the
+    model, so that its form can be varied; the model's own coefficients are
+    therefore left at zero to avoid counting it twice."""
     from .analytical.triple_pendulum import PendulumParams, TriplePendulumModel
 
     p = PendulumParams.from_yaml()
     links = [replace(l, m=l.m * ms, I=l.I * is_)
              for l, ms, is_ in zip(p.links, cfg.mass_scale, cfg.inertia_scale)]
-    p = replace(p, links=links, m_cart=p.m_cart * cfg.cart_mass_scale, g=cfg.gravity,
-                b_cart=cfg.b_cart, fc_cart=cfg.fc_cart,
-                b_joint=list(cfg.b_joint), fc_joint=list(cfg.fc_joint))
-    return TriplePendulumModel(p)
+    return TriplePendulumModel(replace(
+        p, links=links, m_cart=p.m_cart * cfg.cart_mass_scale, g=cfg.gravity,
+        b_cart=0.0, fc_cart=0.0, b_joint=[0.0] * 3, fc_joint=[0.0] * 3))
+
+
+def friction_forces(fc: FrictionCfg, q, qd) -> np.ndarray:
+    """Generalised friction, shape (4,), opposing motion.
+
+    Joint friction acts on the RELATIVE rate across each joint and appears with
+    opposite sign on the two bodies it couples -- it is not diagonal damping on
+    absolute angles. Same structure as the analytical model's own friction, so
+    the two agree when the form is 'coulomb'.
+    """
+    f = np.zeros(4)
+    if fc.model == "none":
+        return f
+    k = fc.tanh_k
+    v = qd[0]
+
+    def slide(vel, b, coul, stat, vstr):
+        out = b * vel
+        if fc.model in ("coulomb", "stribeck"):
+            mag = coul
+            if fc.model == "stribeck" and stat > coul:
+                # breakaway force decaying to Coulomb as speed rises
+                mag = coul + (stat - coul) * np.exp(-(vel / max(vstr, 1e-9)) ** 2)
+            out = out + mag * np.tanh(k * vel)
+        return out
+
+    f[0] = slide(v, fc.b_cart, fc.fc_cart, fc.fs_cart, fc.vs_cart)
+    rel = [qd[1], qd[2] - qd[1], qd[3] - qd[2]]
+    for i, w in enumerate(rel):
+        t = slide(w, fc.b_joint, fc.fc_joint, fc.fs_joint, fc.vs_joint)
+        f[1 + i] += t
+        if i > 0:
+            f[i] -= t
+    return f
 
 
 class ClosedLoop:
@@ -133,47 +185,58 @@ class ClosedLoop:
         self.actor = actor
         self.cfg = cfg
         self.model = build_model(cfg) if model is None else model
-        d = cfg.drive
-        self.alpha = 1.0 if d.tau <= 0 else cfg.dt_ctrl / (cfg.dt_ctrl + d.tau)
+        d, dt = cfg.drive, cfg.dt_ctrl
+        self.alpha = 1.0 if d.tau <= 0 else dt / (dt + d.tau)
+        self.wn = 1.0 / max(d.tau, 1e-9)
 
-    # ---------------------------------------------------------------- one step
     def step(self, z: np.ndarray) -> np.ndarray:
-        """Advance one CONTROL step: policy, drive, servo, then the plant."""
-        cfg, d = self.cfg, self.cfg.drive
+        cfg, d, fr = self.cfg, self.cfg.drive, self.cfg.friction
+        dt = cfg.dt_ctrl
         q, qd = z[IQ].copy(), z[IQD].copy()
 
-        obs = observation(q, qd, z[IA])
-        a = float(self.actor(obs)[0, 0])
+        a = float(self.actor(observation(q, qd, z[IA]))[0, 0])
+        v_cmd = a * d.action_scale
 
-        v_cmd = np.clip(a * d.action_scale, -d.v_max, d.v_max)
-        v_ref = z[IV] + self.alpha * (v_cmd - z[IV])
+        if d.deadband > 0.0:
+            # commands below the deadband produce no motion at all
+            v_cmd = np.sign(v_cmd) * max(abs(v_cmd) - d.deadband, 0.0)
+        v_cmd = np.clip(v_cmd, -d.v_max, d.v_max)
 
-        h = cfg.dt_ctrl / cfg.substeps
+        queue = z[IDLY].copy()
+        v_eff = v_cmd if d.delay_steps <= 0 else queue[min(d.delay_steps, DMAX) - 1]
+        queue = np.concatenate([[v_cmd], queue[:-1]])
+
+        if d.order == 2:
+            vdd = self.wn ** 2 * (v_eff - z[IV]) - 2.0 * d.zeta * self.wn * z[IVD]
+            v_refdot = z[IVD] + dt * vdd
+            v_ref = z[IV] + dt * v_refdot
+        else:
+            v_ref = z[IV] + self.alpha * (v_eff - z[IV])
+            v_refdot = 0.0
+
+        h = dt / cfg.substeps
+        M, C, G, B = self.model.M, self.model.C, self.model.G, self.model.B()
         for _ in range(cfg.substeps):
             F = np.clip(d.kv * (v_ref - qd[0]), -d.f_clamp, d.f_clamp)
-            # semi-implicit Euler at a substep well inside the velocity loop's
-            # 2 ms time constant; see the note on SimCfg.substeps
-            acc = self.model.accel(q, qd, F)
-            qd = qd + h * acc
+            rhs = B * F - C(q, qd) @ qd - G(q) - friction_forces(fr, q, qd)
+            qd = qd + h * np.linalg.solve(M(q), rhs)
             q = q + h * qd
 
-        out = np.empty(NZ)
+        out = np.zeros(NZ)
         out[IQ], out[IQD] = q, qd
-        out[IV] = v_ref
+        out[IV], out[IVD] = v_ref, v_refdot
         out[IA] = np.clip(a, -d.obs_action_clip, d.obs_action_clip)
+        out[IDLY] = queue
         return out
 
     def rollout(self, z0: np.ndarray, n: int) -> np.ndarray:
-        """(n+1, NZ) trajectory."""
         Z = np.empty((n + 1, NZ))
         Z[0] = z0
         for k in range(n):
             Z[k + 1] = self.step(Z[k])
         return Z
 
-    # ------------------------------------------------------------- variational
     def jacobian(self, z: np.ndarray, eps: float = 1e-6) -> np.ndarray:
-        """dF/dz by central differences, through policy + clip + servo + plant."""
         A = np.empty((NZ, NZ))
         for i in range(NZ):
             dz = np.zeros(NZ)
@@ -183,58 +246,37 @@ class ClosedLoop:
 
 
 def transition_matrices(loop: ClosedLoop, Z: np.ndarray) -> np.ndarray:
-    """A_k = dF/dz at each visited state. Shape (n, NZ, NZ)."""
     return np.stack([loop.jacobian(Z[k]) for k in range(len(Z) - 1)])
 
 
-def amplification(A: np.ndarray) -> tuple:
-    """Phi(N,0) accumulated backwards, plus sigma_max at every horizon.
-
-    Returns (Phi_N0, G_curve) where G_curve[k] = sigma_max(Phi(k,0)), i.e. the
-    growth achieved by step k. The curve is what localises WHEN the closed loop
-    is fragile -- for swing-up the interesting window is the capture, not the
-    steady hold.
-    """
-    n = len(A)
-    Phi = np.eye(NZ)
-    G = np.empty(n + 1)
-    G[0] = 1.0
-    for k in range(n):
-        Phi = A[k] @ Phi
-        G[k + 1] = np.linalg.svd(Phi, compute_uv=False)[0]
-    return Phi, G
-
-
 def stability_weighted_gap(loop_s: ClosedLoop, loop_r: ClosedLoop,
-                           z0: np.ndarray, n: int) -> dict:
-    """The central measurement: model discrepancy weighted by amplification.
+                           z0: np.ndarray, n: int, A=None, Zs=None) -> dict:
+    """Model discrepancy weighted by closed-loop amplification.
 
     Everything is evaluated ALONG THE SIMULATOR'S trajectory, which is the only
-    one available in practice -- you do not have reality's trajectory when you
-    are choosing a simulator.
+    one available in practice: you do not have reality's trajectory when you are
+    choosing which simulator to trust. `A` and `Zs` may be passed in when many
+    realities are compared against one simulator, since they depend only on S.
     """
-    Zs = loop_s.rollout(z0, n)
-    A = transition_matrices(loop_s, Zs)
+    if Zs is None:
+        Zs = loop_s.rollout(z0, n)
+    if A is None:
+        A = transition_matrices(loop_s, Zs)
 
-    # per-step model discrepancy d_k = F_R(z_k) - F_S(z_k)
     D = np.stack([loop_r.step(Zs[k]) - Zs[k + 1] for k in range(n)])
 
-    # accumulate Phi(N, k+1) d_k without ever forming all the Phi's:
-    # walk backwards, carrying P = Phi(N, k+1)
     P = np.eye(NZ)
     terms = np.empty((n, NZ))
     for k in range(n - 1, -1, -1):
         terms[k] = P @ D[k]
         P = P @ A[k]
-    Phi_N0 = P
 
     contrib = np.linalg.norm(terms, axis=1)
     return {
-        "Phi_N0": Phi_N0,
-        "G_T": float(np.linalg.svd(Phi_N0, compute_uv=False)[0]),
-        "D_SW": float(contrib.sum()),          # triangle-inequality bound
-        "e_pred": float(np.linalg.norm(terms.sum(axis=0))),   # with cancellation
-        "raw_gap": float(np.linalg.norm(D, axis=1).sum()),    # unweighted model error
+        "G_T": float(np.linalg.svd(P, compute_uv=False)[0]),
+        "D_SW": float(contrib.sum()),
+        "e_pred": float(np.linalg.norm(terms.sum(axis=0))),
+        "raw_gap": float(np.linalg.norm(D, axis=1).sum()),
         "per_step_contrib": contrib,
         "Zs": Zs,
         "D": D,
