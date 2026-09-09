@@ -99,6 +99,7 @@ class DriveCfg:
     order: int = 1               # 1 = first-order lag, 2 = second-order
     tau: float = 0.100           # first-order time constant [s]
     zeta: float = 0.9            # damping ratio, second-order only
+    omega_n: float = 0.0         # rad/s, second order; 0 means use 1/tau
     deadband: float = 0.0        # m/s of commanded velocity ignored
     delay_steps: int = 0         # pure transport delay, in control steps
     kv: float = 400.0            # inner velocity-loop gain [N s/m]
@@ -187,7 +188,7 @@ class ClosedLoop:
         self.model = build_model(cfg) if model is None else model
         d, dt = cfg.drive, cfg.dt_ctrl
         self.alpha = 1.0 if d.tau <= 0 else dt / (dt + d.tau)
-        self.wn = 1.0 / max(d.tau, 1e-9)
+        self.wn = float(d.omega_n) if d.omega_n else 1.0 / max(d.tau, 1e-9)
 
     def step(self, z: np.ndarray) -> np.ndarray:
         cfg, d, fr = self.cfg, self.cfg.drive, self.cfg.friction
