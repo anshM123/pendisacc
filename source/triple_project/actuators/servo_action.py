@@ -54,11 +54,22 @@ class LaggedJointVelocityAction(JointVelocityAction):
         # first-order smoothing coefficient; tau = 0 reproduces the instant case
         tau = float(cfg.time_constant_s)
         self._alpha = 1.0 if tau <= 0.0 else dt / (dt + tau)
+        # Second-order option, for asking whether it is the actuator's ORDER
+        # that matters rather than its speed. omega_n is given explicitly so the
+        # comparison can be bandwidth- or rise-time-matched against the
+        # first-order case instead of naively setting omega_n = 1/tau, which
+        # yields only 75% of the first-order -3 dB bandwidth and is therefore
+        # simply a slower actuator wearing a different label.
+        self._order = int(getattr(cfg, "order", 1))
+        self._zeta = float(getattr(cfg, "zeta", 0.9))
+        wn = getattr(cfg, "omega_n", None)
+        self._wn = float(wn) if wn else (1.0 / tau if tau > 0 else 0.0)
         # transport delay, rounded to whole control steps
         self._delay_steps = int(round(float(cfg.delay_s) / dt))
         n = self.num_envs
         d = self.action_dim
         self._filtered = torch.zeros((n, d), device=self.device)
+        self._filtered_dot = torch.zeros((n, d), device=self.device)
         if self._delay_steps > 0:
             self._queue = torch.zeros((self._delay_steps + 1, n, d), device=self.device)
             self._head = 0
@@ -67,10 +78,12 @@ class LaggedJointVelocityAction(JointVelocityAction):
         super().reset(env_ids)
         if env_ids is None:
             self._filtered.zero_()
+            self._filtered_dot.zero_()
             if self._delay_steps > 0:
                 self._queue.zero_()
         else:
             self._filtered[env_ids] = 0.0
+            self._filtered_dot[env_ids] = 0.0
             if self._delay_steps > 0:
                 self._queue[:, env_ids] = 0.0
 
@@ -82,7 +95,12 @@ class LaggedJointVelocityAction(JointVelocityAction):
             self._queue[self._head] = cmd
             self._head = (self._head + 1) % self._queue.shape[0]
             cmd = self._queue[self._head]
-        self._filtered += self._alpha * (cmd - self._filtered)
+        if self._order == 2:
+            acc = self._wn ** 2 * (cmd - self._filtered) - 2.0 * self._zeta * self._wn * self._filtered_dot
+            self._filtered_dot = self._filtered_dot + self._dt * acc
+            self._filtered = self._filtered + self._dt * self._filtered_dot
+        else:
+            self._filtered += self._alpha * (cmd - self._filtered)
         self._processed_actions = self._filtered
 
     @property
@@ -107,3 +125,15 @@ class LaggedJointVelocityActionCfg(actions_cfg.JointVelocityActionCfg):
 
     delay_s: float = 0.0
     """Pure transport dead time: Teensy -> STEP/DIR -> drive acting on it."""
+
+    order: int = 1
+    """1 = first-order lag, 2 = second-order. A MODEL-FORM change, not a
+    parameter one: no amount of randomising time_constant_s covers it."""
+
+    zeta: float = 0.9
+    """Damping ratio, second order only."""
+
+    omega_n: float | None = None
+    """Natural frequency [rad/s], second order only. Set explicitly to match
+    bandwidth or rise time against a first-order reference; defaults to 1/tau,
+    which does NOT match either."""

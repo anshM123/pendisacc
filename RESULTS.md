@@ -94,9 +94,17 @@ confidence interval requires:
 | 3 | `model_700` | **99.02%** | 10 | 0.98% | 100.00% | 99.87% |
 | | **pooled** | **99.51%** | **15 / 3072** | | | |
 
-**Pooled 3057/3072 = 99.51%, Wilson 95% CI [99.20%, 99.70%].** These draws are
-independent, so that interval is meaningful in a way the §1 numbers are not.
-The figure to quote for robustness is the **worst seed, 99.02%**.
+**Pooled 3057/3072 = 99.51%, Wilson 95% CI [99.20%, 99.70%].** The draws within
+a seed are independent, so this is far better founded than the §1 numbers.
+
+> One nuance before quoting the interval. It pools three policies whose true
+> success probabilities visibly differ (99.80 / 99.71 / 99.02), and a vanilla
+> binomial interval treats them as draws from one common Bernoulli parameter.
+> For descriptive reporting 3057/3072 is fine; for inference across PPO seeds
+> the seed belongs in the hierarchy, and the main transfer experiments should
+> use seed-stratified or hierarchical bootstrap intervals rather than
+> pseudo-replicating thousands of environments as though seed variability did
+> not exist. The **worst seed, 99.02%**, is the safe figure to quote.
 
 Two things the failure mode makes clear. **Every failure is a rail excursion** —
 `ever reached upright` is 100.00% in all three seeds, so the policy never fails
@@ -122,12 +130,13 @@ actuator time constants it never saw, 256 episodes each:
 |---|---:|---:|---:|---:|
 | success | 1.6% | 57.0% | 93.8% | **100.0%** |
 
-Success falls away in *both* directions from the trained value, including
-toward a **faster and objectively better drive**: at 20 ms, a servo five times
-quicker than the one assumed, the policy fails 98.4% of the time. This is not a
-robustness curve with a comfortable plateau; it is evidence that the policy
-exploits the particular lag it was trained against. Whatever the real drive
-turns out to be, it will not be exactly 100 ms.
+Success falls away in *both* directions from the trained value. **Increasing
+the actuator bandwidth fivefold takes success from 100% to 1.6%.** Faster is not
+automatically better here, because the policy is itself part of the closed loop
+-- which is the point: this is not a robustness curve with a comfortable
+plateau, it is evidence that the policy exploits the particular actuator
+dynamics it was trained against. Whatever the real drive turns out to be, it
+will not be exactly 100 ms.
 
 **Model form matters more than parameters.** Replacing the first-order lag with
 a second-order actuator of the *same* time constant collapses success to 0%,
@@ -163,12 +172,17 @@ settings the policy never trained on:
 | 80 ms | 66.7% | 93.8% | -27.1 pts |
 | 100 ms | 100.0% | 100.0% | 0.0 pts |
 
-The **ordering is exact** -- all four points rank as Isaac ranks them -- but the
-tool is **systematically pessimistic** by 20-27 points in the middle of the
-range, agreeing only at the extremes. It is therefore sound for *ranking*
-simulators, which is what twin-finding and `D_SW` comparison require, and must
-not be quoted as a calibrated predictor of absolute success. The bias persists
-at n=48, so it is not sampling noise.
+The ordering is exact over these four points, but the tool is **systematically
+pessimistic** by 20-27 points in the middle of the range, agreeing only at the
+extremes; the bias persists at n=48, so it is not sampling noise.
+
+The honest statement of its status: *the standalone model reproduces the
+monotonic ranking over the tested first-order `tau` sweep, but is not calibrated
+for absolute success and is not yet validated across model-form changes.* Four
+scalar-`tau` points do not establish that it will correctly rank friction,
+dead time, second-order actuators, mass error, compliance, or combinations --
+which are exactly what twin-finding needs. It is therefore used for cheap
+candidate DISCOVERY, and every publishable comparison is confirmed in Isaac.
 
 ## 6. Conditions
 
@@ -219,8 +233,11 @@ from the CAD entirely). Links 0.17752 / 0.10026 / 0.07747 kg, joint spacing
 
 > **Caveat on the link masses.** Every link body in the CAD carries density
 > exactly 1000 kg/m³, which is SolidWorks' default for a part with no material
-> assigned. These are placeholders, not a real material, and the link material
-> is not yet settled in this repo. `tools/material_sensitivity.py` sweeps it:
+> assigned. The physical links are **PETG prints**; the CAD density is a
+> placeholder, and what is unsettled is the final manufactured mass, COM and
+> inertia, not the material. Final published mass properties will be obtained
+> from the completed parts rather than inferred from a nominal density.
+> `tools/material_sensitivity.py` sweeps the density anyway:
 > `lambda_max` moves only 6.7% even for steel, because a pendulum's divergence
 > rate is set by geometry rather than mass, and required force stays far inside
 > the drive. So the *control* consequence is small — but the published plant

@@ -1,0 +1,22 @@
+{
+  "task": "TIP-SwingUp-Play-v0",
+  "num_envs": 256,
+  "perturbed": false,
+  "init_ranges": "PLAY default (near-fixed dead hang)",
+  "obs_noise_std": 0.0,
+  "servo_tau_override": null,
+  "servo_order": 2,
+  "servo_wn": 32.0,
+  "servo_zeta": 0.9,
+  "upright_threshold": 0.9,
+  "results": [
+    {
+      "checkpoint": "model_700.pt",
+      "success_rate": 0.34375,
+      "early_termination_rate": 0.4609375,
+      "ever_reached_upright": 0.9921875,
+      "mean_hold_fraction": 0.5863749980926514,
+      "mean_tip_height": 0.3129410147666931
+    }
+  ]
+}
