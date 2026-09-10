@@ -58,6 +58,9 @@ parser.add_argument("--cart_sigma", type=float, default=0.10, help="m, half-widt
 parser.add_argument("--cart_rate_sigma", type=float, default=0.10, help="m/s, half-width on cart velocity")
 parser.add_argument("--obs_noise", type=float, default=0.0,
                     help="std of Gaussian sensor noise added to every observation")
+parser.add_argument("--interface", type=str, default="velocity", choices=("velocity", "force"),
+                    help="must match the interface the checkpoint was TRAINED with; a policy "
+                         "cannot be evaluated through an interface it never spoke")
 parser.add_argument("--vulkan", action="store_true")
 AppLauncher.add_app_launcher_args(parser)
 args_cli = parser.parse_args()
@@ -84,6 +87,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "source"))
 import triple_project.tasks  # noqa: E402,F401
+sys.path.insert(0, os.path.join(ROOT, "experiments"))
+from interfaces import action_term, apply_interface  # noqa: E402
 from dynamics.conventions import rel_to_abs  # noqa: E402
 
 
@@ -115,6 +120,7 @@ def main() -> int:
     agent_cfg = gym.spec(args_cli.task).kwargs["rsl_rl_cfg_entry_point"]()
     agent_cfg = handle_deprecated_rsl_rl_cfg(agent_cfg, metadata.version("rsl-rl-lib"))
     agent_cfg.device = args_cli.device if args_cli.device is not None else agent_cfg.device
+    APPLIED["interface"] = apply_interface(env_cfg, args_cli.interface)
 
     # A near-fixed initial condition makes N parallel environments N replicas of
     # one trajectory, not N independent trials, so a binomial confidence
@@ -133,7 +139,7 @@ def main() -> int:
     if args_cli.servo_tau is not None:
         # cross-check point for the standalone analysis: does Isaac agree with
         # dynamics/closed_loop.py about an actuator the policy never saw?
-        env_cfg.actions.cart_velocity.time_constant_s = float(args_cli.servo_tau)
+        action_term(env_cfg).time_constant_s = float(args_cli.servo_tau)
     # ---- xi: one JSON blob so a suite entry maps to exactly one Isaac run ----
     if not args_cli.xi:
         xi = {}
@@ -143,7 +149,7 @@ def main() -> int:
         with open(args_cli.xi, encoding="utf-8") as _fh:
             xi = json.load(_fh)
     if xi:
-        act = env_cfg.actions.cart_velocity
+        act = action_term(env_cfg)
         for k, attr in (("order", "order"), ("zeta", "zeta"), ("omega_n", "omega_n"),
                         ("tau", "time_constant_s"), ("delay_s", "delay_s"),
                         ("deadband", "deadband")):
@@ -168,10 +174,11 @@ def main() -> int:
         # ['reset'] and the perturbation silently did nothing, which reads as
         # "this xi does not matter" rather than as an error.
     if args_cli.servo_order is not None:
-        env_cfg.actions.cart_velocity.order = int(args_cli.servo_order)
-        env_cfg.actions.cart_velocity.zeta = float(args_cli.servo_zeta)
+        _a = action_term(env_cfg)
+        _a.order = int(args_cli.servo_order)
+        _a.zeta = float(args_cli.servo_zeta)
         if args_cli.servo_wn is not None:
-            env_cfg.actions.cart_velocity.omega_n = float(args_cli.servo_wn)
+            _a.omega_n = float(args_cli.servo_wn)
     if args_cli.obs_noise > 0.0:
         from isaaclab.utils.noise import GaussianNoiseCfg
         n = GaussianNoiseCfg(mean=0.0, std=args_cli.obs_noise, operation="add")

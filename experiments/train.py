@@ -31,6 +31,11 @@ parser.add_argument("--xi", type=str, default=None,
                          "condition can be used interchangeably as a training world or a "
                          "deployment target. Pass a FILE: PowerShell strips the quotes out "
                          "of inline JSON before python sees it.")
+parser.add_argument("--interface", type=str, default="velocity", choices=("velocity", "force"),
+                    help="which physical variable the policy commands. Changes ONLY the "
+                         "action interface -- plant, servo lag, delay, clamp, speed limit, "
+                         "observation, reward and PPO settings are untouched. See "
+                         "experiments/interfaces.py.")
 parser.add_argument("--video", action="store_true", help="record rollouts during training")
 parser.add_argument("--video_length", type=int, default=400)
 parser.add_argument("--video_interval", type=int, default=2000)
@@ -74,6 +79,8 @@ from isaaclab_tasks.utils import parse_env_cfg  # noqa: E402
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(ROOT, "source"))
 import triple_project.tasks  # noqa: E402,F401  registers the gym ids
+sys.path.insert(0, os.path.join(ROOT, "experiments"))
+from interfaces import action_term, apply_interface  # noqa: E402
 
 torch.backends.cuda.matmul.allow_tf32 = True
 torch.backends.cudnn.allow_tf32 = True
@@ -83,6 +90,8 @@ torch.backends.cudnn.benchmark = True
 def main() -> None:
     env_cfg = parse_env_cfg(args_cli.task, device=args_cli.device, num_envs=args_cli.num_envs)
     env_cfg.seed = args_cli.seed
+    iface = apply_interface(env_cfg, args_cli.interface)
+    print("[train] interface:", args_cli.interface, json.dumps(iface))
 
     agent_cfg = gym.spec(args_cli.task).kwargs["rsl_rl_cfg_entry_point"]()
     # rsl-rl >= 4 uses a new model-config schema; this migrates the legacy
@@ -105,13 +114,15 @@ def main() -> None:
     print("[train] task     :", args_cli.task)
     print("[train] num_envs :", env_cfg.scene.num_envs)
     print("[train] log_dir  :", log_dir)
+    with open(os.path.join(log_dir, "interface.json"), "w", encoding="utf-8") as fh:
+        json.dump(iface, fh, indent=1)
 
     # ---- xi: the TRAINING simulator ------------------------------------
     xi = {}
     if args_cli.xi:
         with open(args_cli.xi, encoding="utf-8") as fh:
             xi = json.load(fh)
-        act = env_cfg.actions.cart_velocity
+        act = action_term(env_cfg)
         for k, attr in (("order", "order"), ("zeta", "zeta"), ("omega_n", "omega_n"),
                         ("tau", "time_constant_s"), ("delay_s", "delay_s"),
                         ("deadband", "deadband")):
@@ -154,7 +165,7 @@ def main() -> None:
         _v.set_masses(_m, _idx)
         _v.set_inertias(_I, _idx)
         with open(os.path.join(log_dir, "xi_applied.json"), "w", encoding="utf-8") as fh:
-            json.dump({"xi": xi,
+            json.dump({"xi": xi, "interface": iface,
                        "masses_in_sim": {n: round(float(_v.get_masses()[0, i]), 6)
                                          for i, n in enumerate(_names)}}, fh, indent=1)
 

@@ -1,0 +1,78 @@
+{
+  "task": "TIP-SwingUp-Play-v0",
+  "num_envs": 256,
+  "perturbed": false,
+  "init_ranges": "PLAY default (near-fixed dead hang)",
+  "obs_noise_std": 0.0,
+  "servo_tau_override": null,
+  "servo_order": null,
+  "xi": {
+    "mass_scale": [
+      1.5,
+      1.0,
+      1.0
+    ]
+  },
+  "applied": {
+    "masses": {
+      "base_link": 7.340878,
+      "cart": 0.790532,
+      "link1": 0.266274,
+      "link2": 0.100256,
+      "link3": 0.077468
+    }
+  },
+  "servo_wn": null,
+  "servo_zeta": 0.9,
+  "upright_threshold": 0.9,
+  "results": [
+    {
+      "checkpoint": "model_400.pt",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.7573046684265137
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "success_rate": 0.99609375,
+      "early_termination_rate": 0.00390625,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986718893051147,
+      "mean_tip_height": 0.76375412940979
+    },
+    {
+      "checkpoint": "model_800.pt",
+      "success_rate": 0.96875,
+      "early_termination_rate": 0.0234375,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.996468722820282,
+      "mean_tip_height": 0.7630447745323181
+    },
+    {
+      "checkpoint": "model_600.pt",
+      "success_rate": 0.796875,
+      "early_termination_rate": 0.12890625,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9432500004768372,
+      "mean_tip_height": 0.6280558109283447
+    },
+    {
+      "checkpoint": "model_200.pt",
+      "success_rate": 0.0,
+      "early_termination_rate": 0.2890625,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.3835885524749756,
+      "mean_tip_height": 0.2895054817199707
+    },
+    {
+      "checkpoint": "model_0.pt",
+      "success_rate": 0.0,
+      "early_termination_rate": 1.0,
+      "ever_reached_upright": 0.0,
+      "mean_hold_fraction": 0.0,
+      "mean_tip_height": -0.9665603637695312
+    }
+  ]
+}

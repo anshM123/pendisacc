@@ -143,3 +143,115 @@ class LaggedJointVelocityActionCfg(actions_cfg.JointVelocityActionCfg):
     """Natural frequency [rad/s], second order only. Set explicitly to match
     bandwidth or rise time against a first-order reference; defaults to 1/tau,
     which does NOT match either."""
+
+
+class LaggedJointEffortAction(ActionTerm):
+    """Cart FORCE command with the same delay and lag as the velocity term.
+
+    This exists to ask a question the velocity term cannot: is the uniform
+    inertial equivalence a property of the PLANT or of the INTERFACE?
+    dynamics/symmetry.py proves the equivalence holds when the base coordinate
+    is kinematically prescribed, which a stiff velocity loop with authority to
+    spare does. A force command prescribes no such thing -- the cart
+    acceleration answers to the reaction from the links -- so the cancellation
+    that makes uniform mass scaling invisible should fail.
+
+    Every part of the signal path is deliberately kept identical to
+    LaggedJointVelocityAction: the same first-order lag on the command, the
+    same transport delay, the same +-1 action range, the same physical clamp.
+    The ONLY difference is which physical variable the command denotes. If the
+    two interfaces then behave differently under the same model error, the
+    difference cannot be attributed to actuator speed, delay, or authority.
+
+    Authority note. scale defaults to the drive's PEAK force, not its rated
+    force, so the force interface can command at least as much force as the
+    velocity loop could ever ask for. Handicapping it would confound interface
+    with authority -- which is exactly the confound that sank the c=8 training
+    arm, and it is not repeated here.
+    """
+
+    cfg: "LaggedJointEffortActionCfg"
+
+    def __init__(self, cfg: "LaggedJointEffortActionCfg", env) -> None:
+        super().__init__(cfg, env)
+        self._asset = env.scene[cfg.asset_name]
+        self._joint_ids, self._joint_names = self._asset.find_joints(cfg.joint_names)
+        self._num_joints = len(self._joint_ids)
+        dt = env.step_dt
+        self._dt = dt
+        tau = float(cfg.time_constant_s)
+        self._alpha = 1.0 if tau <= 0.0 else dt / (dt + tau)
+        self._order = int(getattr(cfg, "order", 1))
+        self._zeta = float(getattr(cfg, "zeta", 0.9))
+        wn = getattr(cfg, "omega_n", None)
+        self._wn = float(wn) if wn else (1.0 / tau if tau > 0 else 0.0)
+        self._delay_steps = int(round(float(cfg.delay_s) / dt))
+        n, d = self.num_envs, self._num_joints
+        self._raw = torch.zeros((n, d), device=self.device)
+        self._filtered = torch.zeros((n, d), device=self.device)
+        self._filtered_dot = torch.zeros((n, d), device=self.device)
+        if self._delay_steps > 0:
+            self._queue = torch.zeros((self._delay_steps + 1, n, d), device=self.device)
+            self._head = 0
+
+    @property
+    def action_dim(self) -> int:
+        return self._num_joints
+
+    @property
+    def raw_actions(self) -> torch.Tensor:
+        return self._raw
+
+    @property
+    def processed_actions(self) -> torch.Tensor:
+        return self._filtered
+
+    def reset(self, env_ids=None) -> None:
+        if env_ids is None:
+            self._raw.zero_()
+            self._filtered.zero_()
+            self._filtered_dot.zero_()
+            if self._delay_steps > 0:
+                self._queue.zero_()
+        else:
+            self._raw[env_ids] = 0.0
+            self._filtered[env_ids] = 0.0
+            self._filtered_dot[env_ids] = 0.0
+            if self._delay_steps > 0:
+                self._queue[:, env_ids] = 0.0
+
+    def process_actions(self, actions: torch.Tensor) -> None:
+        self._raw[:] = actions
+        cmd = actions * float(self.cfg.scale)
+        if self.cfg.clip is not None:
+            lo, hi = list(self.cfg.clip.values())[0]
+            cmd = cmd.clamp(lo, hi)
+        if self.cfg.deadband > 0.0:
+            cmd = torch.sign(cmd) * torch.clamp(cmd.abs() - self.cfg.deadband, min=0.0)
+        if self._delay_steps > 0:
+            self._queue[self._head] = cmd
+            self._head = (self._head + 1) % self._queue.shape[0]
+            cmd = self._queue[self._head]
+        if self._order == 2:
+            acc = self._wn ** 2 * (cmd - self._filtered) - 2.0 * self._zeta * self._wn * self._filtered_dot
+            self._filtered_dot = self._filtered_dot + self._dt * acc
+            self._filtered = self._filtered + self._dt * self._filtered_dot
+        else:
+            self._filtered += self._alpha * (cmd - self._filtered)
+
+    def apply_actions(self) -> None:
+        self._asset.set_joint_effort_target(self._filtered, joint_ids=self._joint_ids)
+
+
+@configclass
+class LaggedJointEffortActionCfg(actions_cfg.JointEffortActionCfg):
+    """Cart force command sharing the velocity term's servo model exactly."""
+
+    class_type: type[ActionTerm] = LaggedJointEffortAction
+
+    time_constant_s: float = MISSING
+    delay_s: float = 0.0
+    deadband: float = 0.0
+    order: int = 1
+    zeta: float = 0.9
+    omega_n: float | None = None
