@@ -209,6 +209,30 @@ construction. Second, for this paper: a 77-point within-arm spread is 2.5x the
 30-point threshold P2 was tested against, which is why the seed-spread rule was
 frozen in `PREREGISTRATION_H3.md` in advance.
 
+
+### The criterion is not stable within a run either
+
+Every run trained for the same 1000 iterations. Scoring each run's **best**
+checkpoint against its **final** one, both in the same training simulator:
+
+| | mean |
+|---|---:|
+| best checkpoint | 99.7% |
+| final checkpoint | **61.0%** |
+| mean drop, best → final | **38.6 points** |
+| runs losing >20 points by the end | **11 of 15** |
+| runs whose final checkpoint is their best | 3 of 15 |
+
+The default practice — train for a fixed budget, take the final policy — would
+have reported 61.0% where checkpoint selection reports 99.7%, *in the training
+simulator itself*. Two seeds collapse by more than 80 points
+(`S_nominal_s3` 100.0 → 17.2, `S_twinB_s3` 100.0 → 13.3).
+
+These policies are not converged. They are snapshots of an oscillating process,
+which is the mechanism behind the seed spread above: different seeds are caught
+at different phases of that oscillation, and nothing measurable in the training
+simulator says which phase generalises.
+
 ## 7. What is not yet established
 
 * **Does the geometry change what RL learns?** Everything above is one frozen

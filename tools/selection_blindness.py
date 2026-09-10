@@ -29,6 +29,10 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "results", "selection_blindness.json")
 
 
+def ckpt_num(name):
+    return int("".join(ch for ch in name if ch.isdigit()) or 0)
+
+
 def rows():
     out = []
     for f in sorted(glob.glob(os.path.join(ROOT, "results", "claim5_select", "*.json"))):
@@ -39,10 +43,13 @@ def rows():
         sel = json.load(open(f, encoding="utf-8"))
         best = max(sel["results"],
                    key=lambda r: (r["success_rate"], -r["early_termination_rate"]))
+        final = max(sel["results"], key=lambda r: ckpt_num(r["checkpoint"]))
         dep = json.load(open(dep_path, encoding="utf-8"))
         out.append({"policy": tag.replace("C5_", ""),
                     "checkpoint": best["checkpoint"],
                     "own_sim": 100.0 * best["success_rate"],
+                    "final_checkpoint": final["checkpoint"],
+                    "own_sim_final": 100.0 * final["success_rate"],
                     "in_R_star": 100.0 * dep["results"][0]["success_rate"]})
     return out
 
@@ -112,7 +119,38 @@ def main() -> int:
     print("  moving the selection criterion by %.1f. Simulator choice is not the" % no.ptp())
     print("  only thing that is not being measured -- neither is the policy.")
 
+    # ---- and the criterion is not even stable within one run --------------
+    bv = np.array([r["own_sim"] for r in rs])
+    fv = np.array([r["own_sim_final"] for r in rs])
+    drop = bv - fv
+    print("\n  THE CRITERION IS NOT STABLE WITHIN A RUN EITHER. Every run trained")
+    print("  for the same 1000 iterations. Comparing each run's BEST checkpoint")
+    print("  against its FINAL one, both scored in the same training simulator:\n")
+    print("    policy              best         best%%   final        final%%   drop")
+    print("    " + "-" * 68)
+    for r in rs:
+        print("    %-18s %-12s %6.1f   %-12s %6.1f   %6.1f"
+              % (r["policy"], r["checkpoint"], r["own_sim"],
+                 r["final_checkpoint"], r["own_sim_final"],
+                 r["own_sim"] - r["own_sim_final"]))
+    print("\n    best-checkpoint  mean %5.1f%%" % bv.mean())
+    print("    final-checkpoint mean %5.1f%%" % fv.mean())
+    print("    mean drop best -> final: %.1f points" % drop.mean())
+    print("    runs losing > 20 points by the end: %d of %d" % (int((drop > 20).sum()), len(rs)))
+    print("    runs whose final checkpoint IS their best: %d of %d"
+          % (int((drop < 1e-9).sum()), len(rs)))
+    print("\n  So the default practice -- train for a fixed budget, take the final")
+    print("  policy -- would have reported %.1f%% where checkpoint selection" % fv.mean())
+    print("  reports %.1f%%, in the training simulator itself. These policies are" % bv.mean())
+    print("  not converged; they are snapshots of an oscillating process, which")
+    print("  is the mechanism behind the seed spread above.")
+
     json.dump({"rows": rs, "spearman_rho": rho, "permutation_p": p, "n": len(rs),
+               "best_to_final": {"mean_drop_points": float(drop.mean()),
+                                 "best_mean": float(bv.mean()),
+                                 "final_mean": float(fv.mean()),
+                                 "n_losing_over_20": int((drop > 20).sum()),
+                                 "n_final_is_best": int((drop < 1e-9).sum())},
                "own_sim_spread": float(o.ptp()), "R_star_spread": float(d.ptp()),
                "nominal_arm": {"own_sim_spread": float(no.ptp()),
                                "R_star_spread": float(nd.ptp()),
