@@ -1,0 +1,125 @@
+{
+ "rows": [
+  {
+   "policy": "S_delay_s1",
+   "checkpoint": "model_600.pt",
+   "own_sim": 99.21875,
+   "in_R_star": 1.5625
+  },
+  {
+   "policy": "S_delay_s2",
+   "checkpoint": "model_800.pt",
+   "own_sim": 100.0,
+   "in_R_star": 0.0
+  },
+  {
+   "policy": "S_equiv_c8_s1",
+   "checkpoint": "model_400.pt",
+   "own_sim": 100.0,
+   "in_R_star": 0.0
+  },
+  {
+   "policy": "S_equiv_c8_s2",
+   "checkpoint": "model_999.pt",
+   "own_sim": 100.0,
+   "in_R_star": 1.953125
+  },
+  {
+   "policy": "S_nominal_s1",
+   "checkpoint": "model_800.pt",
+   "own_sim": 100.0,
+   "in_R_star": 100.0
+  },
+  {
+   "policy": "S_nominal_s2",
+   "checkpoint": "model_600.pt",
+   "own_sim": 99.21875,
+   "in_R_star": 71.09375
+  },
+  {
+   "policy": "S_nominal_s3",
+   "checkpoint": "model_600.pt",
+   "own_sim": 100.0,
+   "in_R_star": 23.046875
+  },
+  {
+   "policy": "S_transverse_s1",
+   "checkpoint": "model_400.pt",
+   "own_sim": 100.0,
+   "in_R_star": 2.34375
+  },
+  {
+   "policy": "S_transverse_s2",
+   "checkpoint": "model_800.pt",
+   "own_sim": 100.0,
+   "in_R_star": 7.421875
+  },
+  {
+   "policy": "S_twinA_s1",
+   "checkpoint": "model_600.pt",
+   "own_sim": 100.0,
+   "in_R_star": 0.0
+  },
+  {
+   "policy": "S_twinA_s2",
+   "checkpoint": "model_800.pt",
+   "own_sim": 100.0,
+   "in_R_star": 1.953125
+  },
+  {
+   "policy": "S_twinA_s3",
+   "checkpoint": "model_600.pt",
+   "own_sim": 98.4375,
+   "in_R_star": 0.78125
+  },
+  {
+   "policy": "S_twinB_s1",
+   "checkpoint": "model_800.pt",
+   "own_sim": 100.0,
+   "in_R_star": 100.0
+  },
+  {
+   "policy": "S_twinB_s2",
+   "checkpoint": "model_600.pt",
+   "own_sim": 98.046875,
+   "in_R_star": 73.828125
+  },
+  {
+   "policy": "S_twinB_s3",
+   "checkpoint": "model_600.pt",
+   "own_sim": 100.0,
+   "in_R_star": 22.65625
+  }
+ ],
+ "spearman_rho": -0.08999323744866858,
+ "permutation_p": 0.7492,
+ "n": 15,
+ "own_sim_spread": 1.953125,
+ "R_star_spread": 100.0,
+ "nominal_arm": {
+  "own_sim_spread": 0.78125,
+  "R_star_spread": 76.953125,
+  "rows": [
+   {
+    "policy": "S_nominal_s1",
+    "checkpoint": "model_800.pt",
+    "own_sim": 100.0,
+    "in_R_star": 100.0
+   },
+   {
+    "policy": "S_nominal_s2",
+    "checkpoint": "model_600.pt",
+    "own_sim": 99.21875,
+    "in_R_star": 71.09375
+   },
+   {
+    "policy": "S_nominal_s3",
+    "checkpoint": "model_600.pt",
+    "own_sim": 100.0,
+    "in_R_star": 23.046875
+   }
+  ]
+ },
+ "exploratory": true,
+ "note": "Not pre-registered. Reported as exploratory: this axis was not named in PREREGISTRATION_H3.md and no threshold was frozen for it in advance."
+}
