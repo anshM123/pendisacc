@@ -1,0 +1,80 @@
+[
+ {
+  "name": "f_c20_clamp7000",
+  "xi": {
+   "mass_scale": [
+    20.0,
+    20.0,
+    20.0
+   ],
+   "f_clamp": 7000.0
+  },
+  "prediction": "success",
+  "rationale": "c=20 needs ~1430 N; give it 7000"
+ },
+ {
+  "name": "f_c30_clamp10500",
+  "xi": {
+   "mass_scale": [
+    30.0,
+    30.0,
+    30.0
+   ],
+   "f_clamp": 10500.0
+  },
+  "prediction": "success",
+  "rationale": "c=30, clamp scaled with c"
+ },
+ {
+  "name": "f_c20_clamp1000",
+  "xi": {
+   "mass_scale": [
+    20.0,
+    20.0,
+    20.0
+   ],
+   "f_clamp": 1000.0
+  },
+  "prediction": "FAIL",
+  "rationale": "still under the ~1430 N demand"
+ },
+ {
+  "name": "f_c20_clamp2000",
+  "xi": {
+   "mass_scale": [
+    20.0,
+    20.0,
+    20.0
+   ],
+   "f_clamp": 2000.0
+  },
+  "prediction": "success",
+  "rationale": "just above the demand"
+ },
+ {
+  "name": "f_asym_clamp7000",
+  "xi": {
+   "mass_scale": [
+    5.0,
+    1.0,
+    1.0
+   ],
+   "f_clamp": 7000.0
+  },
+  "prediction": "FAIL",
+  "rationale": "force cannot restore a broken symmetry"
+ },
+ {
+  "name": "f_c05_clamp1000",
+  "xi": {
+   "mass_scale": [
+    5.0,
+    5.0,
+    5.0
+   ],
+   "f_clamp": 1000.0
+  },
+  "prediction": "success",
+  "rationale": "control: already worked, must not break"
+ }
+]
