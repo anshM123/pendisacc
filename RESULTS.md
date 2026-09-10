@@ -1,37 +1,149 @@
-# Swing-up results
+# The geometry of the reality gap
 
-**A learned policy swings the triple pendulum up from dead hang and holds it, in
-3072 of 3072 nominal simulations, on every seed tried — under a deliberately
-pessimistic 100 ms first-order actuator time constant whose pole magnitude is
-smaller than the plant's dominant open-loop unstable eigenvalue.**
+**Simulator error is not ordered by magnitude.** On this system a 150% error in
+every link mass is harmless while a 50% error in *one* link is fatal; an
+actuator with matched bandwidth and *faster* rise time takes transfer from 100%
+to 0%; and success is not monotone in gravity. Two simulators whose trajectory
+error differs by 1.5% produce transfer of 0% and 100%.
 
-Date: 2026-09-05. Commit: `1c0d509`.
+What decides transfer is the **direction** of the error relative to (i) exact
+dynamical equivalences of the plant, (ii) the authority of the control
+interface, and (iii) the learned policy's failure boundaries.
+
+Date: 2026-09-10. Baseline frozen at `1c0d509`; see `configs/FROZEN_BASELINE.md`.
+
+> **Two pre-registered hypotheses were tested and REJECTED** before arriving
+> here, and both are reported rather than buried (§4). A scalar
+> policy-conditioned fidelity measure did not beat conventional trajectory
+> fidelity. That failure is what motivated looking at geometry directly.
 
 ---
 
-## 1. The headline
+## 1. Error magnitude does not order transfer
 
-| seed | checkpoint | episodes | successes | success rate | early termination | hold fraction |
-|-----:|------------|---------:|----------:|-------------:|------------------:|--------------:|
-| 1 | `model_800` | 1024 | 1024 | 100.00% | 0.00% | 99.87% |
-| 2 | `model_700` | 1024 | 1024 | 100.00% | 0.00% | 99.87% |
-| 3 | `model_700` | 1024 | 1024 | 100.00% | 0.00% | 99.87% |
-| | **pooled** | **3072** | **3072** | **100.00%** | **0.00%** | **99.87%** |
+All measured in Isaac, 256 episodes per condition, one frozen policy.
 
-The figure to quote is the **minimum across seeds**, which is also 100.00%.
+| model error | magnitude | transfer |
+|---|---|---:|
+| every link mass x2.5 | +150% | **100.0%** |
+| every link mass x10 | +900% | **100.0%** |
+| **link 1 alone x1.5** | **+50%** | **0.0%** |
+| link 1 alone x5 | +400% | 0.0% |
+| force clamp cut to 40 N (a quarter) | -89% | 100.0% |
+| joint viscous damping 0.08 | large | 100.0% |
+| **transport delay 20 ms** | **tiny** | **0.0%** |
+| **joint Coulomb friction 0.008** | **tiny** | **3.5%** |
 
-> **Do not attach a binomial confidence interval to this.** The evaluation start
-> is near-fixed (§2), so 1024 parallel environments are close to 1024 replicas of
-> one trajectory rather than 1024 independent Bernoulli trials. "3072/3072
-> nominal simulations succeeded" is the defensible claim; a rule-of-three lower
-> bound is not, because the independence assumption fails. For a rate with a
-> distribution behind it, see the randomised evaluation in §4.
+A uniform error twenty times larger than the asymmetric one is harmless, while
+the smaller one is fatal. Gravity is not even monotone: 9.90 gives 100%, 10.50
+gives 51.2%, 11.00 gives 80.9%.
 
-The three runs are independently seeded and reach an identical hold fraction to
-four decimal places, which suggests the metric is measuring a property of the
-converged behaviour rather than run-specific noise.
+## 2. Some errors are exact dynamical equivalences
 
-## 2. What "success" means here
+`dynamics/symmetry.py` proves, symbolically rather than numerically, that for a
+planar N-link chain on a **kinematically prescribed** base, scaling every link
+mass and inertia by a common factor multiplies the passive equations of motion
+by that factor, which then divides out:
+
+| N | uniform scaling | one link only | + joint friction |
+|---|---|---|---|
+| 1 | **EXACT** | — | fails |
+| 2 | **EXACT** | fails | fails |
+| 3 | **EXACT** | fails | fails |
+| 4 | **EXACT** | fails | fails |
+
+"EXACT" is `simplify(residual(c·m, c·I) − c·residual(m, I)) == 0`, an algebraic
+identity. Numerically the induced change in the angular accelerations is ~1e-15
+at scales from 1.3x to 100x, against 7.5% for a single-link change.
+
+The two counterexample columns show the hypotheses are load-bearing: uniformity,
+and the absence of any non-scaling generalised force on the passive coordinates.
+
+**The base mass never appears.** Once the base is prescribed it is outside the
+passive equations entirely, so the equivalence is a property of the *actuation
+interface* as much as of the mechanics. Under torque command the base is not
+prescribed, the cancellation fails, and the same mass error stops being free.
+
+## 3. The interface gates the equivalence — causally
+
+A real velocity servo does not prescribe the base exactly; its authority is
+finite. Frozen policy weights, only the drive changed:
+
+| | kv 400, clamp 349 N | kv 4000, clamp 7000 N |
+|---|---:|---:|
+| uniform mass x20 | **0.0%** | **100.0%** |
+| uniform mass x30 | 0.0% | **100.0%** |
+| **asymmetric [5,1,1]** | 0.0% | **0.0%** |
+| uniform mass x5 (control) | 100.0% | 100.0% |
+
+Lifting the gain alone leaves 0.0%; lifting the clamp alone leaves 0.0%. The
+two limits bound each other, `F = min(clamp, kv·(v_max − ẋ))`, and during
+swing-up ẋ reaches 3.5 of 4.0 m/s so a large clamp is unusable without gain.
+**Together they restore transfer completely, without retraining.**
+
+Authority restores an *intact* symmetry and cannot manufacture a broken one —
+the asymmetric error stays at 0.0% under 20x force and 10x gain.
+
+Getting here required four pre-registered mechanisms, three of which were
+falsified: a force-clamp threshold (wrong location), velocity-loop stiffness
+(kv 400→4000 changed nothing), force saturation alone (clamp 349→7000 changed
+nothing), and absolute impulse deficit (does not transfer across clamps). The
+first estimate failed because the force demand was computed over an open-loop
+state distribution rather than the trajectory the policy actually flies — 22.7 N
+against a true 98.7 N. *A closed-loop quantity was estimated on an open-loop
+distribution*, which is the paper's own thesis in miniature.
+
+## 4. Scalar fidelity cannot certify transfer
+
+Two pre-registered attempts to build a policy-conditioned scalar that beats
+conventional fidelity **failed** (`PREREGISTRATION.md`, `results/h2_test.json`).
+Over 38 heterogeneous conditions:
+
+| predictor | ρ vs measured success |
+|---|---:|
+| **short-window trajectory RMSE** | **−0.506** |
+| \|phase error at λ_max\| | −0.505 |
+| `D_SW` (stability-weighted) | −0.415 |
+| `R_TC` (task-margin projected) | −0.406 |
+| raw model gap | −0.390 |
+
+Conventional trajectory fidelity won. `R_TC` failed all four frozen kill
+criteria. What *did* hold: weighting the same discrepancies by closed-loop
+amplification moved ρ from −0.390 to −0.415…−0.698 depending on the family, so
+amplification carries real signal — it just does not beat a good simple
+baseline.
+
+But the winner cannot **certify** transfer. With the tolerance frozen in
+advance (10% relative, ≥50-point gap, plausible conditions only):
+
+| | trajectory RMSE | transfer |
+|---|---:|---:|
+| `act_2nd_z05` — 2nd-order actuator, ζ=0.5 | 1.1624 | **0.0%** |
+| `dis_jdamp_004` — joint viscous damping | 1.1448 | **100.0%** |
+| difference | **1.5%** | **100 points** |
+
+Different model families, indistinguishable fidelity, opposite outcomes. Four
+such pairs clear the threshold. So trajectory fidelity is **informative
+statistically and ambiguous locally** — a sharper claim than "insufficient",
+and one our own data supports rather than contradicts.
+
+## 5. What is not yet established
+
+* **Does the geometry change what RL learns?** Everything above is one frozen
+  policy across many simulators. The sim-to-real question is
+  `S_i → π_i → R*`. Pre-registered in `PREREGISTRATION_H3.md`; 15 policies
+  training as of 2026-09-10.
+* **Is the geometry useful?** No geometry-aware randomisation or policy
+  selection experiment has been run.
+* **Does it survive reality?** The hardware is not built. Every number here is
+  simulation.
+* The twin pairs come from the discovery set and need fresh confirmation.
+
+---
+
+# Appendix: the baseline these results are measured against
+
+## 6. What "success" means here
 
 Reward is not the metric. It misled this project three separate times — most
 starkly when a run reported reward 108 and rising while measuring **0%** actual
@@ -54,7 +166,7 @@ and no sensor noise. That is a **capability** test, not a robustness test, and
 it is why the numbers in §1 carry no confidence interval. §4 repeats the
 measurement over an actual distribution.
 
-## 3. A representative trajectory
+## 7. A representative trajectory
 
 From `results/rollout_success.npz` (seed 3, `model_700`), rendered in
 `figures/swingup_success.gif` using the real CAD outlines:
@@ -73,7 +185,7 @@ rail limit** (0 terminations in 3072). Peak speed is the tighter of the two
 margins (87% vs 77%), and required force is an order of magnitude inside the
 drive's capability (§7).
 
-## 4. Robustness — over an actual distribution
+## 8. Robustness — over an actual distribution
 
 §1 is a capability test from a near-fixed start. This is the same policy
 measured over **independent random draws**, which is what a rate with a
@@ -117,7 +229,7 @@ Reading this against §1: perfect nominal success and ~99.5% perturbed success
 is the expected shape. The gap is the honest measure of margin, and it points at
 rail headroom during swing-up rather than at the controller.
 
-## 5. Sensitivity to the simulator itself
+## 9. Sensitivity to the simulator itself
 
 Section 4 randomises the initial condition and the sensors. It does **not**
 randomise `xi`, the simulator. Doing so changes the picture, and not
@@ -184,7 +296,7 @@ dead time, second-order actuators, mass error, compliance, or combinations --
 which are exactly what twin-finding needs. It is therefore used for cheap
 candidate DISCOVERY, and every publishable comparison is confirmed in Isaac.
 
-## 6. Conditions
+## 10. Conditions
 
 These are not idealised-actuator results.
 
@@ -213,7 +325,7 @@ unmeasured. A first-order lag contributes at most 90° of phase and is
 compensable with full state feedback; a dead time is not. **If one thing is
 measured on the real drive, it should be dead time, not settling time.**
 
-## 7. The plant these results are about
+## 11. The plant these results are about
 
 Derived from the CAD by `tools/sw_dump_assembly.py` and validated end-to-end by
 `tools/validate_asset.py` (`results/asset_validation.json`, all checks pass):
@@ -244,7 +356,7 @@ from the CAD entirely). Links 0.17752 / 0.10026 / 0.07747 kg, joint spacing
 > parameters should come from **weighing the actual links once built**, with COM
 > and inertia measured or estimated per link, not from any assumed density.
 
-## 8. Actuator headroom
+## 12. Actuator headroom
 
 `tools/actuator_bandwidth.py` designs an LQR on the augmented plant (link
 states + drive lag state, commanded cart velocity as input) and asks what it
@@ -260,7 +372,7 @@ Against a drive rated at **99.7 N** (349.5 N peak) and **4.0 m/s**. The
 requirement degrades gently with lag because holding a lean needs only ~1 m/s²
 and `v_cmd − v_ref = a·tau`. Force is not the constraint at any plausible lag.
 
-## 9. What it took — four defects, each found by measurement
+## 13. What it took — four defects, each found by measurement
 
 Every one of these was diagnosed only after the reward curve had already lied
 about it. The order matters: each fix was necessary and none was sufficient.
@@ -279,7 +391,7 @@ and `exp(−Σω²/σ_v²)` is annihilated at `Σω²` = 11660 for any sane `σ_
 failures came from the same mistake — sizing a reward term against an *assumed*
 operating point (4 rad/s) instead of a measured one (62 rad/s).
 
-## 10. Known limitations
+## 14. Known limitations
 
 **Checkpoint selection is required, not a convenience.** Within a single run,
 performance oscillates violently:
@@ -311,7 +423,7 @@ on selection. Not done.
 results. The simulator population, nonlinear fingerprints, twin search and
 pseudo-realities are all still empty.
 
-## 11. Reproducing
+## 15. Reproducing
 
 ```powershell
 # three seeds, 1000 iterations each (~35 min per seed on an RTX 5070 Ti)
