@@ -36,6 +36,14 @@ parser.add_argument("--interface", type=str, default="velocity", choices=("veloc
                          "action interface -- plant, servo lag, delay, clamp, speed limit, "
                          "observation, reward and PPO settings are untouched. See "
                          "experiments/interfaces.py.")
+parser.add_argument("--dr", type=str, default="none", choices=("none", "box", "geom"),
+                    help="link-mass domain randomisation (H5). 'box' is isotropic over all "
+                         "three link masses; 'geom' spends the SAME expected budget "
+                         "E||dm|| confined transverse to the uniform equivalence direction. "
+                         "See PREREGISTRATION_H5.md.")
+parser.add_argument("--dr_width", type=float, default=0.20,
+                    help="half-width of the box arm. The geom arm's width is scaled up by "
+                         "GEOM_WIDTH_FACTOR so the two budgets match.")
 parser.add_argument("--video", action="store_true", help="record rollouts during training")
 parser.add_argument("--video_length", type=int, default=400)
 parser.add_argument("--video_interval", type=int, default=2000)
@@ -141,6 +149,16 @@ def main() -> None:
             env_cfg.sim.gravity = (0.0, 0.0, -float(xi["gravity"]))
         print("[train] xi       :", json.dumps(xi))
 
+    # ---- H5: link-mass domain randomisation, per environment ------------
+    # Startup-mode randomisation: each of the N parallel environments is given
+    # its own sampled link masses, fixed for the run. With 4096 environments
+    # that samples the randomisation distribution densely. Applied through the
+    # PhysX view after gym.make for the same reason xi is -- a dynamically
+    # assigned EventTermCfg does not register, and would silently randomise
+    # nothing while reporting a plausible number.
+    GEOM_WIDTH_FACTOR = 1.478   # restores E||dm|| after the projection; see
+                                # PREREGISTRATION_H5.md for the measurement
+
     env_cfg.log_dir = log_dir
     env = gym.make(args_cli.task, cfg=env_cfg, render_mode="rgb_array" if args_cli.video else None)
 
@@ -168,6 +186,43 @@ def main() -> None:
             json.dump({"xi": xi, "interface": iface,
                        "masses_in_sim": {n: round(float(_v.get_masses()[0, i]), 6)
                                          for i, n in enumerate(_names)}}, fh, indent=1)
+
+    if args_cli.dr != "none":
+        import numpy as _np
+        _rb2 = env.unwrapped.scene["robot"]
+        _v2 = _rb2.root_physx_view
+        _names2 = list(_rb2.body_names)
+        _li = [_names2.index("link%d" % (i + 1)) for i in range(3)]
+        _m2, _I2 = _v2.get_masses().clone(), _v2.get_inertias().clone()
+        _n_env = _m2.shape[0]
+        _m0 = _np.array([float(_m2[0, b]) for b in _li])
+        _u = _m0 / _np.linalg.norm(_m0)                 # equivalence direction
+        _rng = _np.random.default_rng(args_cli.seed)
+        _w = args_cli.dr_width * (GEOM_WIDTH_FACTOR if args_cli.dr == "geom" else 1.0)
+        _d = (_rng.uniform(1.0 - _w, 1.0 + _w, size=(_n_env, 3)) - 1.0) * _m0
+        if args_cli.dr == "geom":
+            _d = _d - _np.outer(_d @ _u, _u)            # project off the null direction
+        _scale = 1.0 + _d / _m0
+        if float(_scale.min()) <= 0.0:
+            raise SystemExit("[train] dr width %.3f produces a non-positive mass" % _w)
+        for _k, _b in enumerate(_li):
+            _f = torch.tensor(_scale[:, _k], dtype=_m2.dtype, device=_m2.device)
+            _m2[:, _b] *= _f
+            _I2[:, _b] *= _f.unsqueeze(-1)
+        _v2.set_masses(_m2, torch.arange(_v2.count, dtype=torch.int32))
+        _v2.set_inertias(_I2, torch.arange(_v2.count, dtype=torch.int32))
+        _budget = float(_np.linalg.norm(_d, axis=1).mean())
+        _along = float(_np.abs(_d @ _u).mean())
+        print("[train] dr       : %s width %.4f  E||dm|| = %.6f kg  E|dm.u| = %.3e"
+              % (args_cli.dr, _w, _budget, _along))
+        with open(os.path.join(log_dir, "dr_applied.json"), "w", encoding="utf-8") as fh:
+            json.dump({"mode": args_cli.dr, "width": _w,
+                       "base_width": args_cli.dr_width,
+                       "geom_width_factor": GEOM_WIDTH_FACTOR,
+                       "E_norm_dm_kg": _budget, "E_abs_dm_dot_u": _along,
+                       "m0": _m0.tolist(), "n_envs": int(_n_env),
+                       "scale_min": float(_scale.min()),
+                       "scale_max": float(_scale.max())}, fh, indent=1)
 
     if args_cli.video:
         video_kwargs = {
