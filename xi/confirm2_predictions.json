@@ -1,0 +1,79 @@
+[
+ {
+  "name": "fix_c20_kv4000",
+  "xi": {
+   "mass_scale": [
+    20.0,
+    20.0,
+    20.0
+   ],
+   "kv": 4000.0
+  },
+  "prediction": "success",
+  "rationale": "c=20 fails at kv=400; stiffer loop should restore it"
+ },
+ {
+  "name": "fix_c30_kv4000",
+  "xi": {
+   "mass_scale": [
+    30.0,
+    30.0,
+    30.0
+   ],
+   "kv": 4000.0
+  },
+  "prediction": "success",
+  "rationale": "same, c=30"
+ },
+ {
+  "name": "fix_c20_kv1200",
+  "xi": {
+   "mass_scale": [
+    20.0,
+    20.0,
+    20.0
+   ],
+   "kv": 1200.0
+  },
+  "prediction": "success",
+  "rationale": "3x gain, marginal"
+ },
+ {
+  "name": "ctl_c20_kv400",
+  "xi": {
+   "mass_scale": [
+    20.0,
+    20.0,
+    20.0
+   ]
+  },
+  "prediction": "FAIL",
+  "rationale": "control: the failure being intervened on"
+ },
+ {
+  "name": "ctl_c05_kv4000",
+  "xi": {
+   "mass_scale": [
+    5.0,
+    5.0,
+    5.0
+   ],
+   "kv": 4000.0
+  },
+  "prediction": "success",
+  "rationale": "control: stiff loop must not break what worked"
+ },
+ {
+  "name": "fix_asym_kv4000",
+  "xi": {
+   "mass_scale": [
+    5.0,
+    1.0,
+    1.0
+   ],
+   "kv": 4000.0
+  },
+  "prediction": "FAIL",
+  "rationale": "stiffness must NOT rescue an asymmetric error"
+ }
+]
