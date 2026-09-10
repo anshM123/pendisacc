@@ -25,6 +25,12 @@ parser.add_argument("--num_envs", type=int, default=None)
 parser.add_argument("--max_iterations", type=int, default=None)
 parser.add_argument("--seed", type=int, default=1)
 parser.add_argument("--run_name", type=str, default=None)
+parser.add_argument("--xi", type=str, default=None,
+                    help="path to a JSON file of simulator perturbations -- the TRAINING "
+                         "simulator. Same schema as experiments/evaluate.py --xi, so a "
+                         "condition can be used interchangeably as a training world or a "
+                         "deployment target. Pass a FILE: PowerShell strips the quotes out "
+                         "of inline JSON before python sees it.")
 parser.add_argument("--video", action="store_true", help="record rollouts during training")
 parser.add_argument("--video_length", type=int, default=400)
 parser.add_argument("--video_interval", type=int, default=2000)
@@ -51,6 +57,7 @@ if sys.platform == "win32" and not getattr(args_cli, "vulkan", False):
 app_launcher = AppLauncher(args_cli)
 simulation_app = app_launcher.app
 
+import json  # noqa: E402
 import time  # noqa: E402
 from datetime import datetime  # noqa: E402
 
@@ -99,8 +106,57 @@ def main() -> None:
     print("[train] num_envs :", env_cfg.scene.num_envs)
     print("[train] log_dir  :", log_dir)
 
+    # ---- xi: the TRAINING simulator ------------------------------------
+    xi = {}
+    if args_cli.xi:
+        with open(args_cli.xi, encoding="utf-8") as fh:
+            xi = json.load(fh)
+        act = env_cfg.actions.cart_velocity
+        for k, attr in (("order", "order"), ("zeta", "zeta"), ("omega_n", "omega_n"),
+                        ("tau", "time_constant_s"), ("delay_s", "delay_s"),
+                        ("deadband", "deadband")):
+            if k in xi:
+                setattr(act, attr, int(xi[k]) if k == "order" else float(xi[k]))
+        rob = env_cfg.scene.robot
+        if "kv" in xi:
+            rob.actuators["cart"].damping = float(xi["kv"])
+        if "f_clamp" in xi:
+            rob.actuators["cart"].effort_limit_sim = float(xi["f_clamp"])
+        if "joint_damping" in xi:
+            rob.actuators["passive"].damping = float(xi["joint_damping"])
+        if "joint_friction" in xi:
+            rob.actuators["passive"].friction = float(xi["joint_friction"])
+        if "gravity" in xi:
+            env_cfg.sim.gravity = (0.0, 0.0, -float(xi["gravity"]))
+        print("[train] xi       :", json.dumps(xi))
+
     env_cfg.log_dir = log_dir
     env = gym.make(args_cli.task, cfg=env_cfg, render_mode="rgb_array" if args_cli.video else None)
+
+    if xi and any(k in xi for k in ("mass_scale", "cart_mass_scale")):
+        # after gym.make: masses live in the USD asset, and a dynamically
+        # assigned startup EventTermCfg does not register (verified -- the event
+        # manager reported only ['reset'] and the perturbation silently did
+        # nothing while reporting a plausible success rate).
+        _rb = env.unwrapped.scene["robot"]
+        _v = _rb.root_physx_view
+        _names = list(_rb.body_names)
+        _m, _I = _v.get_masses().clone(), _v.get_inertias().clone()
+        _want = {"cart": float(xi.get("cart_mass_scale", 1.0))}
+        for _i, _sc in enumerate(xi.get("mass_scale", [1.0, 1.0, 1.0])):
+            _want["link%d" % (_i + 1)] = float(_sc)
+        for _n, _sc in _want.items():
+            if _n in _names and _sc != 1.0:
+                _b = _names.index(_n)
+                _m[:, _b] *= _sc      # inertia scaled by the same factor: a
+                _I[:, _b] *= _sc      # density error at fixed geometry
+        _idx = torch.arange(_v.count, dtype=torch.int32)
+        _v.set_masses(_m, _idx)
+        _v.set_inertias(_I, _idx)
+        with open(os.path.join(log_dir, "xi_applied.json"), "w", encoding="utf-8") as fh:
+            json.dump({"xi": xi,
+                       "masses_in_sim": {n: round(float(_v.get_masses()[0, i]), 6)
+                                         for i, n in enumerate(_names)}}, fh, indent=1)
 
     if args_cli.video:
         video_kwargs = {

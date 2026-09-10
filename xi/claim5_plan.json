@@ -1,0 +1,69 @@
+{
+ "simulators": {
+  "S_nominal": {
+   "xi": {},
+   "seeds": 3,
+   "role": "reference"
+  },
+  "S_equiv_c8": {
+   "xi": {
+    "mass_scale": [
+     8.0,
+     8.0,
+     8.0
+    ]
+   },
+   "seeds": 2,
+   "role": "far along the EXACT equivalence direction"
+  },
+  "S_transverse": {
+   "xi": {
+    "mass_scale": [
+     1.5,
+     1.0,
+     1.0
+    ]
+   },
+   "seeds": 2,
+   "role": "transverse: breaks the mass-ratio symmetry"
+  },
+  "S_twinA": {
+   "xi": {
+    "order": 2,
+    "omega_n": 28.0,
+    "zeta": 0.5
+   },
+   "seeds": 3,
+   "role": "fidelity twin A (act_2nd_z05)"
+  },
+  "S_twinB": {
+   "xi": {
+    "joint_damping": 0.004
+   },
+   "seeds": 3,
+   "role": "fidelity twin B (dis_jdamp_004)"
+  },
+  "S_delay": {
+   "xi": {
+    "delay_s": 0.012
+   },
+   "seeds": 2,
+   "role": "near-boundary dead time"
+  }
+ },
+ "R_star": {
+  "tau": 0.075,
+  "joint_friction": 0.005,
+  "delay_s": 0.008,
+  "mass_scale": [
+   1.12,
+   1.09,
+   1.14
+  ],
+  "cart_mass_scale": 1.07
+ },
+ "iterations": 1000,
+ "num_envs": 4096,
+ "selection": "best checkpoint by measured dead-hang success in its OWN training simulator",
+ "deployment_eval": "R_star, 256 episodes, TIP-SwingUp-Play-v0"
+}

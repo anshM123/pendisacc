@@ -1,0 +1,13 @@
+{
+ "order": 2,
+ "omega_n": 34.0,
+ "zeta": 0.8,
+ "joint_friction": 0.002,
+ "delay_s": 0.004,
+ "mass_scale": [
+  1.08,
+  1.06,
+  1.09
+ ],
+ "cart_mass_scale": 1.05
+}

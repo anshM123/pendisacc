@@ -1,0 +1,11 @@
+{
+ "tau": 0.075,
+ "joint_friction": 0.005,
+ "delay_s": 0.008,
+ "mass_scale": [
+  1.12,
+  1.09,
+  1.14
+ ],
+ "cart_mass_scale": 1.07
+}
