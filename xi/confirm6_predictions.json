@@ -1,0 +1,44 @@
+[
+ {
+  "name": "g_clamp349_c9",
+  "clamp": 349.5,
+  "c": 9,
+  "deficit": 2.95,
+  "prediction": "success"
+ },
+ {
+  "name": "g_clamp349_c16",
+  "clamp": 349.5,
+  "c": 16,
+  "deficit": 10.67,
+  "prediction": "FAIL"
+ },
+ {
+  "name": "g_clamp1000_c17",
+  "clamp": 1000.0,
+  "c": 17,
+  "deficit": 1.16,
+  "prediction": "success"
+ },
+ {
+  "name": "g_clamp1000_c31",
+  "clamp": 1000.0,
+  "c": 31,
+  "deficit": 12.66,
+  "prediction": "FAIL"
+ },
+ {
+  "name": "g_clamp3000_c41",
+  "clamp": 3000.0,
+  "c": 41,
+  "deficit": 0.0,
+  "prediction": "success"
+ },
+ {
+  "name": "g_clamp3000_c74",
+  "clamp": 3000.0,
+  "c": 74,
+  "deficit": 19.98,
+  "prediction": "FAIL"
+ }
+]
