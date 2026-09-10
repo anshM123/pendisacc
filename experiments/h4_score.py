@@ -139,7 +139,13 @@ def main() -> int:
     if gate_fail:
         for n, p, v in gate_fail:
             print("      %s/%s only %.1f%%" % (n, p, v))
-    print("      -> %s\n" % verdicts["Q3"])
+    print("      -> %s" % verdicts["Q3"])
+    print("      stricter %.0f%% standard (added after H4 was frozen; reported"
+          % GATE_STRICT)
+    print("      alongside the pre-registered gate, never in place of it): %s"
+          % ("all pass" if not strict_fail
+             else ", ".join("%s/%s %.1f%%" % t for t in strict_fail)))
+    print("")
 
     floored = all(r["best_any"] < FLOOR for r in af)
     overlap = not (min(Av) > max(Af) or min(Af) > max(Av))
