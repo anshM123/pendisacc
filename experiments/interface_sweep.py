@@ -21,6 +21,11 @@ so every condition at a given c is exactly as far from nominal as every other,
 and any difference between them is due to direction alone. Without this the
 comparison would merely be re-discovering that bigger errors are worse.
 
+A second scheme, DOMINATED, is swept alongside it: uniform x c against a single
+link x c. There the uniform condition is strictly the LARGER perturbation in
+every norm, so it cannot be accused of being flattered by the choice of
+matching. See conditions() for why both are needed.
+
   run.cmd experiments/interface_sweep.py --interface force --runs <dir> <dir>
 """
 
@@ -90,19 +95,48 @@ def link_masses_and_lengths():
 
 
 def conditions(m0):
-    """Uniform and per-link transverse errors at MATCHED ||dm|| for each c."""
+    """Two matching schemes, because the choice of matching is contestable.
+
+    MATCHED NORM (pre-registered primary). Every condition at a given c is the
+    same Euclidean distance from nominal in link-mass space. Uniform scaling by
+    c displaces (c-1)*m0; each transverse condition puts that same norm into
+    one link. Magnitude held fixed, direction varied.
+
+      The obvious objection: at c = 2.5 this compares uniform x2.50 against
+      link3 x5.22, because link3 is the lightest link and absorbing the whole
+      displacement takes a large factor. "Of course the 5x error is worse."
+
+    DOMINATED (robustness check, added before any H4 number existed). Uniform
+    scaling by c against a SINGLE link scaled by the same factor c. Now the
+    uniform condition changes all three links by c while the transverse one
+    changes a single link by c, so the uniform perturbation is strictly larger
+    in every norm -- larger in L1, L2, Linf, and larger in fractional terms on
+    every link that moves. If uniform STILL transfers better, no choice of
+    matching can explain it away, because uniform is not being flattered by
+    the matching at all; it is being handicapped.
+
+    The primary verdict remains the matched-norm one. This is reported
+    alongside it, not instead of it.
+    """
     norm = float(np.linalg.norm(m0))
     out = []
     for c in args_cli.c_values:
         d = (c - 1.0) * norm
-        out.append({"c": c, "direction": "uniform", "scale": [c, c, c], "dm": d})
+        out.append({"c": c, "direction": "uniform", "scale": [c, c, c],
+                    "dm": d, "scheme": "both"})
         if c == 1.0:
             continue
         for i in range(3):
             s = [1.0, 1.0, 1.0]
             s[i] = 1.0 + d / m0[i]
             out.append({"c": c, "direction": "transverse_link%d" % (i + 1),
-                        "scale": s, "dm": d})
+                        "scale": s, "dm": d, "scheme": "matched_norm"})
+        for i in range(3):
+            s = [1.0, 1.0, 1.0]
+            s[i] = c
+            dm_i = abs(c - 1.0) * m0[i]
+            out.append({"c": c, "direction": "dominated_link%d" % (i + 1),
+                        "scale": s, "dm": dm_i, "scheme": "dominated"})
     return out
 
 
@@ -225,6 +259,7 @@ def main() -> int:
                          "interface": args_cli.interface, "c": cd["c"],
                          "direction": cd["direction"],
                          "scale": [round(float(x), 5) for x in cd["scale"]],
+                         "scheme": cd["scheme"],
                          "dm_kg": cd["dm"], "success": r, "early_term": e,
                          "masses_in_sim": applied})
             print("  [%s] c=%-5.2f %-18s ||dm||=%.4f  success %6.1f%%"
