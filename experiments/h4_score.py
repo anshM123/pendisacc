@@ -32,7 +32,11 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 C_STAR = 2.5
 Q1_MIN = 40.0
 Q2_MIN = 40.0
-GATE = 80.0
+GATE = 80.0        # pre-registered in PREREGISTRATION_H4.md
+GATE_STRICT = 95.0 # stricter standard requested after H4 was frozen. Reported
+                   # alongside, never in place of: moving a pre-registered
+                   # threshold once data exists is how a kill condition gets
+                   # quietly repealed.
 FLOOR = 20.0
 
 
@@ -127,6 +131,9 @@ def main() -> int:
     gate_fail = [(n, r["policy"], r["nominal"])
                  for n, a in (("velocity", av), ("force", af))
                  for r in a if r["nominal"] < GATE]
+    strict_fail = [(n, r["policy"], r["nominal"])
+                   for n, a in (("velocity", av), ("force", af))
+                   for r in a if r["nominal"] < GATE_STRICT]
     verdicts["Q3"] = "SUPPORTED" if not gate_fail else "FAIL"
     print("  Q3  competence: every policy >= %.0f%% at c = 1 in its own interface" % GATE)
     if gate_fail:
