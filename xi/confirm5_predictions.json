@@ -1,0 +1,50 @@
+[
+ {
+  "name": "b_c12",
+  "xi": {
+   "mass_scale": [
+    12.0,
+    12.0,
+    12.0
+   ]
+  },
+  "prediction": "success",
+  "rationale": "deficit ~5.9 N s, below the transition"
+ },
+ {
+  "name": "b_c14",
+  "xi": {
+   "mass_scale": [
+    14.0,
+    14.0,
+    14.0
+   ]
+  },
+  "prediction": "success",
+  "rationale": "deficit ~8.2 N s, just below"
+ },
+ {
+  "name": "b_c16",
+  "xi": {
+   "mass_scale": [
+    16.0,
+    16.0,
+    16.0
+   ]
+  },
+  "prediction": "FAIL",
+  "rationale": "deficit ~10.6 N s, just above"
+ },
+ {
+  "name": "b_c18",
+  "xi": {
+   "mass_scale": [
+    18.0,
+    18.0,
+    18.0
+   ]
+  },
+  "prediction": "FAIL",
+  "rationale": "deficit ~13.1 N s, above"
+ }
+]
