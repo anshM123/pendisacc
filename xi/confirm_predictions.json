@@ -1,0 +1,74 @@
+[
+ {
+  "name": "inv_c05",
+  "mass_scale": [
+   5.0,
+   5.0,
+   5.0
+  ],
+  "prediction": "success"
+ },
+ {
+  "name": "inv_c10",
+  "mass_scale": [
+   10.0,
+   10.0,
+   10.0
+  ],
+  "prediction": "success"
+ },
+ {
+  "name": "inv_c20",
+  "mass_scale": [
+   20.0,
+   20.0,
+   20.0
+  ],
+  "prediction": "success"
+ },
+ {
+  "name": "inv_c30",
+  "mass_scale": [
+   30.0,
+   30.0,
+   30.0
+  ],
+  "prediction": "success"
+ },
+ {
+  "name": "inv_c50",
+  "mass_scale": [
+   50.0,
+   50.0,
+   50.0
+  ],
+  "prediction": "FAIL"
+ },
+ {
+  "name": "inv_c70",
+  "mass_scale": [
+   70.0,
+   70.0,
+   70.0
+  ],
+  "prediction": "FAIL"
+ },
+ {
+  "name": "inv_asym_c05",
+  "mass_scale": [
+   5.0,
+   1.0,
+   1.0
+  ],
+  "prediction": "FAIL"
+ },
+ {
+  "name": "inv_asym_c10",
+  "mass_scale": [
+   10.0,
+   1.0,
+   1.0
+  ],
+  "prediction": "FAIL"
+ }
+]
