@@ -82,7 +82,8 @@ def main() -> int:
         return 1
 
     print("  strongest pairs by transfer gap:")
-    print("  %-19s %-19s   E_a      E_b     rel     P_a     P_b     gap")
+    print("  %-19s %-19s   E_a      E_b     rel     P_a     P_b     gap"
+          % ("condition A", "condition B"))
     print("  " + "-" * 88)
     for p in pairs[:12]:
         print("  %-19s %-19s %7.4f  %7.4f  %4.1f%%  %5.1f%%  %5.1f%%  %5.1f"
