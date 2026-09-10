@@ -1,0 +1,84 @@
+[
+ {
+  "name": "j_c20_both",
+  "xi": {
+   "mass_scale": [
+    20.0,
+    20.0,
+    20.0
+   ],
+   "kv": 4000.0,
+   "f_clamp": 7000.0
+  },
+  "prediction": "success",
+  "rationale": "both limits lifted together"
+ },
+ {
+  "name": "j_c30_both",
+  "xi": {
+   "mass_scale": [
+    30.0,
+    30.0,
+    30.0
+   ],
+   "kv": 6000.0,
+   "f_clamp": 10500.0
+  },
+  "prediction": "success",
+  "rationale": "same, scaled with c"
+ },
+ {
+  "name": "j_c20_kvonly",
+  "xi": {
+   "mass_scale": [
+    20.0,
+    20.0,
+    20.0
+   ],
+   "kv": 4000.0
+  },
+  "prediction": "FAIL",
+  "rationale": "gain only - clamp still binds"
+ },
+ {
+  "name": "j_c20_clponly",
+  "xi": {
+   "mass_scale": [
+    20.0,
+    20.0,
+    20.0
+   ],
+   "f_clamp": 7000.0
+  },
+  "prediction": "FAIL",
+  "rationale": "clamp only - gain still binds"
+ },
+ {
+  "name": "j_asym_both",
+  "xi": {
+   "mass_scale": [
+    5.0,
+    1.0,
+    1.0
+   ],
+   "kv": 4000.0,
+   "f_clamp": 7000.0
+  },
+  "prediction": "FAIL",
+  "rationale": "authority cannot restore a broken symmetry"
+ },
+ {
+  "name": "j_c05_both",
+  "xi": {
+   "mass_scale": [
+    5.0,
+    5.0,
+    5.0
+   ],
+   "kv": 4000.0,
+   "f_clamp": 7000.0
+  },
+  "prediction": "success",
+  "rationale": "control: must not break what worked"
+ }
+]
