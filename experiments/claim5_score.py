@@ -61,8 +61,13 @@ def compare(a, b, thresh, name_a, name_b, directional):
     ma, ra = summary(a)
     mb, rb = summary(b)
     gap = ma - mb if directional else abs(ma - mb)
-    overlap = not (min(ra[0], rb[0]) == ra[0] and ra[0] > rb[1]) and \
-              not (rb[0] > ra[1])
+    # Two ranges are DISJOINT when one starts above where the other ends.
+    # The earlier form of this test had an extra min() guard that made it
+    # report overlap whenever arm A sat entirely ABOVE arm B. Neither P1 nor
+    # P2 was in that configuration, so the reported verdicts are unchanged --
+    # verified in the commit message -- but the bug's direction was to call a
+    # clean separation "inconclusive", i.e. to under-claim.
+    overlap = not (ra[0] > rb[1] or rb[0] > ra[1])
     detail = ("%s %.1f%% (seeds %.1f-%.1f)  vs  %s %.1f%% (seeds %.1f-%.1f)  gap %+.1f"
               % (name_a, ma, ra[0], ra[1], name_b, mb, rb[0], rb[1], gap))
     if gap < thresh:
