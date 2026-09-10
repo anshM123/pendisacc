@@ -43,16 +43,33 @@ def load(interface):
     return json.load(open(p, encoding="utf-8"))
 
 
-def anisotropy(rows, policy, c=C_STAR):
-    """A = success(uniform) - mean success(transverse), at matched ||dm||."""
+def anisotropy(rows, policy, c=C_STAR, scheme="matched_norm"):
+    """A = success(uniform) - mean success(off-axis), in points.
+
+    scheme "matched_norm" is the pre-registered primary: every condition sits
+    at the same ||dm||, so only direction varies. scheme "dominated" is the
+    robustness check: uniform x c against one link x c, where uniform is the
+    strictly LARGER perturbation, so a positive A there cannot be an artefact
+    of how the magnitudes were matched.
+    """
     sel = [r for r in rows if r["policy"] == policy and abs(r["c"] - c) < 1e-9]
     uni = [r["success"] for r in sel if r["direction"] == "uniform"]
-    tra = [r["success"] for r in sel if r["direction"].startswith("transverse")]
-    if not uni or not tra:
+    prefix = "transverse" if scheme == "matched_norm" else "dominated"
+    off = [r["success"] for r in sel if r["direction"].startswith(prefix)]
+    if not uni or not off:
         return None
-    dm = {round(r["dm_kg"], 9) for r in sel}
-    assert len(dm) == 1, "conditions at c=%s are not at matched ||dm||: %s" % (c, dm)
-    return 100.0 * (float(np.mean(uni)) - float(np.mean(tra)))
+    if scheme == "matched_norm":
+        dm = {round(r["dm_kg"], 9) for r in sel
+              if r["direction"] == "uniform" or r["direction"].startswith(prefix)}
+        assert len(dm) == 1, "c=%s not at matched ||dm||: %s" % (c, sorted(dm))
+    else:
+        # uniform must be the LARGER perturbation for this scheme to mean what
+        # it claims; assert it rather than trusting the sweep's arithmetic
+        dm_u = max(r["dm_kg"] for r in sel if r["direction"] == "uniform")
+        dm_o = max(r["dm_kg"] for r in sel if r["direction"].startswith(prefix))
+        assert dm_u > dm_o, ("dominated scheme is not dominated at c=%s: "
+                             "uniform ||dm||=%.4f vs off-axis %.4f" % (c, dm_u, dm_o))
+    return 100.0 * (float(np.mean(uni)) - float(np.mean(off)))
 
 
 def nominal(rows, policy):
@@ -64,7 +81,10 @@ def nominal(rows, policy):
 def arm(data):
     rows = data["rows"]
     pols = sorted({r["policy"] for r in rows})
-    return [{"policy": p, "A": anisotropy(rows, p), "nominal": nominal(rows, p),
+    return [{"policy": p,
+             "A": anisotropy(rows, p, scheme="matched_norm"),
+             "A_dominated": anisotropy(rows, p, scheme="dominated"),
+             "nominal": nominal(rows, p),
              "best_any": 100.0 * max(r["success"] for r in rows if r["policy"] == p)}
             for p in pols]
 
@@ -84,12 +104,13 @@ def main() -> int:
     print("H4: does the anisotropy of the reality gap belong to the interface?")
     print("Anisotropy A = success(uniform) - success(transverse) at matched")
     print("||dm||, c = %.1f. Higher A means direction matters more.\n" % C_STAR)
-    print("  arm        policy        nominal(c=1)   best any cond      A")
-    print("  " + "-" * 62)
+    print("  arm        policy        nominal(c=1)   best any     A(matched)  A(dominated)")
+    print("  " + "-" * 78)
     for name, a in (("velocity", av), ("force", af)):
         for r in a:
-            print("  %-10s %-13s %7.1f%%      %7.1f%%      %+7.1f"
-                  % (name, r["policy"], r["nominal"], r["best_any"], r["A"]))
+            ad = "     n/a" if r["A_dominated"] is None else "%+8.1f" % r["A_dominated"]
+            print("  %-10s %-13s %7.1f%%      %7.1f%%    %+8.1f  %s"
+                  % (name, r["policy"], r["nominal"], r["best_any"], r["A"], ad))
 
     Av = [r["A"] for r in av]
     Af = [r["A"] for r in af]
@@ -138,6 +159,24 @@ def main() -> int:
     print("  Q2  A_velocity >= %.0f points on its own" % Q2_MIN)
     print("      %+.1f\n      -> %s\n" % (mAv, verdicts["Q2"]))
 
+    # ---- robustness: the scheme that cannot be argued with -----------------
+    Dv = [r["A_dominated"] for r in av if r["A_dominated"] is not None]
+    Df = [r["A_dominated"] for r in af if r["A_dominated"] is not None]
+    if Dv and Df:
+        mDv, mDf = float(np.mean(Dv)), float(np.mean(Df))
+        print("  ROBUSTNESS (not a pre-registered verdict): the DOMINATED scheme,")
+        print("  where uniform x c is a strictly LARGER error than one link x c.")
+        print("      A_velocity %+.1f  (seeds %s)" % (mDv, fmt(sorted(Dv, reverse=True))))
+        print("      A_force    %+.1f  (seeds %s)" % (mDf, fmt(sorted(Df, reverse=True))))
+        print("      gap        %+.1f" % (mDv - mDf))
+        if mDv > 0:
+            print("      A_velocity > 0 here means the LARGER error transferred better,")
+            print("      which no choice of magnitude matching can produce by itself.\n")
+        else:
+            print("")
+    else:
+        mDv = mDf = None
+
     ok = sum(1 for v in verdicts.values() if v == "SUPPORTED")
     print("  %d of 3 supported: %s" % (ok, verdicts))
     if verdicts["Q1"].startswith("FAIL -- KILL"):
@@ -147,7 +186,8 @@ def main() -> int:
 
     out = {"c_star": C_STAR, "Q1_min": Q1_MIN, "Q2_min": Q2_MIN, "gate": GATE,
            "velocity": av, "force": af, "A_velocity_mean": mAv,
-           "A_force_mean": mAf, "gap": gap, "seed_ranges_overlap": bool(overlap),
+           "A_force_mean": mAf, "gap": gap,
+           "A_dominated_velocity_mean": mDv, "A_dominated_force_mean": mDf, "seed_ranges_overlap": bool(overlap),
            "force_arm_floored": bool(floored), "verdicts": verdicts}
     json.dump(out, open(os.path.join(ROOT, "results", "h4_score.json"), "w"), indent=1)
     print("\n[out] results/h4_score.json")
