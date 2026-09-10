@@ -127,7 +127,89 @@ such pairs clear the threshold. So trajectory fidelity is **informative
 statistically and ambiguous locally** — a sharper claim than "insufficient",
 and one our own data supports rather than contradicts.
 
-## 5. What is not yet established
+## 5. Does the geometry change what RL learns? Partly, and less than predicted
+
+Everything above is one frozen policy across many simulators. The sim-to-real
+question is `S_i -> pi_i -> R*`: train *in* each simulator, deploy into a common
+reality. 15 policies, six training simulators, one deployment target `R*` fixed
+in `PREREGISTRATION_H3.md` before any of them existed.
+
+| training simulator | seeds | success in `R*` (per seed) | mean |
+|---|---:|---|---:|
+| `S_nominal` | 3 | 100.0, 71.1, 23.0 | 64.7% |
+| `S_twinB` — joint damping 0.004 | 3 | 100.0, 73.8, 22.7 | **65.5%** |
+| `S_transverse` — mass [1.5,1,1] | 2 | 7.4, 2.3 | 4.9% |
+| `S_equiv_c8` — uniform x8 | 2 | 2.0, 0.0 | **1.0%** |
+| `S_twinA` — 2nd-order actuator, ζ=0.5 | 3 | 2.0, 0.8, 0.0 | **0.9%** |
+| `S_delay` — 12 ms dead time | 2 | 1.6, 0.0 | 0.8% |
+
+**P1 failed, and failed in the direction opposite to the prediction.** The
+equivalence-direction simulator (uniform x8) trained *worse*-transferring
+policies (1.0%) than the transverse one (4.9%). The pre-registration named this
+as a kill condition and it is reported as one.
+
+The likely reason sharpens the theory rather than rescuing it, but it is
+**post-hoc and is labelled as such**: at c = 8 the force demand is ~8x nominal,
+so *training* at c = 8 happens in a force-saturated regime. §3 already showed
+the symmetry is only realisable while the drive has authority. A policy
+*evaluated* at c = 8 with authority restored scores 100%; a policy *raised*
+there learns a strategy fitted to saturation and does not come back. So
+
+> equivalence for a fixed policy is not equivalence for training.
+
+That is a real distinction and it is not one the paper predicted. Testing it
+properly requires an authority-matched c = 8 training arm, which has not been
+run.
+
+**P2 was supported, by 64.6 points** — the two trajectory-fidelity twins, 1.5%
+apart in RMSE, trained policies transferring at 65.5% and 0.9%. But the honest
+reading is weaker than the number: `S_twinB` is joint damping 0.004, a nearly
+negligible perturbation whose seed pattern (100.0, 73.8, 22.7) is almost
+identical to nominal's (100.0, 71.1, 23.0), because the same seed under a
+negligible ξ gives nearly the same policy. So P2 is "one twin is near-nominal
+and the other is destructive", not "two comparable rivals". The fidelity
+measure still cannot separate them, which is the claim — but the claim is
+carried by twinA being severe.
+
+**P3 was supported.** Nominal (64.7%) beat transverse (4.9%), so the protocol
+is not at fault.
+
+## 6. In-simulator performance carries no information about transfer
+
+Exploratory — this axis was not named in `PREREGISTRATION_H3.md` and no
+threshold was frozen for it. It is also the most uncomfortable number here.
+
+Every one of the 15 policies was selected the only way a practitioner without
+access to reality can select: best measured success in its **own** training
+simulator.
+
+| | mean | range | spread |
+|---|---:|---|---:|
+| own training simulator | 99.7% | 98.0 – 100.0 | **2.0 points** |
+| deployment into `R*` | 27.1% | 0.0 – 100.0 | **100.0 points** |
+
+Spearman ρ(own-sim, `R*`) = **−0.090**, permutation *p* = 0.749, *n* = 15.
+
+The controlled version removes the simulator from the comparison entirely.
+Within the nominal arm the simulator, protocol, reward, architecture and
+iteration count are identical; the random **seed** is the only difference:
+
+| policy | own-sim | in `R*` |
+|---|---:|---:|
+| `S_nominal_s1` | 100.0% | 100.0% |
+| `S_nominal_s2` | 99.2% | 71.1% |
+| `S_nominal_s3` | 100.0% | 23.0% |
+| **spread** | **0.8 points** | **77.0 points** |
+
+Seed alone moves transfer by 77 points while moving the selection criterion by
+0.8. Two consequences. First, methodological: the quantity everyone selects on
+is uninformative about the quantity everyone wants, so any single-seed
+sim-to-real comparison — including several of ours — is underpowered by
+construction. Second, for this paper: a 77-point within-arm spread is 2.5x the
+30-point threshold P2 was tested against, which is why the seed-spread rule was
+frozen in `PREREGISTRATION_H3.md` in advance.
+
+## 7. What is not yet established
 
 * **Does the geometry change what RL learns?** Everything above is one frozen
   policy across many simulators. The sim-to-real question is
@@ -143,7 +225,7 @@ and one our own data supports rather than contradicts.
 
 # Appendix: the baseline these results are measured against
 
-## 6. What "success" means here
+## 8. What "success" means here
 
 Reward is not the metric. It misled this project three separate times — most
 starkly when a run reported reward 108 and rising while measuring **0%** actual
@@ -166,7 +248,7 @@ and no sensor noise. That is a **capability** test, not a robustness test, and
 it is why the numbers in §1 carry no confidence interval. §4 repeats the
 measurement over an actual distribution.
 
-## 7. A representative trajectory
+## 9. A representative trajectory
 
 From `results/rollout_success.npz` (seed 3, `model_700`), rendered in
 `figures/swingup_success.gif` using the real CAD outlines:
@@ -185,7 +267,7 @@ rail limit** (0 terminations in 3072). Peak speed is the tighter of the two
 margins (87% vs 77%), and required force is an order of magnitude inside the
 drive's capability (§7).
 
-## 8. Robustness — over an actual distribution
+## 10. Robustness — over an actual distribution
 
 §1 is a capability test from a near-fixed start. This is the same policy
 measured over **independent random draws**, which is what a rate with a
@@ -229,7 +311,7 @@ Reading this against §1: perfect nominal success and ~99.5% perturbed success
 is the expected shape. The gap is the honest measure of margin, and it points at
 rail headroom during swing-up rather than at the controller.
 
-## 9. Sensitivity to the simulator itself
+## 11. Sensitivity to the simulator itself
 
 Section 4 randomises the initial condition and the sensors. It does **not**
 randomise `xi`, the simulator. Doing so changes the picture, and not
@@ -296,7 +378,7 @@ dead time, second-order actuators, mass error, compliance, or combinations --
 which are exactly what twin-finding needs. It is therefore used for cheap
 candidate DISCOVERY, and every publishable comparison is confirmed in Isaac.
 
-## 10. Conditions
+## 12. Conditions
 
 These are not idealised-actuator results.
 
@@ -325,7 +407,7 @@ unmeasured. A first-order lag contributes at most 90° of phase and is
 compensable with full state feedback; a dead time is not. **If one thing is
 measured on the real drive, it should be dead time, not settling time.**
 
-## 11. The plant these results are about
+## 13. The plant these results are about
 
 Derived from the CAD by `tools/sw_dump_assembly.py` and validated end-to-end by
 `tools/validate_asset.py` (`results/asset_validation.json`, all checks pass):
@@ -356,7 +438,7 @@ from the CAD entirely). Links 0.17752 / 0.10026 / 0.07747 kg, joint spacing
 > parameters should come from **weighing the actual links once built**, with COM
 > and inertia measured or estimated per link, not from any assumed density.
 
-## 12. Actuator headroom
+## 14. Actuator headroom
 
 `tools/actuator_bandwidth.py` designs an LQR on the augmented plant (link
 states + drive lag state, commanded cart velocity as input) and asks what it
@@ -372,7 +454,7 @@ Against a drive rated at **99.7 N** (349.5 N peak) and **4.0 m/s**. The
 requirement degrades gently with lag because holding a lean needs only ~1 m/s²
 and `v_cmd − v_ref = a·tau`. Force is not the constraint at any plausible lag.
 
-## 13. What it took — four defects, each found by measurement
+## 15. What it took — four defects, each found by measurement
 
 Every one of these was diagnosed only after the reward curve had already lied
 about it. The order matters: each fix was necessary and none was sufficient.
@@ -391,7 +473,7 @@ and `exp(−Σω²/σ_v²)` is annihilated at `Σω²` = 11660 for any sane `σ_
 failures came from the same mistake — sizing a reward term against an *assumed*
 operating point (4 rad/s) instead of a measured one (62 rad/s).
 
-## 14. Known limitations
+## 16. Known limitations
 
 **Checkpoint selection is required, not a convenience.** Within a single run,
 performance oscillates violently:
@@ -423,7 +505,7 @@ on selection. Not done.
 results. The simulator population, nonlinear fingerprints, twin search and
 pseudo-realities are all still empty.
 
-## 15. Reproducing
+## 17. Reproducing
 
 ```powershell
 # three seeds, 1000 iterations each (~35 min per seed on an RTX 5070 Ti)
