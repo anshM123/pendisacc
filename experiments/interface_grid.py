@@ -165,6 +165,20 @@ def main() -> int:
                     early |= dones.bool()
                 # ---- authority telemetry, the confound this experiment must
                 # not be silently measuring instead of the interface ----
+                #
+                # data.applied_torque is written from actuator.applied_effort
+                # (articulation.py:1901), which for an ImplicitActuator is
+                # clip(stiffness*e_pos + damping*e_vel + joint_efforts). That
+                # is exactly the quantity wanted in both arms -- kv*(v_des - v)
+                # for the velocity loop, the commanded force for the force arm.
+                #
+                # It is a MODEL-SIDE estimate, not a PhysX readback: PhysX
+                # solves the damping term implicitly, so the force actually
+                # applied across a substep differs slightly from this explicit
+                # evaluation at the step boundary. The saturation fractions
+                # below are therefore close but not exact, which is fine for
+                # flagging saturated cells and would not be fine for a claim
+                # about the precise force.
                 f = robot.data.applied_torque[:, cart_idx].abs()
                 v = robot.data.joint_vel[:, cart_idx].abs()
                 f_abs_sum += float(f.mean())
