@@ -188,39 +188,110 @@ def main() -> None:
                                          for i, n in enumerate(_names)}}, fh, indent=1)
 
     if args_cli.dr != "none":
+        # ---- H5: randomisation over a 7-D parameter block ------------------
+        # Coordinates, in dimensionless relative units:
+        #   [m1, m2, m3, I1, I2, I3, cart_mass]
+        # Mass and inertia move INDEPENDENTLY here, unlike the xi conditions
+        # elsewhere which scale them together as a density error. They have to:
+        # the null structure couples them, and holding I = f(m) would collapse
+        # the very directions this experiment is about.
+        #
+        # The geom arm projects off the null subspace DISCOVERED by
+        # tools/geometry_discover.py, not off a hand-written direction. An
+        # earlier version of this block projected off m0/||m0||, the
+        # analytically known answer, which made the "geometry-aware" arm a
+        # restatement of the theory rather than a test of a method.
+        #
+        # kv is NOT randomised even though the most-null discovered direction
+        # is cart_mass <-> kv. Per-environment joint damping is writable
+        # (articulation.write_joint_damping_to_sim) but the source notes it
+        # does not update the actuator model's own bookkeeping, so the
+        # telemetry and the physics would disagree. Excluded deliberately
+        # rather than risked on an 8-hour unattended run; recorded here so the
+        # omission is visible in the result.
         import numpy as _np
+        _DRN = ["m1", "m2", "m3", "I1", "I2", "I3", "cart_mass"]
         _rb2 = env.unwrapped.scene["robot"]
         _v2 = _rb2.root_physx_view
         _names2 = list(_rb2.body_names)
         _li = [_names2.index("link%d" % (i + 1)) for i in range(3)]
+        _ci = _names2.index("cart")
         _m2, _I2 = _v2.get_masses().clone(), _v2.get_inertias().clone()
         _n_env = _m2.shape[0]
-        _m0 = _np.array([float(_m2[0, b]) for b in _li])
-        _u = _m0 / _np.linalg.norm(_m0)                 # equivalence direction
-        _rng = _np.random.default_rng(args_cli.seed)
-        _w = args_cli.dr_width * (GEOM_WIDTH_FACTOR if args_cli.dr == "geom" else 1.0)
-        _d = (_rng.uniform(1.0 - _w, 1.0 + _w, size=(_n_env, 3)) - 1.0) * _m0
+
+        _null = _np.zeros((7, 0))
         if args_cli.dr == "geom":
-            _d = _d - _np.outer(_d @ _u, _u)            # project off the null direction
-        _scale = 1.0 + _d / _m0
+            _gp = os.path.join(ROOT, "results", "geometry_discover.json")
+            if not os.path.exists(_gp):
+                raise SystemExit("[train] --dr geom needs results/geometry_discover.json; "
+                                 "run tools/geometry_discover.py first")
+            # Restricting the FULL null subspace to a coordinate subset does
+            # NOT give a null subspace of the restricted system. Doing that
+            # here returned "cart_mass alone", because the discovered null
+            # direction is cart_mass TOGETHER WITH kv and kv is held fixed.
+            #
+            # The correct object is the metric of the restricted problem, and
+            # because G = E[J^T J] that is exactly the corresponding submatrix
+            # of G. Rebuild G from its spectrum, take the submatrix, and
+            # eigendecompose that.
+            _g = json.load(open(_gp, encoding="utf-8"))
+            _V = _np.array(_g["eigenvectors"])
+            _wv = _np.array(_g["eigenvalues"])
+            _G = _V @ _np.diag(_wv) @ _V.T
+            _rows = [_g["params"].index(n) for n in _DRN]
+            _Gr = _G[_np.ix_(_rows, _rows)]
+            _wr, _Vr = _np.linalg.eigh(_Gr)
+            _o = _np.argsort(_wr)
+            _wr, _Vr = _wr[_o], _Vr[:, _o]
+            # rank 2: with kv fixed the null space is {cart_mass, uniform
+            # inertial}, and there is a 12x eigenvalue gap after the first
+            # with the analytic symmetry sitting at alignment 0.968 with the
+            # first two. Taking 3 would start removing directions an order of
+            # magnitude more sensitive, i.e. throwing away useful budget.
+            _null = _Vr[:, :2]
+            print("[train] dr null subspace (restricted metric): lambda = %s"
+                  % ", ".join("%.3e" % x for x in _wr[:3]))
+            for _j in range(_null.shape[1]):
+                _t = _np.argsort(-_np.abs(_null[:, _j]))[:3]
+                print("          n%d: %s" % (_j, ", ".join(
+                    "%s %+.2f" % (_DRN[k], _null[k, _j]) for k in _t)))
+
+        _rng = _np.random.default_rng(args_cli.seed)
+        _w = args_cli.dr_width
+        _d = _rng.uniform(-_w, _w, size=(_n_env, 7))
+        _box_budget = float(_np.linalg.norm(_d, axis=1).mean())
+        if args_cli.dr == "geom" and _null.shape[1]:
+            _d = _d - (_d @ _null) @ _null.T        # remove the null component
+            # projection removes budget; rescale so the two arms spend the same
+            _cur = float(_np.linalg.norm(_d, axis=1).mean())
+            _d *= _box_budget / max(_cur, 1e-12)
+        _budget = float(_np.linalg.norm(_d, axis=1).mean())
+        _leak = (float(_np.abs(_d @ _null).mean()) if _null.shape[1] else float("nan"))
+
+        _scale = 1.0 + _d
         if float(_scale.min()) <= 0.0:
-            raise SystemExit("[train] dr width %.3f produces a non-positive mass" % _w)
+            raise SystemExit("[train] dr width %.3f produces a non-positive parameter" % _w)
         for _k, _b in enumerate(_li):
-            _f = torch.tensor(_scale[:, _k], dtype=_m2.dtype, device=_m2.device)
-            _m2[:, _b] *= _f
-            _I2[:, _b] *= _f.unsqueeze(-1)
+            _m2[:, _b] *= torch.tensor(_scale[:, _k], dtype=_m2.dtype, device=_m2.device)
+            _I2[:, _b] *= torch.tensor(_scale[:, 3 + _k],
+                                       dtype=_I2.dtype, device=_I2.device).unsqueeze(-1)
+        _m2[:, _ci] *= torch.tensor(_scale[:, 6], dtype=_m2.dtype, device=_m2.device)
         _v2.set_masses(_m2, torch.arange(_v2.count, dtype=torch.int32))
         _v2.set_inertias(_I2, torch.arange(_v2.count, dtype=torch.int32))
-        _budget = float(_np.linalg.norm(_d, axis=1).mean())
-        _along = float(_np.abs(_d @ _u).mean())
-        print("[train] dr       : %s width %.4f  E||dm|| = %.6f kg  E|dm.u| = %.3e"
-              % (args_cli.dr, _w, _budget, _along))
+
+        print("[train] dr       : %s width %.4f  E||dtheta|| = %.6f "
+              "(box reference %.6f)  leakage %.3e"
+              % (args_cli.dr, _w, _budget, _box_budget, _leak))
         with open(os.path.join(log_dir, "dr_applied.json"), "w", encoding="utf-8") as fh:
             json.dump({"mode": args_cli.dr, "width": _w,
-                       "base_width": args_cli.dr_width,
-                       "geom_width_factor": GEOM_WIDTH_FACTOR,
-                       "E_norm_dm_kg": _budget, "E_abs_dm_dot_u": _along,
-                       "m0": _m0.tolist(), "n_envs": int(_n_env),
+                       "coords": _DRN,
+                       "null_subspace_rank": int(_null.shape[1]),
+                       "null_subspace": _null.tolist(),
+                       "E_norm_dtheta": _budget,
+                       "E_norm_dtheta_box_reference": _box_budget,
+                       "E_abs_leakage_into_null": _leak,
+                       "kv_randomised": False,
+                       "n_envs": int(_n_env),
                        "scale_min": float(_scale.min()),
                        "scale_max": float(_scale.max())}, fh, indent=1)
 
