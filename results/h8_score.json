@@ -1,0 +1,14 @@
+{
+ "results": {
+  "nominal": 100.0,
+  "scale_only": 100.0,
+  "ratio_only": 1.171875,
+  "corrected_mid": 0.78125,
+  "corrected_lo": 1.5625,
+  "corrected_hi": 5.46875
+ },
+ "P1": true,
+ "P2": true,
+ "P3": true,
+ "P4": true
+}
