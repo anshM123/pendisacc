@@ -1,0 +1,186 @@
+{
+ "checkpoint": "logs/rsl_rl/tip_swingup/2026-09-05_21-02-09_rel1/model_800.pt",
+ "num_envs": 256,
+ "kv_nominal": 400.0,
+ "c_values": [
+  1.0,
+  2.0,
+  4.0,
+  8.0,
+  16.0,
+  32.0
+ ],
+ "rows": [
+  {
+   "condition": "sanity_kv_x0.25",
+   "cart_scale": 1.0,
+   "kv": 100.0,
+   "cart_mass_kg": 0.7905319929122925,
+   "kv_readback": 100.0,
+   "tau_loop_ms": 7.905319929122925,
+   "success": 1.0
+  },
+  {
+   "condition": "cart_only_x1",
+   "cart_scale": 1.0,
+   "kv": 400.0,
+   "cart_mass_kg": 0.7905319929122925,
+   "kv_readback": 400.0,
+   "tau_loop_ms": 1.9763299822807312,
+   "success": 1.0
+  },
+  {
+   "condition": "kv_only_x1",
+   "cart_scale": 1.0,
+   "kv": 400.0,
+   "cart_mass_kg": 0.7905319929122925,
+   "kv_readback": 400.0,
+   "tau_loop_ms": 1.9763299822807312,
+   "success": 1.0
+  },
+  {
+   "condition": "both_x1",
+   "cart_scale": 1.0,
+   "kv": 400.0,
+   "cart_mass_kg": 0.7905319929122925,
+   "kv_readback": 400.0,
+   "tau_loop_ms": 1.9763299822807312,
+   "success": 1.0
+  },
+  {
+   "condition": "cart_only_x2",
+   "cart_scale": 2.0,
+   "kv": 400.0,
+   "cart_mass_kg": 1.581063985824585,
+   "kv_readback": 400.0,
+   "tau_loop_ms": 3.9526599645614624,
+   "success": 1.0
+  },
+  {
+   "condition": "kv_only_x2",
+   "cart_scale": 1.0,
+   "kv": 800.0,
+   "cart_mass_kg": 0.7905319929122925,
+   "kv_readback": 800.0,
+   "tau_loop_ms": 0.9881649911403656,
+   "success": 1.0
+  },
+  {
+   "condition": "both_x2",
+   "cart_scale": 2.0,
+   "kv": 800.0,
+   "cart_mass_kg": 1.581063985824585,
+   "kv_readback": 800.0,
+   "tau_loop_ms": 1.9763299822807312,
+   "success": 1.0
+  },
+  {
+   "condition": "cart_only_x4",
+   "cart_scale": 4.0,
+   "kv": 400.0,
+   "cart_mass_kg": 3.16212797164917,
+   "kv_readback": 400.0,
+   "tau_loop_ms": 7.905319929122925,
+   "success": 1.0
+  },
+  {
+   "condition": "kv_only_x4",
+   "cart_scale": 1.0,
+   "kv": 1600.0,
+   "cart_mass_kg": 0.7905319929122925,
+   "kv_readback": 1600.0,
+   "tau_loop_ms": 0.4940824955701828,
+   "success": 1.0
+  },
+  {
+   "condition": "both_x4",
+   "cart_scale": 4.0,
+   "kv": 1600.0,
+   "cart_mass_kg": 3.16212797164917,
+   "kv_readback": 1600.0,
+   "tau_loop_ms": 1.9763299822807312,
+   "success": 1.0
+  },
+  {
+   "condition": "cart_only_x8",
+   "cart_scale": 8.0,
+   "kv": 400.0,
+   "cart_mass_kg": 6.32425594329834,
+   "kv_readback": 400.0,
+   "tau_loop_ms": 15.81063985824585,
+   "success": 1.0
+  },
+  {
+   "condition": "kv_only_x8",
+   "cart_scale": 1.0,
+   "kv": 3200.0,
+   "cart_mass_kg": 0.7905319929122925,
+   "kv_readback": 3200.0,
+   "tau_loop_ms": 0.2470412477850914,
+   "success": 1.0
+  },
+  {
+   "condition": "both_x8",
+   "cart_scale": 8.0,
+   "kv": 3200.0,
+   "cart_mass_kg": 6.32425594329834,
+   "kv_readback": 3200.0,
+   "tau_loop_ms": 1.9763299822807312,
+   "success": 1.0
+  },
+  {
+   "condition": "cart_only_x16",
+   "cart_scale": 16.0,
+   "kv": 400.0,
+   "cart_mass_kg": 12.64851188659668,
+   "kv_readback": 400.0,
+   "tau_loop_ms": 31.6212797164917,
+   "success": 0.01171875
+  },
+  {
+   "condition": "kv_only_x16",
+   "cart_scale": 1.0,
+   "kv": 6400.0,
+   "cart_mass_kg": 0.7905319929122925,
+   "kv_readback": 6400.0,
+   "tau_loop_ms": 0.1235206238925457,
+   "success": 1.0
+  },
+  {
+   "condition": "both_x16",
+   "cart_scale": 16.0,
+   "kv": 6400.0,
+   "cart_mass_kg": 12.64851188659668,
+   "kv_readback": 6400.0,
+   "tau_loop_ms": 1.9763299822807312,
+   "success": 0.9765625
+  },
+  {
+   "condition": "cart_only_x32",
+   "cart_scale": 32.0,
+   "kv": 400.0,
+   "cart_mass_kg": 25.29702377319336,
+   "kv_readback": 400.0,
+   "tau_loop_ms": 63.2425594329834,
+   "success": 0.0
+  },
+  {
+   "condition": "kv_only_x32",
+   "cart_scale": 1.0,
+   "kv": 12800.0,
+   "cart_mass_kg": 0.7905319929122925,
+   "kv_readback": 12800.0,
+   "tau_loop_ms": 0.06176031194627285,
+   "success": 1.0
+  },
+  {
+   "condition": "both_x32",
+   "cart_scale": 32.0,
+   "kv": 12800.0,
+   "cart_mass_kg": 25.29702377319336,
+   "kv_readback": 12800.0,
+   "tau_loop_ms": 1.9763299822807312,
+   "success": 0.0
+  }
+ ]
+}
