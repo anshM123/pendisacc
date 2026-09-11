@@ -1,0 +1,464 @@
+%% Direction, Not Magnitude -- anisotropy of the sim-to-real gap.
+%%
+%% Default build is IEEEtran (ICRA). For ICLR, see paper/README.md: the body is
+%% deliberately free of two-column-specific markup, so the switch is a preamble
+%% change plus figure resizing, not a rewrite.
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+
+\newcommand{\repo}{\url{https://github.com/anshM123/pendisacc}}
+
+\begin{document}
+
+\title{Direction, Not Magnitude: Anisotropy of the\\Sim-to-Real Gap in Learned Control}
+
+\author{\IEEEauthorblockN{Amitosh Mishra}
+\IEEEauthorblockA{\textit{Independent Researcher}\\
+amitosh.mishra81@gmail.com}}
+
+\maketitle
+
+\begin{abstract}
+A simulator in which every link mass is wrong by $700\%$ trains a swing-up
+policy that transfers perfectly. A simulator in which a \emph{single} link mass
+is wrong by the same factor---a strictly smaller error in every norm---trains a
+policy that fails completely. We study this reversal on a triple inverted
+pendulum on a cart and show that it is not an accident of one perturbation.
+Holding the Euclidean distance of the model error fixed in link-mass space and
+varying only its \emph{direction} moves swing-up success by 100 percentage
+points. Part of the effect has an exact explanation: for a planar $N$-link chain
+driven through a kinematically prescribed base, uniform scaling of all link
+inertias multiplies the passive Euler--Lagrange equations by a constant and
+leaves the trajectory invariant. We prove this symbolically for $N\!=\!1..4$ and
+give its counterexamples. We then pre-registered and tested the natural
+generalisation---that the equivalence class is a property of the \emph{action
+interface}, since the proof needs the base to be prescribed---and it
+\textbf{failed}: replacing cart-velocity command with direct cart-force command
+changes the measured anisotropy by $4.3$ points against a pre-registered
+threshold of $40$. Two further pre-registered scalar metrics were also rejected.
+What survives is sharper and less comfortable: the anisotropy is real, large and
+robust to the interface; short-horizon trajectory fidelity is the best aggregate
+predictor of transfer yet admits simulator pairs $1.5\%$ apart in fidelity with
+a 100-point transfer gap; and in-simulator success is uncorrelated with transfer
+($\rho=-0.09$, $n=15$), with seed alone moving transfer by 77 points at
+identical settings. All experiments, pre-registrations, failures and analysis
+code are public at \repo.
+\end{abstract}
+
+\begin{IEEEkeywords}
+sim-to-real transfer, reinforcement learning, underactuated systems, system
+identification, domain randomisation
+\end{IEEEkeywords}
+
+\section{Introduction}
+
+Practitioners choose where to spend effort on a simulator by asking how large
+each modelling error is. Mass is uncertain to $10\%$, so randomise mass by
+$10\%$; the actuator model is crude, so identify it better. This implicitly
+treats the space of model errors as isotropic, with a single scalar---error
+magnitude, or a fidelity score---ordering how dangerous a discrepancy is.
+
+On the system studied here that ordering is wrong, and not marginally. Scaling
+every link mass by $8\times$ displaces the model by $\|\Delta m\| = 1.53\,$kg
+and leaves swing-up success at $100.0\%$. Scaling one link by $8\times$
+displaces it by $1.24\,$kg---smaller in $L_1$, $L_2$ and $L_\infty$---and gives
+$0.0\%$. The larger error is free; the smaller one is fatal.
+
+\subsection*{Contributions}
+
+\begin{enumerate}
+\item \textbf{A matched-magnitude experiment} isolating direction from
+magnitude in model-error space, showing a 100-point transfer gap between
+directions at identical $\|\Delta m\|$ (\S\ref{sec:aniso}).
+\item \textbf{An exact symmetry} explaining the privileged direction for planar
+$N$-link chains under prescribed base motion, proved symbolically with its
+hypotheses and counterexamples (\S\ref{sec:sym}).
+\item \textbf{A pre-registered test of the interface hypothesis that failed}
+(\S\ref{sec:iface}), reported as the pre-registration specified. Two further
+pre-registered fidelity metrics were also rejected (\S\ref{sec:fidelity}).
+\item \textbf{Evidence that in-simulator performance is uninformative about
+transfer} (\S\ref{sec:blind}), including a 77-point transfer spread driven by
+random seed alone at otherwise identical settings, together with a separate
+pre-registered test of whether the geometry changes what RL \emph{learns}
+(\S\ref{sec:h3}), which also failed.
+\end{enumerate}
+
+Every hypothesis in this paper was registered in the public repository, with
+thresholds and kill conditions, in a commit that precedes the data. Two of five
+were rejected. We regard the rejections as part of the result.
+
+\section{Related Work}
+
+\textbf{Domain randomisation} trains across a distribution of simulator
+parameters so that reality is covered by the training support
+\cite{tobin2017,peng2018,openai2020}. Randomisation widths are typically chosen
+per-parameter and isotropically; our results suggest a large fraction of that
+budget can be spent along directions the closed loop cannot resolve.
+
+\textbf{Control-oriented system identification} argues that identification
+should preserve closed-loop relevant properties rather than open-loop prediction
+accuracy \cite{gevers2005,hjalmarsson2009}. We arrive at a related conclusion
+from the opposite direction: rather than weighting an identification criterion,
+we exhibit parameter directions that are \emph{exactly} unobservable to the task
+under a stated actuation hypothesis.
+
+\textbf{Actuator modelling for transfer} has repeatedly been identified as
+decisive, with learned actuator models a standard remedy \cite{hwangbo2019}. Our
+\S\ref{sec:iface} was designed to test whether the action interface determines
+which physical errors matter. It did not support that hypothesis at the
+pre-registered operating point.
+
+\textbf{Behavioural equivalence} in RL, via bisimulation metrics
+\cite{ferns2004,castro2020}, formalises when two states or MDPs are
+interchangeable for control. That work quotients the \emph{state} space; the
+object here is an equivalence on \emph{physical parameters} induced by a task
+and an actuation interface.
+
+\section{System, Task and Protocol}\label{sec:setup}
+
+\subsection{Plant}
+A triple inverted pendulum on a belt-driven cart, modelled from CAD of a
+physical build. Link masses are $m_0 = [0.178, 0.100, 0.077]\,$kg with
+pivot-to-pivot lengths $[0.250, 0.250, 0.316]\,$m; the translating cart mass is
+$0.79\,$kg. The drive is a $400\,$W servo through a $40$-tooth GT2 pulley
+(pitch radius $12.73\,$mm), giving a rated cart force of $99.7\,$N, a peak of
+$349.5\,$N, and a rated cart speed of $4.0\,$m/s. The upright equilibrium has
+$\lambda_{\max} = 15.5\,$rad/s, i.e.\ a $64\,$ms divergence time constant.
+
+\subsection{Task, action interfaces and success}
+Episodes begin at dead hang. The policy commands the cart at $250\,$Hz through
+one of two interfaces:
+
+\begin{itemize}
+\item \textbf{velocity} --- commanded cart velocity through a stiff inner loop,
+$F = \mathrm{clip}(k_v(v_{\mathrm{cmd}} - \dot x), \pm F_{\mathrm{clamp}})$
+with $k_v = 400\,$N\,s/m. This is what the STEP/DIR hardware accepts.
+\item \textbf{force} --- commanded cart force directly, with the inner loop
+removed ($k_v = 0$).
+\end{itemize}
+
+Both carry an identical first-order actuator lag ($\tau = 100\,$ms), the same
+$349.5\,$N clamp and the same $4.0\,$m/s speed limit, and the force action is
+scaled to the \emph{peak} force so it is never given less authority than the
+velocity loop could demand. An episode \textbf{succeeds} when it never
+terminates early, the tip reaches upright, and the tip is \emph{still} upright
+over the final quarter of the episode. Reward is never used as a success
+metric: two runs reached high reward while never lifting the tip.
+
+\subsection{Learning and evaluation}
+PPO (\texttt{rsl-rl}) in Isaac Lab, $4096$ environments, $1000$ iterations,
+frozen hyperparameters. Checkpoints are selected by measured success in the
+policy's \emph{own} training simulator---the only criterion available without
+access to reality. Evaluation uses $256$ independent episodes.
+
+\textbf{The experimental unit is the policy seed, not the episode.} This is not
+a formality: \S\ref{sec:blind} measures a 77-point transfer spread across seeds
+at identical settings, which exceeds most effects one might wish to claim.
+
+\section{The Gap is Anisotropic}\label{sec:aniso}
+
+\subsection{Separating direction from magnitude}
+To ask whether \emph{direction} matters, magnitude must be held fixed. For
+uniform scaling by $c$ the displacement in link-mass space is
+$\Delta m = (c-1)m_0$, of norm $(c-1)\|m_0\|$. Each transverse condition places
+that same norm entirely into one link,
+\begin{equation}
+\text{scale}_i \;=\; 1 + \frac{(c-1)\|m_0\|}{m_{0,i}},
+\label{eq:matched}
+\end{equation}
+so every condition at a given $c$ is exactly equidistant from nominal by
+\eqref{eq:matched}
+(verified: spread $0.00\mathrm{e}{+}00$ across conditions). Without this the
+experiment would merely rediscover that larger errors are worse.
+
+Matching by norm invites one objection: at $c = 2.5$ it compares uniform
+$\times 2.50$ against link-3 $\times 5.22$, because absorbing the whole
+displacement into the lightest link takes a large factor. We therefore also
+report a \textbf{dominated} scheme: uniform $\times c$ against a \emph{single}
+link $\times c$. There the uniform perturbation is strictly larger in $L_1$,
+$L_2$, $L_\infty$ and in fractional terms on every link that moves, so it is
+handicapped rather than flattered.
+
+\subsection{Result}
+Table~\ref{tab:matched} gives the velocity-interface sweep, three seeds, all
+clearing a $95\%$ nominal-competence gate.
+
+\begin{table}[t]
+\caption{Matched-magnitude sweep, cart-velocity interface. Every row holds
+$\|\Delta m\|$ fixed and varies only direction. Mean over three policy seeds.}
+\label{tab:matched}
+\centering
+\begin{tabular}{rrrrrr}
+\toprule
+$c$ & $\|\Delta m\|$ [kg] & uniform & trans.\ L1 & trans.\ L2 & trans.\ L3\\
+\midrule
+1.5 & 0.109 & $100.0\%$ & $0.0\%$ & $0.1\%$ & $2.1\%$\\
+2.5 & 0.327 & $100.0\%$ & $0.0\%$ & $0.0\%$ & $0.0\%$\\
+4.0 & 0.654 & $98.8\%$  & $0.0\%$ & $0.0\%$ & $0.0\%$\\
+8.0 & 1.527 & $100.0\%$ & $0.0\%$ & $0.0\%$ & $0.0\%$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The anisotropy, defined as
+$A = P(\text{uniform}) - \overline{P(\text{transverse})}$ at matched
+$\|\Delta m\|$, is $+100.0$ points at $c = 2.5$ with a per-seed spread of
+$2.2$ points. Under the dominated scheme it is $+99.7$: the \emph{larger} error
+transfers better, which no choice of magnitude matching can produce on its own.
+
+Uniform scaling at $c = 8$ shows $0.0\%$ early termination, so the drive still
+holds the system; the sweep is inside the authority envelope. Separate
+experiments place the authority boundary between $c = 10$ and $c = 20$.
+
+\section{An Exact Inertial Symmetry}\label{sec:sym}
+
+\begin{proposition}
+Let a mechanical system have coordinates $(x,q)$ where $x$ is kinematically
+prescribed and $q$ is passive, carrying no generalised force. The kinetic and
+potential energies of the passive bodies,
+\begin{align}
+T &= \textstyle\sum_i \tfrac12 m_i \|v_i(q,\dot q,x,\dot x)\|^2
+     + \tfrac12 I_i \omega_i^2,\\
+V &= \textstyle\sum_i m_i g\, h_i(q,x),
+\end{align}
+are linear in $\{m_i, I_i\}$, so scaling all of them by $c>0$ gives
+$\mathcal L \to c\mathcal L$. The passive Euler--Lagrange equations are
+homogeneous, $\frac{d}{dt}\partial_{\dot q}\mathcal L - \partial_q \mathcal L
+= 0$, hence become $c$ times themselves and $c$ divides out. Therefore
+$q(t;c) = q(t;1)$ for the same $x(t)$ and initial conditions.
+\end{proposition}
+
+The result is exact, holds for any $N$, and does not involve the base mass at
+all: once $x$ is prescribed the base leaves the passive equations. We verify it
+symbolically for $N = 1..4$ by checking
+$\mathrm{simplify}\big(e|_{m\to cm, I\to cI} - c\,e\big) = 0$ for every passive
+equation $e$.
+
+\textbf{The hypotheses are the interesting part.} The same check
+\emph{fails}---as it must---when (i) only a subset of links is scaled, breaking
+uniformity; (ii) a non-scaling generalised force such as fixed joint friction
+acts on $q$; or (iii) $x$ is not truly prescribed, which on real hardware means
+the drive has finite authority. We confirm (iii) causally elsewhere: with frozen
+policy weights, uniform $\times 20$ gives $0.0\%$ at $k_v\!=\!400$/$349\,$N and
+$100.0\%$ at $k_v\!=\!4000$/$7000\,$N, and neither raising the gain alone nor the
+clamp alone suffices.
+
+\section{Is the Equivalence Interface-Conditioned?}\label{sec:iface}
+
+\subsection{The hypothesis, and why it is natural}
+The proof needs $x$ prescribed---a statement about the \emph{actuator}, not the
+mechanics. A stiff velocity loop with authority to spare prescribes the base; a
+force command does not. Analytically the consequence is stark. At matched
+$\|\Delta m\| = 0.109\,$kg, the worst-case relative change in link acceleration
+over 400 states is
+
+\begin{center}
+\begin{tabular}{lrr}
+\toprule
+direction & velocity & force\\
+\midrule
+uniform $[c,c,c]$      & $1.4\mathrm{e}{-}14$ & $7.5\mathrm{e}{-}02$\\
+transverse $[c,1,1]$   & $1.2\mathrm{e}{-}01$ & $1.3\mathrm{e}{-}01$\\
+transverse $[1,1,c]$   & $2.0\mathrm{e}{-}01$ & $2.0\mathrm{e}{-}01$\\
+\midrule
+ratio worst/best       & $1.4\mathrm{e}{+}13$ & $2.6$\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+In the equations, direction is everything under one interface and nearly
+irrelevant under the other. We pre-registered the prediction that this survives
+into learned closed-loop control: $A_{\text{vel}} - A_{\text{force}} \geq 40$
+points, with $A_{\text{force}} \geq A_{\text{vel}}$ as a kill condition, three
+seeds per arm, everything but the commanded variable held identical.
+
+\subsection{Result: the prediction failed}
+\begin{center}
+\begin{tabular}{lccc}
+\toprule
+arm & $A$ per seed & mean & \\
+\midrule
+velocity & $100.0,\,100.0,\,100.0$ & $+100.0$ & \\
+force    & $100.0,\,96.9,\,90.2$   & $+95.7$  & \\
+\midrule
+\multicolumn{2}{l}{gap} & $+4.3$ & (threshold $40$)\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+All six policies cleared the competence gate. The kill condition was
+\emph{not} met---the effect points the predicted way---but $+4.3$ points is an
+order of magnitude below threshold, so the hypothesis is unsupported at the
+pre-registered operating point.
+
+\textbf{Where the inference went wrong.} The analytical table is correct; the
+error was inferring a small behavioural gap from a small ratio. Swing-up success
+is a threshold, not a linear readout of acceleration error. Under force command
+uniform scaling still does roughly half the damage of a matched transverse
+error, and half is enough to sit on the far side of the threshold. A
+$1.4\mathrm{e}{+}13$ ratio and a $2.6$ ratio produce the same 100-point gap.
+
+\subsection{Post-hoc: the effect exists at larger perturbations}
+Fig.~\ref{fig:aniso} shows why the pre-registered probe was blind. Along the
+equivalence direction the velocity arm is flat to $\|\Delta m\| = 1.53\,$kg,
+while the force arm decays: $99.0\%$, $95.7\%$, $61.5\%$, $3.5\%$. The
+interface effect is real and large---but it lives beyond $c^\star = 2.5$, which
+was fixed in advance precisely to avoid saturation. We report the
+pre-registered verdict as the result and this as an observation requiring
+independent confirmation.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/h4_interface_anisotropy.png}
+\caption{Transfer against model-error magnitude, two interfaces. Within a panel
+both curves sit at identical $\|\Delta m\|$; only direction differs. Shaded
+bands span three policy seeds.}
+\label{fig:aniso}
+\end{figure}
+
+\section{Fidelity is Informative but Cannot Certify}\label{sec:fidelity}
+
+Across 38 heterogeneous conditions spanning actuation, dissipation, rigid-body
+and combined errors, conventional short-window trajectory RMSE is the best
+aggregate predictor of transfer ($\rho = -0.506$). Two pre-registered
+policy-conditioned alternatives were \textbf{rejected}: a stability-weighted gap
+$D_{SW}$ ($\rho = -0.415$) and a task-margin projected risk $R_{TC}$
+($\rho = -0.406$), the latter failing all four of its frozen kill criteria.
+
+But the winner cannot \emph{certify}. With a tolerance frozen in advance
+($10\%$ relative, $\geq 50$-point gap, plausible conditions only), a
+second-order actuator condition and a joint-damping condition differ by $1.51\%$
+in trajectory RMSE and transfer at $0.0\%$ and $100.0\%$. Twenty-eight
+admissible pairs fall within tolerance. Trajectory fidelity is therefore
+\emph{informative statistically and ambiguous locally}---a sharper claim than
+``insufficient'', and one our own data supports rather than contradicts.
+
+\section{The Simulator Cannot Tell You Which Policy to Ship}\label{sec:blind}
+
+Fifteen policies were trained across six simulators and deployed into a common
+target $R^\star$ fixed before any of them existed. Each was selected on measured
+success in its own training simulator.
+
+\begin{center}
+\begin{tabular}{lrrr}
+\toprule
+ & mean & range & spread\\
+\midrule
+own training simulator & $99.7\%$ & $98.0$--$100.0$ & $2.0$\\
+deployment into $R^\star$ & $27.1\%$ & $0.0$--$100.0$ & $100.0$\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Spearman $\rho = -0.090$ (permutation $p = 0.749$, $n = 15$). The selection
+criterion every practitioner has available is uninformative about the quantity
+every practitioner wants.
+
+The controlled version removes the simulator entirely. Within the nominal arm,
+where architecture, reward, protocol and iteration count are identical and only
+the random seed differs, own-simulator success spans $0.8$ points while transfer
+spans $\mathbf{77.0}$ points ($100.0\%$, $71.1\%$, $23.0\%$).
+
+Nor is the criterion stable within a run. Comparing each run's best checkpoint
+to its final one, both in the same simulator, the mean drop is $38.6$ points
+($99.7\% \to 61.0\%$); $11$ of $15$ runs lose more than $20$ points and only
+$3$ end at their best. The default practice---train for a fixed budget, take the
+final policy---would report $61.0\%$ where selection reports $99.7\%$. These
+policies are not converged; they are samples from an oscillating process.
+
+\section{Does the Geometry Change What RL Learns?}\label{sec:h3}
+
+The results above concern one frozen policy across many simulators. The
+sim-to-real question is $S_i \to \pi_i \to R^\star$. We pre-registered that
+training in an equivalence-direction simulator (uniform $\times 8$) would
+transfer at least 20 points better than training in a transverse one
+(mass $[1.5,1,1]$).
+
+\textbf{It failed, in the opposite direction}: $1.0\%$ versus $4.9\%$. A
+plausible account---at $c\!=\!8$ the force demand is $\sim\!8\times$ nominal, so
+\emph{training} occurs in a saturated regime and the policy fits
+saturation---is post-hoc and untested; the authority-matched arm that would test
+it has not been run. A companion prediction was supported: two simulators
+indistinguishable by trajectory fidelity trained policies differing by $64.6$
+points. Equivalence for a \emph{fixed} policy is evidently not equivalence for
+\emph{training}.
+
+\section{Limitations}
+
+\textbf{Everything here is simulation.} The hardware described in
+\S\ref{sec:setup} is specified and partly procured but not assembled. No claim
+in this paper has touched a real robot, and the honest status of the
+sim-to-real framing is that $R^\star$ is a stand-in for reality, not reality.
+
+\textbf{One plant, one task.} The exact symmetry is proved for general planar
+$N$-link chains under prescribed base motion, but every measurement is on one
+triple pendulum performing swing-up. Whether other systems admit
+task-conditioned equivalence directions is untested.
+
+\textbf{Three seeds against a 77-point nuisance spread.} Effects smaller than
+$\sim\!40$ points are not resolvable at this seed count. The anisotropy
+($+100$) clears it comfortably; the interface gap ($+4.3$) does not, and we do
+not claim a small true effect has been ruled out.
+
+\textbf{Policies are not converged}, as \S\ref{sec:blind} documents. Results
+therefore describe a selected snapshot of an oscillating training process, which
+is standard practice and is also part of what \S\ref{sec:blind} criticises.
+
+\section{Conclusion}
+
+Model-error magnitude does not order sim-to-real transfer. On this system,
+moving $1.53\,$kg along one direction in link-mass space is free while moving
+$1.24\,$kg along another is fatal, and an exact Lagrangian symmetry explains
+part of why. The natural generalisation---that the action interface selects
+which errors matter---is intuitive, analytically supported by thirteen orders of
+magnitude, and \emph{not} what learned closed-loop behaviour does at the
+operating point we pre-registered.
+
+The practical reading is uncomfortable. A practitioner cannot rank simulators by
+a scalar fidelity score, cannot rank policies by in-simulator success, and
+cannot assume a large parameter error is more dangerous than a small one. What
+is left is the geometry itself, which is measurable, large, and---on this
+evidence---more robust than the theory we advanced to explain it.
+
+\section*{Reproducibility}
+
+All code, configurations, pre-registrations, raw result files and the analysis
+that produced every number in this paper are public at \repo. Each hypothesis
+appears in a commit that precedes its data; the rejected ones
+(\texttt{PREREGISTRATION.md}, \texttt{PREREGISTRATION\_H3.md},
+\texttt{PREREGISTRATION\_H4.md}) are retained unchanged.
+
+\begin{thebibliography}{00}
+\bibitem{tobin2017} J. Tobin \emph{et al.}, ``Domain randomization for
+transferring deep neural networks from simulation to the real world,'' in
+\emph{IROS}, 2017.
+\bibitem{peng2018} X. B. Peng \emph{et al.}, ``Sim-to-real transfer of robotic
+control with dynamics randomization,'' in \emph{ICRA}, 2018.
+\bibitem{openai2020} OpenAI \emph{et al.}, ``Solving Rubik's cube with a robot
+hand,'' arXiv:1910.07113, 2019.
+\bibitem{gevers2005} M. Gevers, ``Identification for control: from the early
+achievements to the revival of experiment design,'' \emph{European Journal of
+Control}, vol.~11, 2005.
+\bibitem{hjalmarsson2009} H. Hjalmarsson, ``System identification of complex and
+structured systems,'' \emph{European Journal of Control}, vol.~15, 2009.
+\bibitem{hwangbo2019} J. Hwangbo \emph{et al.}, ``Learning agile and dynamic
+motor skills for legged robots,'' \emph{Science Robotics}, vol.~4, 2019.
+\bibitem{ferns2004} N. Ferns, P. Panangaden and D. Precup, ``Metrics for finite
+Markov decision processes,'' in \emph{UAI}, 2004.
+\bibitem{castro2020} P. S. Castro, ``Scalable methods for computing state
+similarity in deterministic Markov decision processes,'' in \emph{AAAI}, 2020.
+\end{thebibliography}
+
+\end{document}
