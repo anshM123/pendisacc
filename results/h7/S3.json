@@ -1,0 +1,178 @@
+{
+ "tag": "S3",
+ "xi": {
+  "delay_s": 0.016
+ },
+ "num_envs": 256,
+ "masses_in_sim": null,
+ "rows": [
+  {
+   "policy": "C5_S_delay_s1",
+   "checkpoint": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-10_07-03-12_C5_S_delay_s1\\model_600.pt",
+   "own_sim": 99.21875,
+   "R_star": 1.5625,
+   "stress": 100.0
+  },
+  {
+   "policy": "C5_S_delay_s2",
+   "checkpoint": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-10_07-46-50_C5_S_delay_s2\\model_800.pt",
+   "own_sim": 100.0,
+   "R_star": 0.0,
+   "stress": 90.625
+  },
+  {
+   "policy": "C5_S_equiv_c8_s1",
+   "checkpoint": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-10_01-18-10_C5_S_equiv_c8_s1\\model_400.pt",
+   "own_sim": 100.0,
+   "R_star": 0.0,
+   "stress": 0.0
+  },
+  {
+   "policy": "C5_S_equiv_c8_s2",
+   "checkpoint": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-10_02-00-25_C5_S_equiv_c8_s2\\model_999.pt",
+   "own_sim": 100.0,
+   "R_star": 1.953125,
+   "stress": 1.5625
+  },
+  {
+   "policy": "C5_S_nominal_s1",
+   "checkpoint": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-09_23-13-48_C5_S_nominal_s1\\model_800.pt",
+   "own_sim": 100.0,
+   "R_star": 100.0,
+   "stress": 2.34375
+  },
+  {
+   "policy": "C5_S_nominal_s2",
+   "checkpoint": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-09_23-53-13_C5_S_nominal_s2\\model_600.pt",
+   "own_sim": 99.21875,
+   "R_star": 71.09375,
+   "stress": 1.171875
+  },
+  {
+   "policy": "C5_S_nominal_s3",
+   "checkpoint": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-10_00-35-47_C5_S_nominal_s3\\model_600.pt",
+   "own_sim": 100.0,
+   "R_star": 23.046875,
+   "stress": 0.78125
+  },
+  {
+   "policy": "C5_S_transverse_s1",
+   "checkpoint": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-10_02-42-50_C5_S_transverse_s1\\model_400.pt",
+   "own_sim": 100.0,
+   "R_star": 2.34375,
+   "stress": 2.734375
+  },
+  {
+   "policy": "C5_S_transverse_s2",
+   "checkpoint": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-10_03-21-59_C5_S_transverse_s2\\model_800.pt",
+   "own_sim": 100.0,
+   "R_star": 7.421875,
+   "stress": 1.171875
+  },
+  {
+   "policy": "C5_S_twinA_s1",
+   "checkpoint": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-10_03-52-46_C5_S_twinA_s1\\model_600.pt",
+   "own_sim": 100.0,
+   "R_star": 0.0,
+   "stress": 0.0
+  },
+  {
+   "policy": "C5_S_twinA_s2",
+   "checkpoint": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-10_04-23-56_C5_S_twinA_s2\\model_800.pt",
+   "own_sim": 100.0,
+   "R_star": 1.953125,
+   "stress": 0.0
+  },
+  {
+   "policy": "C5_S_twinA_s3",
+   "checkpoint": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-10_04-55-48_C5_S_twinA_s3\\model_600.pt",
+   "own_sim": 98.4375,
+   "R_star": 0.78125,
+   "stress": 0.0
+  },
+  {
+   "policy": "C5_S_twinB_s1",
+   "checkpoint": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-10_05-27-58_C5_S_twinB_s1\\model_800.pt",
+   "own_sim": 100.0,
+   "R_star": 100.0,
+   "stress": 3.125
+  },
+  {
+   "policy": "C5_S_twinB_s2",
+   "checkpoint": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-10_06-00-06_C5_S_twinB_s2\\model_600.pt",
+   "own_sim": 98.046875,
+   "R_star": 73.828125,
+   "stress": 1.953125
+  },
+  {
+   "policy": "C5_S_twinB_s3",
+   "checkpoint": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-10_06-31-15_C5_S_twinB_s3\\model_600.pt",
+   "own_sim": 100.0,
+   "R_star": 22.65625,
+   "stress": 0.0
+  },
+  {
+   "policy": "H5_box_s1",
+   "checkpoint": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-11_00-35-23_H5_box_s1\\model_999.pt",
+   "own_sim": 10.15625,
+   "R_star": 0.390625,
+   "stress": 0.0
+  },
+  {
+   "policy": "H5_box_s2",
+   "checkpoint": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-11_01-07-38_H5_box_s2\\model_200.pt",
+   "own_sim": 0.0,
+   "R_star": 0.0,
+   "stress": 0.0
+  },
+  {
+   "policy": "H5_box_s3",
+   "checkpoint": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-11_01-38-32_H5_box_s3\\model_999.pt",
+   "own_sim": 100.0,
+   "R_star": 94.140625,
+   "stress": 1.5625
+  },
+  {
+   "policy": "H5_geom_s1",
+   "checkpoint": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-11_02-10-41_H5_geom_s1\\model_600.pt",
+   "own_sim": 100.0,
+   "R_star": 17.578125,
+   "stress": 0.0
+  },
+  {
+   "policy": "H5_geom_s2",
+   "checkpoint": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-11_02-42-49_H5_geom_s2\\model_800.pt",
+   "own_sim": 100.0,
+   "R_star": 7.03125,
+   "stress": 0.0
+  },
+  {
+   "policy": "H5_geom_s3",
+   "checkpoint": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-11_03-14-18_H5_geom_s3\\model_600.pt",
+   "own_sim": 100.0,
+   "R_star": 5.078125,
+   "stress": 0.0
+  },
+  {
+   "policy": "H5_none_s1",
+   "checkpoint": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-10_22-57-27_H5_none_s1\\model_800.pt",
+   "own_sim": 100.0,
+   "R_star": 100.0,
+   "stress": 1.171875
+  },
+  {
+   "policy": "H5_none_s2",
+   "checkpoint": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-10_23-30-47_H5_none_s2\\model_600.pt",
+   "own_sim": 99.609375,
+   "R_star": 76.171875,
+   "stress": 1.5625
+  },
+  {
+   "policy": "H5_none_s3",
+   "checkpoint": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-11_00-03-09_H5_none_s3\\model_600.pt",
+   "own_sim": 100.0,
+   "R_star": 22.65625,
+   "stress": 0.0
+  }
+ ]
+}
