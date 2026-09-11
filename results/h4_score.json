@@ -1,0 +1,64 @@
+{
+ "c_star": 2.5,
+ "Q1_min": 40.0,
+ "Q2_min": 40.0,
+ "gate": 80.0,
+ "velocity": [
+  {
+   "policy": "vel_s1",
+   "A": 100.0,
+   "A_dominated": 100.0,
+   "nominal": 100.0,
+   "best_any": 100.0
+  },
+  {
+   "policy": "vel_s2",
+   "A": 100.0,
+   "A_dominated": 98.95833333333334,
+   "nominal": 98.4375,
+   "best_any": 100.0
+  },
+  {
+   "policy": "vel_s3",
+   "A": 100.0,
+   "A_dominated": 100.0,
+   "nominal": 100.0,
+   "best_any": 100.0
+  }
+ ],
+ "force": [
+  {
+   "policy": "force_s1",
+   "A": 100.0,
+   "A_dominated": 99.609375,
+   "nominal": 100.0,
+   "best_any": 100.0
+  },
+  {
+   "policy": "force_s2",
+   "A": 96.875,
+   "A_dominated": 96.875,
+   "nominal": 99.21875,
+   "best_any": 99.21875
+  },
+  {
+   "policy": "force_s3",
+   "A": 90.234375,
+   "A_dominated": 90.234375,
+   "nominal": 100.0,
+   "best_any": 100.0
+  }
+ ],
+ "A_velocity_mean": 100.0,
+ "A_force_mean": 95.703125,
+ "gap": 4.296875,
+ "A_dominated_velocity_mean": 99.65277777777779,
+ "A_dominated_force_mean": 95.57291666666667,
+ "seed_ranges_overlap": true,
+ "force_arm_floored": false,
+ "verdicts": {
+  "Q3": "SUPPORTED",
+  "Q1": "FAIL",
+  "Q2": "SUPPORTED"
+ }
+}
