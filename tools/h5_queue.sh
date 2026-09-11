@@ -14,7 +14,7 @@
 cd "$(dirname "$0")/.."
 V=logs/rsl_rl/tip_swingup
 
-while [ ! -f results/h4_grid_force.json ]; do sleep 60; done
+# invoked directly by tools/overnight.sh once the force grid is done
 echo "=== H4 complete; starting H5 $(date) ==="
 
 for arm in none box geom; do
