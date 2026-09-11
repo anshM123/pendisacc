@@ -75,7 +75,7 @@ def main() -> int:
     # ---- budget check first: it can invalidate the whole comparison --------
     bud = budgets()
     print("REALISED RANDOMISATION BUDGET (from dr_applied.json, per run)\n")
-    print("  arm     runs   E||dm|| [kg]        E|dm.u| [kg]   leakage along u")
+    print("  arm     runs   E||dtheta||         leakage into null subspace")
     print("  " + "-" * 68)
     means = {}
     for arm in ("box", "geom"):
@@ -83,8 +83,8 @@ def main() -> int:
         if not js:
             print("  %-7s  --    (no dr_applied.json found)" % arm)
             continue
-        e = float(np.mean([j["E_norm_dm_kg"] for j in js]))
-        a = float(np.mean([j["E_abs_dm_dot_u"] for j in js]))
+        e = float(np.mean([j["E_norm_dtheta"] for j in js]))
+        a = float(np.mean([j["E_abs_leakage_into_null"] for j in js]))
         means[arm] = e
         print("  %-7s %4d   %.6f            %.3e     %s"
               % (arm, len(js), e, a, "projected out" if a < 1e-9 else "present"))
