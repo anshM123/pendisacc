@@ -1,0 +1,927 @@
+[
+ {
+  "id": "A01",
+  "group": "A",
+  "claim": "CPU linear margin at the exact Isaac condition classifies Isaac success>=50% (S1,S2,S3,S5,R*)",
+  "stat": "AUC",
+  "op": ">=",
+  "thr": 0.8,
+  "fn": "A01",
+  "value": 0.7222857142857143,
+  "n": 120,
+  "detail": {
+   "n_pos": 50
+  },
+  "passed": false,
+  "seconds": 0.2
+ },
+ {
+  "id": "A02",
+  "group": "A",
+  "claim": "Exact-condition CPU margin rank-correlates with Isaac success, pooled",
+  "stat": "spearman",
+  "op": ">=",
+  "thr": 0.5,
+  "fn": "A02",
+  "value": 0.3540403176922747,
+  "n": 120,
+  "detail": {},
+  "passed": false,
+  "seconds": 0.2
+ },
+ {
+  "id": "A10",
+  "group": "A",
+  "claim": "Min margin over the five Isaac conditions ranks mean Isaac stress success",
+  "stat": "spearman",
+  "op": ">=",
+  "thr": 0.6,
+  "fn": "A10",
+  "value": -0.5172715842105603,
+  "n": 24,
+  "detail": {},
+  "passed": false,
+  "seconds": 0.0
+ },
+ {
+  "id": "A11",
+  "group": "A",
+  "claim": "Smaller local gain norm ranks higher Isaac R* success",
+  "stat": "spearman",
+  "op": ">=",
+  "thr": 0.5,
+  "fn": "A11",
+  "value": -0.374015891173694,
+  "n": 24,
+  "detail": {},
+  "passed": false,
+  "seconds": 0.0
+ },
+ {
+  "id": "A03",
+  "group": "A",
+  "claim": "Margin on the policy's own training plant ranks Isaac R* transfer",
+  "stat": "spearman",
+  "op": ">=",
+  "thr": 0.5,
+  "fn": "A03",
+  "value": 0.441171826623763,
+  "n": 24,
+  "detail": {},
+  "passed": false,
+  "seconds": 0.2
+ },
+ {
+  "id": "A12",
+  "group": "A",
+  "claim": "Lower sensor-noise tip variance at R* plant ranks higher R* success",
+  "stat": "spearman",
+  "op": ">=",
+  "thr": 0.5,
+  "fn": "A12",
+  "value": -0.057221013181137176,
+  "n": 24,
+  "detail": {},
+  "passed": false,
+  "seconds": 0.0
+ },
+ {
+  "id": "A09",
+  "group": "A",
+  "claim": "Worst margin over a +-20% arm-mass box ranks mean Isaac stress success",
+  "stat": "spearman",
+  "op": ">=",
+  "thr": 0.5,
+  "fn": "A09",
+  "value": -0.03672934325755458,
+  "n": 24,
+  "detail": {},
+  "passed": false,
+  "seconds": 0.0
+ },
+ {
+  "id": "A15",
+  "group": "A",
+  "claim": "Picking the competent policy with best R*-plant CPU margin yields Isaac R* >= 70",
+  "stat": "R* of pick",
+  "op": ">=",
+  "thr": 70.0,
+  "fn": "A15",
+  "value": 71.09375,
+  "n": 22,
+  "detail": {
+   "pick": "C5_S_nominal_s2"
+  },
+  "passed": true,
+  "seconds": 0.0
+ },
+ {
+  "id": "A14",
+  "group": "A",
+  "claim": "Minimum closed-loop damping ratio on nominal ranks R* success",
+  "stat": "spearman",
+  "op": ">=",
+  "thr": 0.5,
+  "fn": "A14",
+  "value": 0.692476205529775,
+  "n": 24,
+  "detail": {},
+  "passed": true,
+  "seconds": 0.0
+ },
+ {
+  "id": "A17",
+  "group": "A",
+  "claim": "R*-plant margin orders every twin pair (same reward, different transfer) correctly",
+  "stat": "pairs correct",
+  "op": ">=",
+  "thr": 3,
+  "fn": "A17",
+  "value": 2.0,
+  "n": 3,
+  "detail": {},
+  "passed": false,
+  "seconds": 0.0
+ },
+ {
+  "id": "A18",
+  "group": "A",
+  "claim": "Within a training arm, R*-plant margin orders seeds whose R* differs by >=20 points",
+  "stat": "fraction",
+  "op": ">=",
+  "thr": 0.7,
+  "fn": "A18",
+  "value": 0.2727272727272727,
+  "n": 11,
+  "detail": {},
+  "passed": false,
+  "seconds": 0.0
+ },
+ {
+  "id": "A19",
+  "group": "control",
+  "claim": "CONTROL: own-simulator success classifies R*>=50 (expected to fail; the known blind spot)",
+  "stat": "AUC",
+  "op": ">=",
+  "thr": 0.8,
+  "fn": "A19",
+  "value": 0.4327731092436975,
+  "n": 24,
+  "detail": {},
+  "passed": false,
+  "seconds": 0.0
+ },
+ {
+  "id": "A04",
+  "group": "A",
+  "claim": "Delay margin (steps) classifies Isaac S3 (16 ms delay) success",
+  "stat": "AUC",
+  "op": ">=",
+  "thr": 0.8,
+  "fn": "A04",
+  "value": 0.75,
+  "n": 24,
+  "detail": {},
+  "passed": false,
+  "seconds": 0.2
+ },
+ {
+  "id": "A07",
+  "group": "A",
+  "claim": "Exact-plant margin classifies Isaac S5 (m3 x1.2 + tau 0.12) success",
+  "stat": "AUC",
+  "op": ">=",
+  "thr": 0.8,
+  "fn": "A07",
+  "value": 0.8592592592592593,
+  "n": 24,
+  "detail": {},
+  "passed": true,
+  "seconds": 0.2
+ },
+ {
+  "id": "B02",
+  "group": "B",
+  "claim": "HOLDOUT: CPU margin classifies Isaac T1 success over 26 random 8-D parameter directions",
+  "stat": "AUC",
+  "op": ">=",
+  "thr": 0.8,
+  "fn": "B02",
+  "value": 0.6666666666666666,
+  "n": 26,
+  "detail": {
+   "n_pos": 2
+  },
+  "passed": false,
+  "seconds": 0.0
+ },
+ {
+  "id": "A08",
+  "group": "A",
+  "claim": "Exact-plant margin classifies Isaac R* success",
+  "stat": "AUC",
+  "op": ">=",
+  "thr": 0.8,
+  "fn": "A08",
+  "value": 0.5546218487394958,
+  "n": 24,
+  "detail": {},
+  "passed": false,
+  "seconds": 0.2
+ },
+ {
+  "id": "B01",
+  "group": "B",
+  "claim": "HOLDOUT: CPU margin classifies Isaac T4 landscape success (2 policies x 30 mass conditions)",
+  "stat": "AUC",
+  "op": ">=",
+  "thr": 0.8,
+  "fn": "B01",
+  "value": 0.7673325499412456,
+  "n": 60,
+  "detail": {
+   "n_pos": 37
+  },
+  "passed": false,
+  "seconds": 0.0
+ },
+ {
+  "id": "C01",
+  "group": "C",
+  "claim": "RL converges to the edge of stability: |1-rho| < 0.01 for >=80% of competent policies",
+  "stat": "fraction",
+  "op": ">=",
+  "thr": 0.8,
+  "fn": "C01",
+  "value": 1.0,
+  "n": 22,
+  "detail": {},
+  "passed": true,
+  "seconds": 0.0
+ },
+ {
+  "id": "B05",
+  "group": "B",
+  "claim": "HOLDOUT: CPU margin sign matches Isaac success>=50 on the H8 CAD-defect conditions",
+  "stat": "fraction",
+  "op": ">=",
+  "thr": 0.83,
+  "fn": "B05",
+  "value": 0.3333333333333333,
+  "n": 6,
+  "detail": {
+   "corrected_hi.json": [
+    0.0006,
+    0.0546875
+   ],
+   "corrected_lo.json": [
+    5e-05,
+    0.015625
+   ],
+   "corrected_mid.json": [
+    0.00032,
+    0.0078125
+   ],
+   "nominal.json": [
+    0.00705,
+    1.0
+   ],
+   "ratio_only.json": [
+    0.00032,
+    0.01171875
+   ],
+   "scale_only.json": [
+    0.00707,
+    1.0
+   ]
+  },
+  "passed": false,
+  "seconds": 0.0
+ },
+ {
+  "id": "C03",
+  "group": "C",
+  "claim": "The slowest closed-loop mode is cart drift: >=60% of its energy in cart states, >=80% of policies",
+  "stat": "fraction",
+  "op": ">=",
+  "thr": 0.8,
+  "fn": "C03",
+  "value": 0.36363636363636365,
+  "n": 22,
+  "detail": {},
+  "passed": false,
+  "seconds": 0.0
+ },
+ {
+  "id": "C04",
+  "group": "C",
+  "claim": "Where R* destabilises a policy, the unstable mode is a pendulum mode (>=60% angle energy), >=80%",
+  "stat": "fraction",
+  "op": ">=",
+  "thr": 0.8,
+  "fn": "C04",
+  "value": 1.0,
+  "n": 8,
+  "detail": {},
+  "passed": true,
+  "seconds": 0.0
+ },
+ {
+  "id": "C05",
+  "group": "C",
+  "claim": "Competent policies have a closed-loop time constant > 2 s (weak centring), >=80%",
+  "stat": "fraction",
+  "op": ">=",
+  "thr": 0.8,
+  "fn": "C05",
+  "value": 0.09090909090909091,
+  "n": 22,
+  "detail": {},
+  "passed": false,
+  "seconds": 0.0
+ },
+ {
+  "id": "A16",
+  "group": "A",
+  "claim": "Picking by target-agnostic robustness (arm box + delay + lag margins) yields R* >= 70",
+  "stat": "R* of pick",
+  "op": ">=",
+  "thr": 70.0,
+  "fn": "A16",
+  "value": 22.65625,
+  "n": 22,
+  "detail": {
+   "pick": "H5_none_s3"
+  },
+  "passed": false,
+  "seconds": 0.0
+ },
+ {
+  "id": "C06",
+  "group": "C",
+  "claim": "Training with 12 ms delay raises the CPU delay margin by >=1 step over nominal training",
+  "stat": "steps",
+  "op": ">=",
+  "thr": 1.0,
+  "fn": "C06",
+  "value": 0.8334970171734333,
+  "n": 5,
+  "detail": {},
+  "passed": false,
+  "seconds": 0.0
+ },
+ {
+  "id": "A05",
+  "group": "A",
+  "claim": "Servo-lag margin classifies Isaac S2 (tau 0.13) success",
+  "stat": "AUC",
+  "op": ">=",
+  "thr": 0.8,
+  "fn": "A05",
+  "value": 0.8203125,
+  "n": 24,
+  "detail": {},
+  "passed": true,
+  "seconds": 0.2
+ },
+ {
+  "id": "C09",
+  "group": "C",
+  "claim": "Common inertial scale x8 with drive fixed leaves the linear margin unchanged (|drho| < 1e-3)",
+  "stat": "max |drho|",
+  "op": "<=",
+  "thr": 0.001,
+  "fn": "C09",
+  "value": 0.00015857315277212347,
+  "n": 2,
+  "detail": {},
+  "passed": true,
+  "seconds": 0.0
+ },
+ {
+  "id": "A13",
+  "group": "A",
+  "claim": "Lower H-inf peak (action disturbance -> tip) at R* ranks mean stress success",
+  "stat": "spearman",
+  "op": ">=",
+  "thr": 0.5,
+  "fn": "A13",
+  "value": -0.5178795238914699,
+  "n": 24,
+  "detail": {},
+  "passed": false,
+  "seconds": 0.1
+ },
+ {
+  "id": "E01",
+  "group": "E",
+  "claim": "The three hanging mode frequencies identify the three arm-mass ratios (Jacobian cond < 30)",
+  "stat": "cond",
+  "op": "<=",
+  "thr": 30.0,
+  "fn": "E01",
+  "value": 10548034499.358826,
+  "n": 3,
+  "detail": {
+   "J": [
+    [
+     0.039740287231249116,
+     0.012827372092849565,
+     -0.05256765930800045
+    ],
+    [
+     -0.01446468839788606,
+     -0.09258349326746185,
+     0.10704818177748043
+    ],
+    [
+     -0.26505855029834713,
+     0.1562210653882623,
+     0.10883748492229728
+    ]
+   ]
+  },
+  "passed": false,
+  "seconds": 0.0
+ },
+ {
+  "id": "E02",
+  "group": "E",
+  "claim": "10 s of 0.05 rad free swinging at 14-bit resolution gives each arm-mass ratio to <2% (CRLB)",
+  "stat": "max rel std",
+  "op": "<=",
+  "thr": 0.02,
+  "fn": "E02",
+  "value": 294759.0976554422,
+  "n": 3,
+  "detail": {
+   "freqs_hz": [
+    0.7103392437061204,
+    1.2125477869764707,
+    2.084521138222753
+   ],
+   "rel_std": [
+    294759.09754275647,
+    294759.0976554422,
+    294759.0973502063
+   ]
+  },
+  "passed": false,
+  "seconds": 0.0
+ },
+ {
+  "id": "C08",
+  "group": "C",
+  "claim": "Training at m1 x1.5 raises the link-1 upward radius by >=0.1 log over nominal training",
+  "stat": "log radius",
+  "op": ">=",
+  "thr": 0.1,
+  "fn": "C08",
+  "value": 0.43685302734375014,
+  "n": 5,
+  "detail": {},
+  "passed": true,
+  "seconds": 0.0
+ },
+ {
+  "id": "E03",
+  "group": "E",
+  "claim": "Frequencies + mode shapes separate mass from inertia for all 3 arms (6 params, cond < 1e3)",
+  "stat": "cond",
+  "op": "<=",
+  "thr": 1000.0,
+  "fn": "E03",
+  "value": 16094237904.493475,
+  "n": 6,
+  "detail": {
+   "sv": [
+    6.1655701065095805,
+    1.5443501511679565,
+    0.8628381387225833,
+    0.2288651658056602,
+    0.17150178329898585,
+    3.830917712971154e-10
+   ]
+  },
+  "passed": false,
+  "seconds": 0.0
+ },
+ {
+  "id": "E04",
+  "group": "E",
+  "claim": "Drive gain kv x0.5..x2 changes the margin by < 1e-3 for >=90% of competent policies",
+  "stat": "fraction",
+  "op": ">=",
+  "thr": 0.9,
+  "fn": "E04",
+  "value": 1.0,
+  "n": 22,
+  "detail": {},
+  "passed": true,
+  "seconds": 0.0
+ },
+ {
+  "id": "E06",
+  "group": "E",
+  "claim": "4 ms encoder latency (1 step) keeps >=80% of competent policies locally stable",
+  "stat": "fraction",
+  "op": ">=",
+  "thr": 0.8,
+  "fn": "E06",
+  "value": 1.0,
+  "n": 22,
+  "detail": {},
+  "passed": true,
+  "seconds": 0.0
+ },
+ {
+  "id": "E05",
+  "group": "E",
+  "claim": "Cart mass x0.8..x1.25 changes the margin by < 1e-3 for >=90% of competent policies",
+  "stat": "fraction",
+  "op": ">=",
+  "thr": 0.9,
+  "fn": "E05",
+  "value": 1.0,
+  "n": 22,
+  "detail": {},
+  "passed": true,
+  "seconds": 0.0
+ },
+ {
+  "id": "E08",
+  "group": "E",
+  "claim": "Joint viscous damping 0.004 changes the margin by < 5e-4 for >=90% of competent policies",
+  "stat": "fraction",
+  "op": ">=",
+  "thr": 0.9,
+  "fn": "E08",
+  "value": 0.13636363636363635,
+  "n": 22,
+  "detail": {},
+  "passed": false,
+  "seconds": 0.0
+ },
+ {
+  "id": "E07",
+  "group": "E",
+  "claim": "14-bit encoder noise gives RMS tip angle < 0.01 rad for >=80% of competent policies",
+  "stat": "fraction",
+  "op": ">=",
+  "thr": 0.8,
+  "fn": "E07",
+  "value": 1.0,
+  "n": 22,
+  "detail": {},
+  "passed": true,
+  "seconds": 0.0
+ },
+ {
+  "id": "E09",
+  "group": "E",
+  "claim": "Plant-only fastest unstable pole (policy-free) classifies Isaac T4 success",
+  "stat": "AUC",
+  "op": ">=",
+  "thr": 0.8,
+  "fn": "E09",
+  "value": 0.0005875440658049354,
+  "n": 60,
+  "detail": {},
+  "passed": false,
+  "seconds": 0.0
+ },
+ {
+  "id": "A06",
+  "group": "A",
+  "claim": "Link-1 upward mass radius classifies Isaac S1 (m1 x1.25) success",
+  "stat": "AUC",
+  "op": ">=",
+  "thr": 0.8,
+  "fn": "A06",
+  "value": 0.5107142857142857,
+  "n": 24,
+  "detail": {},
+  "passed": false,
+  "seconds": 0.3
+ },
+ {
+  "id": "F02",
+  "group": "F",
+  "claim": "Policy-free dimensionless pole x lag (p_fast * (tau + delay)) classifies pooled Isaac success on S1,S2,S3,S5,R*",
+  "stat": "AUC",
+  "op": ">=",
+  "thr": 0.8,
+  "fn": "F02",
+  "value": 0.3422857142857143,
+  "n": 120,
+  "detail": {},
+  "passed": false,
+  "seconds": 0.0
+ },
+ {
+  "id": "F03",
+  "group": "calibration",
+  "claim": "CALIBRATION: exact similarity incl. kv leaves the linear margin invariant (|drho| < 1e-9)",
+  "stat": "max |drho|",
+  "op": "<=",
+  "thr": 1e-09,
+  "fn": "F03",
+  "value": 6.217248937900877e-15,
+  "n": 9,
+  "detail": {},
+  "passed": true,
+  "seconds": 0.0
+ },
+ {
+  "id": "C07",
+  "group": "C",
+  "claim": "Mass DR (H5 box/geom) raises the minimum arm-mass radius by >=0.1 log over H5_none",
+  "stat": "log radius",
+  "op": ">=",
+  "thr": 0.1,
+  "fn": "C07",
+  "value": 0.006506573977289931,
+  "n": 9,
+  "detail": {},
+  "passed": false,
+  "seconds": 0.1
+ },
+ {
+  "id": "E10",
+  "group": "E",
+  "claim": "Arm 3's mass moves the fastest unstable pole most (largest mean |dp/dlog m_i| on +-50% grid)",
+  "stat": "link3 largest",
+  "op": ">=",
+  "thr": 1,
+  "fn": "E10",
+  "value": 0.0,
+  "n": 3,
+  "detail": {
+   "mean_abs_sens": [
+    3.4575881790593868,
+    1.9583781779659402,
+    1.5060461071943363
+   ]
+  },
+  "passed": false,
+  "seconds": 0.1
+ },
+ {
+  "id": "B04",
+  "group": "B",
+  "claim": "FIDELITY: Isaac-competent final policies are locally stable on the CPU model",
+  "stat": "fraction",
+  "op": ">=",
+  "thr": 0.8,
+  "fn": "B04",
+  "value": 0.9047619047619048,
+  "n": 42,
+  "detail": {},
+  "passed": true,
+  "seconds": 0.2
+ },
+ {
+  "id": "C10",
+  "group": "C",
+  "claim": "The best own-sim checkpoint has a larger CPU margin than the final one in >=70% of runs",
+  "stat": "fraction",
+  "op": ">=",
+  "thr": 0.7,
+  "fn": "C10",
+  "value": 0.38095238095238093,
+  "n": 21,
+  "detail": {},
+  "passed": false,
+  "seconds": 0.2
+ },
+ {
+  "id": "F01",
+  "group": "F",
+  "claim": "Only 3 directions of (m1,m2,m3,m_cart,kv) matter: top-3 share of margin-gradient energy >= 0.99",
+  "stat": "energy",
+  "op": ">=",
+  "thr": 0.99,
+  "fn": "F01",
+  "value": 0.9999999902026093,
+  "n": 120,
+  "detail": {
+   "sv": [
+    0.14009982760216255,
+    0.0033390741808834007,
+    0.00022092629755290582,
+    1.387128413438169e-05,
+    2.4624521117135213e-10
+   ]
+  },
+  "passed": true,
+  "seconds": 0.2
+ },
+ {
+  "id": "C02",
+  "group": "C",
+  "claim": "Spectral radius rises toward 1 over training (Spearman(iter, rho) > 0.3) in >=60% of runs",
+  "stat": "fraction",
+  "op": ">=",
+  "thr": 0.6,
+  "fn": "C02",
+  "value": 0.0,
+  "n": 24,
+  "detail": {},
+  "passed": false,
+  "seconds": 0.8
+ },
+ {
+  "id": "B03",
+  "group": "B",
+  "claim": "HOLDOUT: own-plant CPU margin classifies per-checkpoint Isaac own-sim success (all runs)",
+  "stat": "AUC",
+  "op": ">=",
+  "thr": 0.8,
+  "fn": "B03",
+  "value": 0.9545063145809415,
+  "n": 186,
+  "detail": {},
+  "passed": true,
+  "seconds": 1.1
+ },
+ {
+  "id": "D03",
+  "group": "D",
+  "claim": "Actuator uncertainty is binding: with the nominal drive only, +-50% is certified",
+  "stat": "certified",
+  "op": ">=",
+  "thr": 1,
+  "fn": "D03",
+  "value": 0.0,
+  "n": 1,
+  "detail": {
+   "rho": 1.0011674030784306,
+   "peak_a": 1.4510450709630545,
+   "peak_x": 0.5132140391335074
+  },
+  "passed": false,
+  "seconds": 14.4
+ },
+ {
+  "id": "D05",
+  "group": "D",
+  "claim": "Measurement priority: with m2 known exactly, +-50% on m1 and m3 is certified",
+  "stat": "certified",
+  "op": ">=",
+  "thr": 1,
+  "fn": "D05",
+  "value": 0.0,
+  "n": 1,
+  "detail": {
+   "rho": 1.0033854792753236,
+   "peak_a": 1.8421803499416634,
+   "peak_x": 0.5124942653874657
+  },
+  "passed": false,
+  "seconds": 16.5
+ },
+ {
+  "id": "D09",
+  "group": "D",
+  "claim": "At nominal masses one gain tolerates 0-16 ms delay",
+  "stat": "certified",
+  "op": ">=",
+  "thr": 1,
+  "fn": "D09",
+  "value": 0.0,
+  "n": 1,
+  "detail": {
+   "rho": 0.997999999332829,
+   "peak_a": 1.0007441478854926,
+   "peak_x": 0.4009774818114994
+  },
+  "passed": false,
+  "seconds": 16.4
+ },
+ {
+  "id": "D01",
+  "group": "D",
+  "claim": "Rail is binding: allowing 0.55 m cart travel certifies +-37% arm-mass error",
+  "stat": "certified",
+  "op": ">=",
+  "thr": 1,
+  "fn": "D01",
+  "value": 0.0,
+  "n": 1,
+  "detail": {
+   "rho": 0.9999929146883998,
+   "peak_a": 2.1912544814462476,
+   "peak_x": 0.5685937688138563
+  },
+  "passed": false,
+  "seconds": 20.2
+ },
+ {
+  "id": "D00",
+  "group": "calibration",
+  "claim": "CALIBRATION: light-budget certificate reproduces v2 (+-25% certified)",
+  "stat": "certified",
+  "op": ">=",
+  "thr": 1,
+  "fn": "D00",
+  "value": 0.0,
+  "n": 1,
+  "detail": {
+   "rho": 1.00090409084976,
+   "peak_a": 1.8355980294185736,
+   "peak_x": 0.48256941538863185
+  },
+  "passed": false,
+  "seconds": 20.5
+ },
+ {
+  "id": "D06",
+  "group": "D",
+  "claim": "Hardware lever: a 50 ms servo (half the lag) certifies +-50%",
+  "stat": "certified",
+  "op": ">=",
+  "thr": 1,
+  "fn": "D06",
+  "value": 0.0,
+  "n": 1,
+  "detail": {
+   "rho": 1.0013427103244752,
+   "peak_a": 1.8853319197852367,
+   "peak_x": 0.47365749446905236
+  },
+  "passed": false,
+  "seconds": 22.6
+ },
+ {
+  "id": "D02",
+  "group": "D",
+  "claim": "Motor is binding: a 1.5x stronger drive certifies +-37% arm-mass error",
+  "stat": "certified",
+  "op": ">=",
+  "thr": 1,
+  "fn": "D02",
+  "value": 0.0,
+  "n": 1,
+  "detail": {
+   "rho": 0.9981510519336633,
+   "peak_a": 2.746791219484311,
+   "peak_x": 0.4158707537425578
+  },
+  "passed": false,
+  "seconds": 23.0
+ },
+ {
+  "id": "D08",
+  "group": "D",
+  "claim": "A 100 Hz controller still certifies +-12% arm-mass error",
+  "stat": "certified",
+  "op": ">=",
+  "thr": 1,
+  "fn": "D08",
+  "value": 0.0,
+  "n": 1,
+  "detail": {
+   "rho": 0.9991719601085831,
+   "peak_a": 2.2858787528055844,
+   "peak_x": 0.5426658965790656
+  },
+  "passed": false,
+  "seconds": 23.0
+ },
+ {
+  "id": "D04",
+  "group": "D",
+  "claim": "Anisotropy: link 2 has the smallest certifiable one-axis mass range",
+  "stat": "link2 smallest",
+  "op": ">=",
+  "thr": 1,
+  "fn": "D04",
+  "value": 0.0,
+  "n": 3,
+  "detail": {
+   "0": 0.0,
+   "1": 0.0,
+   "2": 0.0
+  },
+  "passed": false,
+  "seconds": 24.8
+ },
+ {
+  "id": "D07",
+  "group": "D",
+  "claim": "Memory helps: one step of observation history certifies +-37%",
+  "stat": "certified",
+  "op": ">=",
+  "thr": 1,
+  "fn": "D07",
+  "value": 0.0,
+  "n": 1,
+  "detail": {
+   "rho": 0.9992139377530314,
+   "peak_a": 2.6458952773164666,
+   "peak_x": 0.49317165491721415
+  },
+  "passed": false,
+  "seconds": 25.5
+ }
+]

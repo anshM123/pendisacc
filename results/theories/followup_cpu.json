@@ -1,0 +1,121 @@
+[
+ {
+  "id": "C11",
+  "stage": "cpu",
+  "claim": "RL balances with less damping than a certified robust gain: >=80% of CPU-stable corrected policies below it",
+  "stat": "fraction",
+  "op": ">=",
+  "thr": 0.8,
+  "fn": "C11",
+  "value": 1.0,
+  "n": 7,
+  "detail": {
+   "certified_min_damping": 0.2931188982586852,
+   "policies": [
+    0.21086490744367206,
+    0.28040879839231464,
+    0.10724709130629227,
+    0.28249464377590133,
+    0.014597740953805557,
+    0.17261535886957052,
+    0.23365618526444198
+   ]
+  },
+  "passed": true,
+  "seconds": 0.1
+ },
+ {
+  "id": "F05",
+  "stage": "cpu",
+  "claim": "HOLDOUT (existing Isaac T1): -|x . u*| classifies success over 26 random 8-D directions, AUC >= 0.8",
+  "stat": "AUC",
+  "op": ">=",
+  "thr": 0.8,
+  "fn": "F05",
+  "value": 1.0,
+  "n": 26,
+  "detail": {
+   "raw_norm_auc": 0.9166666666666666,
+   "u": [
+    0.735,
+    -0.178,
+    -0.025,
+    -0.643,
+    0.115,
+    -0.005,
+    -0.015,
+    0.015
+   ]
+  },
+  "passed": true,
+  "seconds": 0.2
+ },
+ {
+  "id": "E11",
+  "stage": "cpu",
+  "claim": "A free-swing test sees the fragile direction: |P_row(J_hang) u*| >= 0.95 (u* of CORR_s1)",
+  "stat": "projection",
+  "op": ">=",
+  "thr": 0.95,
+  "fn": "E11",
+  "value": 0.926370172928812,
+  "n": 8,
+  "detail": {
+   "rank_Jhang": 3,
+   "u": [
+    -0.524,
+    0.647,
+    -0.351,
+    0.201,
+    -0.253,
+    0.28,
+    0.006,
+    -0.006
+   ]
+  },
+  "passed": false,
+  "seconds": 0.2
+ },
+ {
+  "id": "F04",
+  "stage": "cpu",
+  "claim": "The fragile direction is a property of the robot: mean |cos| between u* of CPU-stable confirmation policies >= 0.9",
+  "stat": "mean |cos|",
+  "op": ">=",
+  "thr": 0.9,
+  "fn": "F04",
+  "value": 0.8823154369857626,
+  "n": 7,
+  "detail": {
+   "min_cos": 0.6620689318772006,
+   "u_first": [
+    -0.524,
+    0.647,
+    -0.351,
+    0.201,
+    -0.253,
+    0.28,
+    0.006,
+    -0.006
+   ]
+  },
+  "passed": false,
+  "seconds": 0.4
+ },
+ {
+  "id": "B06",
+  "stage": "cpu",
+  "claim": "Non-trivial B03: among checkpoints that DO reach upright, own-plant margin classifies own-sim success, AUC >= 0.8",
+  "stat": "AUC",
+  "op": ">=",
+  "thr": 0.8,
+  "fn": "B06",
+  "value": 0.9270516717325228,
+  "n": 117,
+  "detail": {
+   "n_pos": 47
+  },
+  "passed": true,
+  "seconds": 0.4
+ }
+]

@@ -1,0 +1,9 @@
+{
+ "status": "UNINFORMATIVE (S03 control failed)",
+ "runs_with_gate_passing_checkpoints": 4,
+ "rules_differ": 0,
+ "S01": null,
+ "S02": null,
+ "S03_pass": false,
+ "reason": "Per-checkpoint Isaac evals exist only every 200 iterations, so at most 1-2 checkpoints per run pass the 95% own-sim gate and both rules pick the same one in all 4 eligible runs. No GPU spent; the method needs denser checkpoint evaluation to be testable."
+}

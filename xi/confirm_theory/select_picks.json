@@ -1,0 +1,35 @@
+[
+ {
+  "run": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-11_22-27-54_CORR_s1",
+  "baseline": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-11_22-27-54_CORR_s1\\model_800.pt",
+  "damping": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-11_22-27-54_CORR_s1\\model_800.pt",
+  "damping_values": {
+   "model_800.pt": 0.29181899728017935,
+   "model_999.pt": 0.21086490744367206
+  }
+ },
+ {
+  "run": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-11_19-37-34_CORR_s2",
+  "baseline": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-11_19-37-34_CORR_s2\\model_999.pt",
+  "damping": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-11_19-37-34_CORR_s2\\model_999.pt",
+  "damping_values": {
+   "model_999.pt": 0.23945194645917395
+  }
+ },
+ {
+  "run": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-12_01-19-36_VOIDT5_orbit_s1",
+  "baseline": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-12_01-19-36_VOIDT5_orbit_s1\\model_999.pt",
+  "damping": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-12_01-19-36_VOIDT5_orbit_s1\\model_999.pt",
+  "damping_values": {
+   "model_999.pt": 0.28249464377590133
+  }
+ },
+ {
+  "run": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-12_02-04-09_VOIDT5_orbit_s2",
+  "baseline": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-12_02-04-09_VOIDT5_orbit_s2\\model_999.pt",
+  "damping": "C:\\Users\\anshm\\Downloads\\pendisaac\\logs\\rsl_rl\\tip_swingup\\2026-09-12_02-04-09_VOIDT5_orbit_s2\\model_999.pt",
+  "damping_values": {
+   "model_999.pt": 0.014597740953805557
+  }
+ }
+]
