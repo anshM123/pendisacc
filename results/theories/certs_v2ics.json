@@ -1,0 +1,132 @@
+[
+ {
+  "id": "D19",
+  "group": "D",
+  "claim": "Nominal masses: one gain tolerates 0-16 ms delay",
+  "value": 1.0,
+  "passed": true,
+  "detail": {
+   "rho": 0.9940893560618592,
+   "peak_a": 0.754093872832786,
+   "peak_x": 0.3999413770134661
+  },
+  "seconds": 64
+ },
+ {
+  "id": "D18",
+  "group": "D",
+  "claim": "100 Hz controller certifies +-12%",
+  "value": 0.0,
+  "passed": false,
+  "detail": {
+   "rho": 0.9976458126221573,
+   "peak_a": 1.163906717527214,
+   "peak_x": 0.4321268720347385
+  },
+  "seconds": 75
+ },
+ {
+  "id": "D13",
+  "group": "D",
+  "claim": "Actuator uncertainty is binding: nominal drive only certifies +-50%",
+  "value": 0.0,
+  "passed": false,
+  "detail": {
+   "rho": 0.9980000007339064,
+   "peak_a": 1.0491323006466304,
+   "peak_x": 0.40000000122968143
+  },
+  "seconds": 79
+ },
+ {
+  "id": "D12",
+  "group": "D",
+  "claim": "Motor is binding: 1.5x drive certifies +-37%",
+  "value": 1.0,
+  "passed": true,
+  "detail": {
+   "rho": 0.9974120591292621,
+   "peak_a": 1.4469570574851567,
+   "peak_x": 0.3999995664194339
+  },
+  "seconds": 128
+ },
+ {
+  "id": "D16",
+  "group": "D",
+  "claim": "Hardware lever: 50 ms servo certifies +-50%",
+  "value": 0.0,
+  "passed": false,
+  "detail": {
+   "rho": 0.9980000681333565,
+   "peak_a": 1.2101496116420738,
+   "peak_x": 0.40004719848607256
+  },
+  "seconds": 143
+ },
+ {
+  "id": "D11",
+  "group": "D",
+  "claim": "Rail is binding: 0.55 m cart travel certifies +-37%",
+  "value": 0.0,
+  "passed": false,
+  "detail": {
+   "rho": 1.000599767581001,
+   "peak_a": 1.0576736374708962,
+   "peak_x": 0.5498421484740889
+  },
+  "seconds": 147
+ },
+ {
+  "id": "D15",
+  "group": "D",
+  "claim": "Measurement priority: m2 known exactly certifies +-50% on m1, m3",
+  "value": 0.0,
+  "passed": false,
+  "detail": {
+   "rho": 0.9984632267340489,
+   "peak_a": 1.002316569932191,
+   "peak_x": 0.39999999988009105
+  },
+  "seconds": 188
+ },
+ {
+  "id": "D10",
+  "group": "calibration",
+  "claim": "CALIBRATION: reproduces v2 (+-25% certified)",
+  "value": 0.0,
+  "passed": false,
+  "detail": {
+   "rho": 0.9984439924967455,
+   "peak_a": 0.999999969099303,
+   "peak_x": 0.39999999999680247
+  },
+  "seconds": 220
+ },
+ {
+  "id": "D17",
+  "group": "D",
+  "claim": "Memory: one step of observation history certifies +-37%",
+  "value": 0.0,
+  "passed": false,
+  "detail": {
+   "rho": 0.9984822456767036,
+   "peak_a": 1.259681272891843,
+   "peak_x": 0.4000155790971365
+  },
+  "seconds": 305
+ },
+ {
+  "id": "D14",
+  "group": "D",
+  "claim": "Anisotropy: link 2 has the smallest certifiable one-axis range",
+  "value": 0.0,
+  "passed": false,
+  "detail": {
+   "0": 0.5,
+   "1": 0.5,
+   "2": 1.0
+  },
+  "seconds": 918
+ }
+]
