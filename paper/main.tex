@@ -68,11 +68,16 @@ domain randomisation, underactuated systems
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/swingup_cad_frames.png}
-\caption{The task. Eight frames of one PPO swing-up from dead hang, with the
-tip trace. Every episode starts hanging and must reach upright \emph{and stay
-there} for the final quarter. Link geometry is taken from CAD of a physical
-build.}
+\includegraphics[width=0.92\textwidth]{figures/hero.png}
+\caption{The claim, drawn. \textbf{Left:} the tip trace of the nominal plant
+(grey) and of a plant in which every mass, inertia, damping and friction
+coefficient, together with the velocity loop's gain and its force limit, has
+been multiplied by $1000$ (green). They coincide to $6\times10^{-12}$\,rad.
+\textbf{Right:} the same overlay when a \emph{single} link mass is multiplied
+by $1.5$---an error smaller by every norm---which diverges by $34.7$\,rad and
+fails the task. Direction in parameter space, not magnitude, decides whether a
+learned controller can tell two plants apart. Same frozen policy, same
+commanded inputs, same initial condition in all four traces.}
 \label{fig:task}
 \end{figure*}
 
@@ -85,12 +90,13 @@ sharp way: there exists a set of parameter errors, of unbounded magnitude, that
 a learned controller provably cannot perceive, and that set can be written down
 in closed form before any experiment is run.
 
-The plant (Fig.~\ref{fig:task}, \S\ref{sec:setup}) is a triple inverted
+The plant (\S\ref{sec:setup}) is a triple inverted
 pendulum performing swing-up. Scaling every mass, inertia, damping and
 friction coefficient in it by
 $1000$---together with the velocity loop's gain and its force limit---leaves the
 closed-loop trajectory unchanged to $7\times10^{-12}$\,rad. Scaling a single
-link mass by $1.5$ destroys the task. The first error is larger by every norm.
+link mass by $1.5$ destroys the task. The first error is larger by every norm
+(Fig.~\ref{fig:task}).
 
 \subsection*{Contributions}
 \begin{enumerate}
