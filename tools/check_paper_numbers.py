@@ -133,6 +133,21 @@ def main() -> int:
     claim("H3 equiv_c8 mean", 1.0, float(np.mean(c5["S_equiv_c8"])), 0.06)
     claim("H3 transverse mean", 4.9, float(np.mean(c5["S_transverse"])), 0.06)
 
+    # The paper states that the solved symmetry group contains nothing beyond
+    # Buckingham-Pi plus a parameter that never enters the equations. An
+    # earlier draft claimed the opposite, so this is asserted, not trusted.
+    print("")
+    print("dimensional analysis")
+    dc = load("results/dimensional_check.json")
+    claim("group == unit scalings + unused params", 1,
+          int(dc["verdict_nothing_beyond_dimensional_analysis"]), 0)
+    claim("fixed-rate group dim", 3,
+          dc["velocity_loop_dissipative_fixed_rate"]["group_dim"], 0)
+    claim("free-time group dim", 4,
+          dc["velocity_loop_dissipative_free_time"]["group_dim"], 0)
+    claim("unused parameter is L3", 1,
+          int(dc["velocity_loop_dissipative_fixed_rate"]["unused_parameters"] == ["L3"]), 0)
+
     print("")
     if FAILS:
         print("%d of %d checks FAILED:" % (len(FAILS), N))

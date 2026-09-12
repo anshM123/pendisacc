@@ -1,0 +1,52 @@
+{
+ "velocity_loop_dissipative_fixed_rate": {
+  "group_dim": 3,
+  "time_free": false,
+  "unit_scalings_in_group": {
+   "mass": true,
+   "length": true
+  },
+  "unused_parameters": [
+   "L3"
+  ],
+  "nothing_beyond_dimensional_analysis": true
+ },
+ "velocity_loop_dissipative_free_time": {
+  "group_dim": 4,
+  "time_free": true,
+  "unit_scalings_in_group": {
+   "mass": true,
+   "length": true,
+   "time": true
+  },
+  "unused_parameters": [
+   "L3"
+  ],
+  "nothing_beyond_dimensional_analysis": true
+ },
+ "velocity_loop_fixed_rate": {
+  "group_dim": 3,
+  "time_free": false,
+  "unit_scalings_in_group": {
+   "mass": true,
+   "length": true
+  },
+  "unused_parameters": [
+   "L3"
+  ],
+  "nothing_beyond_dimensional_analysis": true
+ },
+ "prescribed_base_fixed_rate": {
+  "group_dim": 3,
+  "time_free": false,
+  "unit_scalings_in_group": {
+   "mass": true,
+   "length": true
+  },
+  "unused_parameters": [
+   "L3"
+  ],
+  "nothing_beyond_dimensional_analysis": true
+ },
+ "verdict_nothing_beyond_dimensional_analysis": true
+}
