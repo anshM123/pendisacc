@@ -19,7 +19,7 @@
 \begin{document}
 
 \title{The Null Space of the Reality Gap:\\
-An Exactly Computable Equivalence Class for Sim-to-Real Transfer}
+An Exactly Computable Equivalence Class in Simulator Parameter Space}
 
 \author{\IEEEauthorblockN{Amitosh Mishra}
 \IEEEauthorblockA{\textit{Independent Researcher}\\
@@ -42,7 +42,7 @@ three-dimensional and contains a generator that scales every mass, inertia,
 damping and friction coefficient \emph{together with the controller's loop gain
 and force limit}; verified numerically, a $1000\times$ error in all of them
 changes the trajectory by $7\times10^{-12}$\,rad. Four experiments establish
-that this group is the \emph{entire} null space (24 random directions at equal
+that no further null direction survives a random search (24 directions at equal
 magnitude all fail, including one $79\%$ aligned with the group), that it is
 \emph{policy-independent} (drop spread $0.4$ points across seeds, in a system
 where seed alone moves transfer by 77 points), that it \emph{generalises} to
@@ -54,7 +54,11 @@ assigned---produced a real model error whose free and fatal components the
 theory separated correctly before measurement. We also report five
 pre-registered hypotheses that failed, including our own attempts to turn the
 geometry into a predictive scalar, which conventional trajectory fidelity still
-beats. Code, pre-registrations and raw results: \repo.
+beats. \textbf{All validation is in simulation}: the physical machine is
+specified but not assembled, so what we demonstrate is a model-to-model
+equivalence with a proved structure, not a measured sim-to-real transfer. We
+mark that boundary explicitly throughout. Code, pre-registrations and raw
+results: \repo.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -95,9 +99,11 @@ symmetries of a driven $N$-link chain by reducing invariance to a linear system
 on scaling exponents (\S\ref{sec:group}). The group is three-dimensional for
 $N=1..4$ and contains a generator coupling plant parameters to controller
 parameters---a coupling no dimensional analysis of the plant alone produces.
-\item \textbf{The group is the whole null space} (\S\ref{sec:t1}). Of 24 random
-directions applied at a magnitude known to be fatal, none is null; one that is
-$79\%$ aligned with the group still scores $0.0\%$.
+\item \textbf{It is the complete \emph{continuous scaling} null space}, and we
+find no evidence of any further null direction (\S\ref{sec:t1}): of 24 random
+directions applied at a magnitude known to be fatal, none is null, and one that
+is $79\%$ aligned with the group still scores $0.0\%$. We are careful to
+distinguish the proved statement from the searched one.
 \item \textbf{It is policy-independent} (\S\ref{sec:t2}), which is what makes it
 usable: it can be computed offline from equations, with no trained policy. In
 the same system, random seed alone moves transfer by 77 points.
@@ -282,7 +288,7 @@ more force than the drive can deliver is not realisable. This is the same
 boundary that gates the inertial symmetry alone, arriving from the theory
 rather than from measurement.
 
-\section{The Group is the Entire Null Space}\label{sec:t1}
+\section{No Null Directions Outside the Group}\label{sec:t1}
 
 Completeness in \S\ref{sec:group} concerns \emph{scalings}. It does not exclude
 other behaviourally null directions. We tested 24 random unit directions in the
@@ -310,8 +316,24 @@ the group does not help: the null space is the group, not a basin around it.}
 \label{fig:null}
 \end{figure}
 
-None is null (Fig.~\ref{fig:null}). A direction $79\%$ aligned with the group scores $0.0\%$. The null
-space is not a basin around the group; it is the group.
+None is null (Fig.~\ref{fig:null}). A direction $79\%$ aligned with the group
+scores $0.0\%$: the null set is not a basin around the group, and partial
+alignment buys nothing.
+
+\textbf{What this does and does not establish.} \S\ref{sec:group} \emph{proves}
+that the group is the complete set of \emph{scaling} symmetries---that is a
+null-space computation, not a sample. This section is a search, and a search of
+24 directions cannot establish that a continuous 8-dimensional parameter space
+contains no other behaviourally null set. A nonlinear curve, an isolated
+equivalence, a discrete transformation or a state-dependent one could all evade
+24 random directions. The honest statement is therefore:
+\[
+G \;=\; \text{complete continuous \emph{scaling} null space (proved)},
+\]
+\[
+\text{no further null direction found under random search (evidence)}.
+\]
+We keep these separate throughout.
 
 \section{The Group is Policy-Independent}\label{sec:t2}
 
@@ -389,7 +411,10 @@ both changes the link masses by $[0.81, 1.06, 0.48]$ and shifts $l_{\rm com}$ by
 $+53.6\%$ on link~1.
 
 This is a real model error, of the commonest possible kind, and it arose
-independently of the theory. Decomposed, it is
+independently of the theory. It is nonetheless a \emph{model-to-model}
+discrepancy: the corrected asset is our best estimate of the machine, not the
+machine. What this section tests is whether the theory correctly decomposes an
+error it did not design, not whether it predicts hardware. Decomposed, it is
 \[
 \text{overall scale } c = 0.744,\qquad
 \text{ratio distortion } 2.21\times .
@@ -450,11 +475,38 @@ in-simulator success by $0.8$.
 RMSE---below what the measure resolves across initial conditions---transfer at
 $0.0\%$ and $100.0\%$.
 
+\section{The Hardware Experiment, Specified in Advance}\label{sec:hw}
+
+The machine is not built, so we specify the physical test now rather than after
+seeing its outcome. Two configurations are manufactured to be \emph{equally
+wrong} in parameter space, one along the group and one transverse to it:
+\[
+\Delta\theta_\parallel \in T_\theta G,
+\qquad
+\Delta\theta_\perp \in (T_\theta G)^\perp,
+\qquad
+\|\Delta\theta_\parallel\| \;\gg\; \|\Delta\theta_\perp\| .
+\]
+The parallel case is realised by adding mass to every link \emph{and} the
+carriage while scaling the drive's velocity-loop gain and current limit by the
+same factor---all four are quantities we can set. The transverse case adds a
+much smaller mass to a single link. The \emph{same frozen policy} is deployed
+in both, with matched initial conditions and repeated trials. The theory
+predicts
+\[
+P_{\rm success}(\parallel) \;\gg\; P_{\rm success}(\perp)
+\]
+despite the parallel configuration being the larger error by every norm. A
+failure of that ordering falsifies the paper's central claim on hardware, and
+the prediction is registered in the repository before the robot exists.
+
 \section{Limitations}
 
 \textbf{No hardware.} The machine is specified and partly procured but not
-assembled. Every number here is simulation, and $R^\star$ is a stand-in for
-reality.
+assembled; \S\ref{sec:hw} states the physical test in advance so it cannot be
+fitted afterwards. Every number here is simulation and $R^\star$ is a stand-in
+for reality, so the strongest claim available to us is a model-to-model one
+with a proved structure.
 
 \textbf{The proposition is elementary.} Its content is a homogeneity argument.
 The non-obvious parts are completeness, the inclusion of controller parameters,
@@ -475,7 +527,8 @@ across that bracket, but no link has been on a scale.
 
 The errors a learned controller cannot perceive form a group, the group can be
 computed in closed form from the equations and the control law, it is the
-entire null space rather than a neighbourhood, it does not depend on the
+complete set of scaling symmetries with no further null direction found, it
+does not depend on the
 policy, and it tells one where not to spend identification or randomisation
 effort. What it does not provide is a scalar that ranks the errors outside it;
 for that, conventional trajectory fidelity remains the better tool, and the two
