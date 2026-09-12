@@ -1,0 +1,69 @@
+{
+  "task": "TIP-SwingUp-Play-v0",
+  "num_envs": 512,
+  "perturbed": false,
+  "init_ranges": "PLAY default (near-fixed dead hang)",
+  "obs_noise_std": 0.0,
+  "servo_tau_override": null,
+  "servo_order": null,
+  "xi": {},
+  "applied": {
+    "interface": {
+      "interface": "velocity",
+      "changed": false
+    }
+  },
+  "servo_wn": null,
+  "servo_zeta": 0.9,
+  "upright_threshold": 0.9,
+  "results": [
+    {
+      "checkpoint": "model_800.pt",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.7831505537033081
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.7702539563179016
+    },
+    {
+      "checkpoint": "model_600.pt",
+      "success_rate": 0.09375,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.8289426565170288,
+      "mean_tip_height": 0.7120723128318787
+    },
+    {
+      "checkpoint": "model_200.pt",
+      "success_rate": 0.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.30721092224121094,
+      "mean_tip_height": 0.3164495825767517
+    },
+    {
+      "checkpoint": "model_400.pt",
+      "success_rate": 0.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.37705209851264954,
+      "mean_tip_height": 0.40191519260406494
+    },
+    {
+      "checkpoint": "model_0.pt",
+      "success_rate": 0.0,
+      "early_termination_rate": 1.0,
+      "ever_reached_upright": 0.0,
+      "mean_hold_fraction": 0.0,
+      "mean_tip_height": -0.9797885417938232
+    }
+  ]
+}

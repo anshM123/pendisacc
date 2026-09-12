@@ -1,14 +1,15 @@
 {
  "results": {
+  "control_c1": 100.0,
   "partial_c32": 0.0,
   "full_c32": 0.0,
-  "full_c32_clamp": 0.390625,
-  "full_c16_clamp": 0.0,
-  "full_c64_clamp": 0.0,
-  "partial_c32_clamp": 0.0
+  "full_c32_clamp": 99.609375,
+  "full_c16_clamp": 100.0,
+  "full_c64_clamp": 100.0,
+  "partial_c32_clamp": 99.609375
  },
- "P1": false,
+ "P1": true,
  "P2": true,
  "P3": false,
- "P4": false
+ "P4": true
 }
