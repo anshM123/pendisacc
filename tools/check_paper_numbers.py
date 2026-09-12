@@ -88,15 +88,13 @@ def main() -> int:
     drops = [100 * (r["success"][0] - r["success"][-1]) for r in t2]
     claim("drop spread", 0.4, max(drops) - min(drops), 0.1)
 
-    print("\nT5 orbit vs transverse")
-    res = {}
-    for f in sorted(glob.glob(os.path.join(ROOT, "results", "T5", "*.json"))):
-        arm = os.path.basename(f)[:-5].split("_")[1]
-        d = json.load(open(f, encoding="utf-8"))
-        b = max(d["results"], key=lambda r: (r["success_rate"], -r["early_termination_rate"]))
-        res.setdefault(arm, []).append(100 * b["success_rate"])
-    claim("orbit mean", 100.0, float(np.mean(res["orbit"])), 0.1)
-    claim("transverse mean", 0.0, float(np.mean(res["transverse"])), 0.1)
+    # T5 is WITHHELD from the paper pending re-measurement (the orbit and
+    # transverse arms fell through to a second, isotropic perturbation, so the
+    # transverse arm carried a strictly larger displacement). Nothing to check
+    # while the section is out. This block stays as a marker: when the section
+    # returns, its numbers must be asserted here before the paper ships.
+    print("")
+    print("T5 orbit vs transverse: WITHHELD pending re-measurement")
 
     print("\nH10 realisability")
     h10 = load("results/h10_score.json")["results"]

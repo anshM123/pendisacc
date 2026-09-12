@@ -41,17 +41,15 @@ the closed loop by solving a linear system on scaling exponents. The group is
 three-dimensional and contains a generator that scales every mass, inertia,
 damping and friction coefficient \emph{together with the controller's loop gain
 and force limit}; verified numerically, a $1000\times$ error in all of them
-changes the trajectory by $7\times10^{-12}$\,rad. Four experiments establish
+changes the trajectory by $7\times10^{-12}$\,rad. Experiments establish
 that no further null direction survives a random search (24 directions at equal
 magnitude all fail, including one $79\%$ aligned with the group), that it is
 \emph{policy-independent} (drop spread $0.4$ points across seeds, in a system
 where seed alone moves transfer by 77 points), that it \emph{generalises} to
-other robot classes and changes with the action interface, and that it is
-\emph{actionable}: at equal budget, domain randomisation along the group leaves
-training at $100\%$ while randomisation transverse to it collapses to $0\%$.
-Finally, an accidental defect---a CAD export in which no materials had been
-assigned---produced a real model error whose free and fatal components the
-theory separated correctly before measurement. We also report five
+other robot classes and changes with the action interface. Finally, an
+accidental defect---a CAD export in which no materials had been assigned---
+produced a real model error whose free and fatal components the theory
+separated correctly before measurement. We also report five
 pre-registered hypotheses that failed, including our own attempts to turn the
 geometry into a predictive scalar, which conventional trajectory fidelity still
 beats. \textbf{All validation is in simulation}: the physical machine is
@@ -113,9 +111,6 @@ distinguish the proved statement from the searched one.
 \item \textbf{It is policy-independent} (\S\ref{sec:t2}), which is what makes it
 usable: it can be computed offline from equations, with no trained policy. In
 the same system, random seed alone moves transfer by 77 points.
-\item \textbf{It is actionable} (\S\ref{sec:t5}). At equal randomisation
-budget, sampling along the group leaves training at $100\%$ and sampling
-transverse to it collapses to $0\%$.
 \item \textbf{A prospective validation on an accidental defect}
 (\S\ref{sec:cad}), and \textbf{five pre-registered failures}
 (\S\ref{sec:fail}), including our own attempts to make the geometry predictive.
@@ -129,9 +124,10 @@ rejections in the same detail as the confirmations.
 
 \textbf{Domain randomisation} covers reality by training across a parameter
 distribution \cite{tobin2017,peng2018,openai2020}. Widths are chosen
-per-parameter and isotropically. \S\ref{sec:t5} shows that budget spent along
-an exact symmetry buys nothing, because the sampled plants are one plant in
-different coordinates.
+per-parameter and isotropically. An exact symmetry implies that budget spent
+inside it buys nothing, because the sampled plants are one plant in different
+coordinates; quantifying that is left to the re-measurement noted in the
+source.
 
 \textbf{Control-oriented identification} argues that identification should
 preserve closed-loop relevant properties rather than open-loop accuracy
@@ -383,28 +379,18 @@ controller's gains, and the group \emph{changes with the action interface}. The
 arm case is a robotics statement on its own: payload-mass uncertainty is
 absorbable by gain scaling.
 
-\section{Consequence: Do Not Randomise Along the Group}\label{sec:t5}
-
-If the group is exactly unobservable, randomisation budget spent inside it is
-wasted: the sampled plants are one plant in different coordinates. Two arms,
-two seeds each, \emph{equal} expected displacement, one sampling strictly along
-the generator and one strictly in its orthogonal complement, both deployed into
-a target fixed in advance:
-
-\begin{center}
-\begin{tabular}{lrr}
-\toprule
-arm & seeds & mean\\
-\midrule
-along the group & $100.0,\,100.0$ & $\mathbf{100.0\%}$\\
-transverse & $0.0,\,0.0$ & $\mathbf{0.0\%}$\\
-\bottomrule
-\end{tabular}
-\end{center}
-
-A 100-point gap at identical budget. The practical reading is a rule a
-practitioner can apply immediately: \emph{compute the group, and spend no
-randomisation and no identification effort inside it.}
+%% ===================================================================
+%% SECTION WITHHELD PENDING RE-MEASUREMENT.
+%% The randomisation experiment reported here was invalidated by a
+%% control-flow bug: the orbit and transverse arms applied their intended
+%% perturbation and then fell through to a block that multiplied a fresh
+%% isotropic draw on top of it, so the transverse arm received a strictly
+%% larger total displacement than the orbit arm. The 100 vs 0 separation was
+%% therefore confounded with magnitude, which is the one thing the equal-budget
+%% design existed to control. Bug fixed and the experiment is re-running at 5
+%% seeds per arm; this section returns only when the new data exists.
+%% Voided results: results/T5_VOID_fallthrough/
+%% ===================================================================
 
 \section{Prospective Test: An Accidental Defect}\label{sec:cad}
 
@@ -518,10 +504,6 @@ with a proved structure.
 The non-obvious parts are completeness, the inclusion of controller parameters,
 and the empirical realisability boundary---not the scaling itself.
 
-\textbf{Two seeds where it matters most.} \S\ref{sec:t5} rests on two seeds per
-arm. The $100$ versus $0$ separation is as clean as two seeds allow, but the
-seed variance documented in \S\ref{sec:fail} argues for five.
-
 \textbf{Other robot classes are symbolic only.} \S\ref{sec:t6} solves for their
 groups; it does not train policies on them.
 
@@ -535,8 +517,8 @@ The errors a learned controller cannot perceive form a group, the group can be
 computed in closed form from the equations and the control law, it is the
 complete set of scaling symmetries with no further null direction found, it
 does not depend on the
-policy, and it tells one where not to spend identification or randomisation
-effort. What it does not provide is a scalar that ranks the errors outside it;
+policy. Whether that translates into a measurable saving in randomisation
+budget is the subject of an experiment currently being re-run. What it does not provide is a scalar that ranks the errors outside it;
 for that, conventional trajectory fidelity remains the better tool, and the two
 are complementary rather than competing.
 

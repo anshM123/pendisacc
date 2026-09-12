@@ -290,44 +290,54 @@ def main() -> None:
                 print("          n%d: %s" % (_j, ", ".join(
                     "%s %+.2f" % (_DRN[k], _null[k, _j]) for k in _t)))
 
-        _rng = _np.random.default_rng(args_cli.seed)
-        _w = args_cli.dr_width
-        _d = _rng.uniform(-_w, _w, size=(_n_env, 7))
-        _box_budget = float(_np.linalg.norm(_d, axis=1).mean())
-        if args_cli.dr == "geom" and _null.shape[1]:
-            _d = _d - (_d @ _null) @ _null.T        # remove the null component
-            # projection removes budget; rescale so the two arms spend the same
-            _cur = float(_np.linalg.norm(_d, axis=1).mean())
-            _d *= _box_budget / max(_cur, 1e-12)
-        _budget = float(_np.linalg.norm(_d, axis=1).mean())
-        _leak = (float(_np.abs(_d @ _null).mean()) if _null.shape[1] else float("nan"))
+        # NOTE: this block is for the box and geom arms ONLY. The orbit and
+        # transverse arms above apply their own perturbation and return. An
+        # earlier version let them fall through to here, which multiplied a
+        # fresh isotropic draw on top of the arm's own perturbation and then
+        # overwrote dr_applied.json -- so the transverse arm received a
+        # strictly larger total displacement than the orbit arm, which is
+        # exactly the confound the equal-budget design exists to remove.
+        if args_cli.dr in ("orbit", "transverse"):
+            pass                                   # already applied above
+        else:
+          _rng = _np.random.default_rng(args_cli.seed)
+          _w = args_cli.dr_width
+          _d = _rng.uniform(-_w, _w, size=(_n_env, 7))
+          _box_budget = float(_np.linalg.norm(_d, axis=1).mean())
+          if args_cli.dr == "geom" and _null.shape[1]:
+              _d = _d - (_d @ _null) @ _null.T        # remove the null component
+              # projection removes budget; rescale so the two arms spend the same
+              _cur = float(_np.linalg.norm(_d, axis=1).mean())
+              _d *= _box_budget / max(_cur, 1e-12)
+          _budget = float(_np.linalg.norm(_d, axis=1).mean())
+          _leak = (float(_np.abs(_d @ _null).mean()) if _null.shape[1] else float("nan"))
 
-        _scale = 1.0 + _d
-        if float(_scale.min()) <= 0.0:
-            raise SystemExit("[train] dr width %.3f produces a non-positive parameter" % _w)
-        for _k, _b in enumerate(_li):
-            _m2[:, _b] *= torch.tensor(_scale[:, _k], dtype=_m2.dtype, device=_m2.device)
-            _I2[:, _b] *= torch.tensor(_scale[:, 3 + _k],
-                                       dtype=_I2.dtype, device=_I2.device).unsqueeze(-1)
-        _m2[:, _ci] *= torch.tensor(_scale[:, 6], dtype=_m2.dtype, device=_m2.device)
-        _v2.set_masses(_m2, torch.arange(_v2.count, dtype=torch.int32))
-        _v2.set_inertias(_I2, torch.arange(_v2.count, dtype=torch.int32))
+          _scale = 1.0 + _d
+          if float(_scale.min()) <= 0.0:
+              raise SystemExit("[train] dr width %.3f produces a non-positive parameter" % _w)
+          for _k, _b in enumerate(_li):
+              _m2[:, _b] *= torch.tensor(_scale[:, _k], dtype=_m2.dtype, device=_m2.device)
+              _I2[:, _b] *= torch.tensor(_scale[:, 3 + _k],
+                                         dtype=_I2.dtype, device=_I2.device).unsqueeze(-1)
+          _m2[:, _ci] *= torch.tensor(_scale[:, 6], dtype=_m2.dtype, device=_m2.device)
+          _v2.set_masses(_m2, torch.arange(_v2.count, dtype=torch.int32))
+          _v2.set_inertias(_I2, torch.arange(_v2.count, dtype=torch.int32))
 
-        print("[train] dr       : %s width %.4f  E||dtheta|| = %.6f "
-              "(box reference %.6f)  leakage %.3e"
-              % (args_cli.dr, _w, _budget, _box_budget, _leak))
-        with open(os.path.join(log_dir, "dr_applied.json"), "w", encoding="utf-8") as fh:
-            json.dump({"mode": args_cli.dr, "width": _w,
-                       "coords": _DRN,
-                       "null_subspace_rank": int(_null.shape[1]),
-                       "null_subspace": _null.tolist(),
-                       "E_norm_dtheta": _budget,
-                       "E_norm_dtheta_box_reference": _box_budget,
-                       "E_abs_leakage_into_null": _leak,
-                       "kv_randomised": False,
-                       "n_envs": int(_n_env),
-                       "scale_min": float(_scale.min()),
-                       "scale_max": float(_scale.max())}, fh, indent=1)
+          print("[train] dr       : %s width %.4f  E||dtheta|| = %.6f "
+                "(box reference %.6f)  leakage %.3e"
+                % (args_cli.dr, _w, _budget, _box_budget, _leak))
+          with open(os.path.join(log_dir, "dr_applied.json"), "w", encoding="utf-8") as fh:
+              json.dump({"mode": args_cli.dr, "width": _w,
+                         "coords": _DRN,
+                         "null_subspace_rank": int(_null.shape[1]),
+                         "null_subspace": _null.tolist(),
+                         "E_norm_dtheta": _budget,
+                         "E_norm_dtheta_box_reference": _box_budget,
+                         "E_abs_leakage_into_null": _leak,
+                         "kv_randomised": False,
+                         "n_envs": int(_n_env),
+                         "scale_min": float(_scale.min()),
+                         "scale_max": float(_scale.max())}, fh, indent=1)
 
     if args_cli.video:
         video_kwargs = {
