@@ -1,0 +1,181 @@
+{
+ "seed": 20260913,
+ "asset": "corrected",
+ "conditions": [
+  {
+   "name": "CT_mass_0",
+   "xi": {
+    "mass_scale": [
+     0.6609,
+     0.845,
+     0.8906
+    ]
+   },
+   "sha256": "563d2124fe802e7efc3cea4b41dea8fc4d6bf9cc9309664742dd41bf7737a53e"
+  },
+  {
+   "name": "CT_mass_1",
+   "xi": {
+    "mass_scale": [
+     1.219,
+     0.8404,
+     0.8339
+    ]
+   },
+   "sha256": "cebcb2fb4c4e35fbc0aa286af8285a6b84c8801bf7a8d0e77eaeeaf3f11491b0"
+  },
+  {
+   "name": "CT_mass_2",
+   "xi": {
+    "mass_scale": [
+     0.9212,
+     1.0783,
+     0.8511
+    ]
+   },
+   "sha256": "1e464d31713027aae28f3cd62f399732a65f20201d3f8680804544e6dc387717"
+  },
+  {
+   "name": "CT_mass_3",
+   "xi": {
+    "mass_scale": [
+     0.9423,
+     0.8308,
+     1.0463
+    ]
+   },
+   "sha256": "eefa3596c2a9196464964bebcc70c0547b12ce3ebc825697f537eb9fed887823"
+  },
+  {
+   "name": "CT_mass_4",
+   "xi": {
+    "mass_scale": [
+     0.9277,
+     0.8377,
+     1.1316
+    ]
+   },
+   "sha256": "eedd08db733ae5904c090f63584d26d1fab45c4a1131d714e3184a10bda77750"
+  },
+  {
+   "name": "CT_mass_5",
+   "xi": {
+    "mass_scale": [
+     0.9444,
+     0.8903,
+     0.9147
+    ]
+   },
+   "sha256": "6976eb7e4dc45cabe9bef0f073d7c30b5abe1eadb443d338cb59e89c2ba5fb5f"
+  },
+  {
+   "name": "CT_tau_070",
+   "xi": {
+    "tau": 0.07
+   },
+   "sha256": "d83e1de5d5287e9933d32bdc476cad7a1f3ac712cf0e9d1c7751a02afd604498"
+  },
+  {
+   "name": "CT_tau_135",
+   "xi": {
+    "tau": 0.135
+   },
+   "sha256": "d541cfdf0f0b085afd6823578bc8a44e80cc589ae49c0dc53186934e675d575f"
+  },
+  {
+   "name": "CT_delay_8ms",
+   "xi": {
+    "delay_s": 0.008
+   },
+   "sha256": "638791cd077b40f4ea70020e5a8894b67a91abfdb34579db60301b27725a0b6a"
+  },
+  {
+   "name": "CT_delay_16ms",
+   "xi": {
+    "delay_s": 0.016
+   },
+   "sha256": "4567aaaf1c97461b7f94d53cf136140e08d6db6d7e5d7d2ffc15ec9d75438501"
+  },
+  {
+   "name": "CT_combo_0",
+   "xi": {
+    "mass_scale": [
+     0.9664,
+     1.1976,
+     0.9061
+    ],
+    "tau": 0.1009,
+    "delay_s": 0.0
+   },
+   "sha256": "7489296da119cf4bb826b3c4a8d152d538b45118dc404d3d612b52ccee160d60"
+  },
+  {
+   "name": "CT_combo_1",
+   "xi": {
+    "mass_scale": [
+     1.1744,
+     1.0424,
+     1.059
+    ],
+    "tau": 0.1178,
+    "delay_s": 0.0
+   },
+   "sha256": "0c4ebabd1223e67293883469b430d48219ab32ffa3e4a69ef10069023eb7a2f9"
+  },
+  {
+   "name": "CT_combo_2",
+   "xi": {
+    "mass_scale": [
+     1.0542,
+     1.1123,
+     1.0507
+    ],
+    "tau": 0.0891,
+    "delay_s": 0.004
+   },
+   "sha256": "552231111f576bd80b0e592c18816523902c78a66f5364c69f6c03235849f7ac"
+  },
+  {
+   "name": "CT_combo_3",
+   "xi": {
+    "mass_scale": [
+     1.0435,
+     1.1628,
+     0.9676
+    ],
+    "tau": 0.1012,
+    "delay_s": 0.004
+   },
+   "sha256": "e15bc9f48060037f41fb2f4aa3bd0de86d11f8dabb25b2c9419086385202ede5"
+  },
+  {
+   "name": "CT_ctrl_kv",
+   "xi": {
+    "kv": 240.0
+   },
+   "sha256": "afef9ab3684b3b6a2d13bf239a450735e25119aeee3bae0210a07d5f2c689e3a"
+  },
+  {
+   "name": "CT_ctrl_cart",
+   "xi": {
+    "cart_mass_scale": 1.2
+   },
+   "sha256": "78c7cc1f9cf48be5913556e6236cdcbf05577d4159fc8315d6dda57c1403fd6c"
+  }
+ ],
+ "runs": [
+  "logs\\rsl_rl\\tip_swingup\\2026-09-11_22-27-54_CORR_s1",
+  "logs\\rsl_rl\\tip_swingup\\2026-09-11_19-37-34_CORR_s2",
+  "logs\\rsl_rl\\tip_swingup\\2026-09-11_20-20-38_CORR_s3",
+  "logs\\rsl_rl\\tip_swingup\\2026-09-12_13-07-55_T5_orbit_s1",
+  "logs\\rsl_rl\\tip_swingup\\2026-09-12_13-48-55_T5_orbit_s2",
+  "logs\\rsl_rl\\tip_swingup\\2026-09-12_01-19-36_VOIDT5_orbit_s1",
+  "logs\\rsl_rl\\tip_swingup\\2026-09-12_02-04-09_VOIDT5_orbit_s2",
+  "logs\\rsl_rl\\tip_swingup\\2026-09-12_10-36-32_VOIDT5_orbit_s3",
+  "logs\\rsl_rl\\tip_swingup\\2026-09-12_11-16-18_VOIDT5_orbit_s4",
+  "logs\\rsl_rl\\tip_swingup\\2026-09-12_12-00-41_VOIDT5_orbit_s5",
+  "logs\\rsl_rl\\tip_swingup\\2026-09-12_02-45-02_VOIDT5_transverse_s1",
+  "logs\\rsl_rl\\tip_swingup\\2026-09-12_03-30-46_VOIDT5_transverse_s2"
+ ],
+ "checkpoint_rule": "final checkpoint of each run (evaluate.py --run_list)"
+}
