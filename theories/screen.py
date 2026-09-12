@@ -968,8 +968,11 @@ def main():
     done = []
     heavy = [i for i in ids if i.startswith("D")]
     light = [i for i in ids if i not in heavy]
+    from concurrent.futures import as_completed
     with ProcessPoolExecutor(max_workers=args.workers) as ex:
-        for rec in ex.map(run_one, heavy + light):
+        futs = [ex.submit(run_one, i) for i in heavy + light]
+        for fut in as_completed(futs):
+            rec = fut.result()
             done.append(rec)
             print("%-4s %-11s %s  %-12s %s %-8s value %-12s n=%-4s %5.0fs  %s"
                   % (rec["id"], rec["group"], "PASS" if rec["passed"] else ("ERR " if rec.get("error") else "fail"),
