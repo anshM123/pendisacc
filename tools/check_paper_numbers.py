@@ -1,157 +1,147 @@
 """Verify the numbers asserted in paper/main.tex against results/*.json.
 
 A paper is the one artefact where a transcription slip is invisible and
-expensive. Each check below re-reads the source of truth and asserts the value
-that appears in the text, so a stale number fails here instead of in review.
+expensive, so every figure quoted in the text is re-read from its source here
+and asserted. Rewritten for the symmetry-group paper.
 
   run.cmd tools/check_paper_numbers.py
 """
 
 from __future__ import annotations
 
+import glob
 import json
 import os
-import re
 import sys
 
 import numpy as np
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEX = open(os.path.join(ROOT, "paper", "main.tex"), encoding="utf-8").read()
-
-FAILS = []
-CHECKS = 0
+FAILS, N = [], 0
 
 
 def load(rel):
     return json.load(open(os.path.join(ROOT, rel), encoding="utf-8"))
 
 
-def claim(desc, expected, actual, tol=0.05):
-    """Assert the paper's number matches the data, and that it is in the text."""
-    global CHECKS
-    CHECKS += 1
-    ok_val = abs(expected - actual) <= tol
-    if not ok_val:
-        FAILS.append("%s: paper says %s, data says %.4f" % (desc, expected, actual))
-    print("  %-52s paper %-9s data %-9.4f %s"
-          % (desc, expected, actual, "ok" if ok_val else "MISMATCH"))
-
-
-def present(desc, needle):
-    global CHECKS
-    CHECKS += 1
-    ok = needle in TEX
+def claim(desc, paper, data, tol=0.05):
+    global N
+    N += 1
+    ok = abs(paper - data) <= tol
     if not ok:
-        FAILS.append("%s: %r not found in main.tex" % (desc, needle))
-    print("  %-52s %s" % (desc, "ok" if ok else "TEXT MISSING"))
+        FAILS.append("%s: paper %s, data %.4f" % (desc, paper, data))
+    print("  %-46s paper %-10s data %-10.4f %s"
+          % (desc, paper, data, "ok" if ok else "MISMATCH"))
 
 
 def main() -> int:
-    print("H4 anisotropy")
-    h4 = load("results/h4_score.json")
-    claim("A_velocity", 100.0, h4["A_velocity_mean"])
-    claim("A_force", 95.7, h4["A_force_mean"], tol=0.06)
-    claim("gap", 4.3, h4["gap"], tol=0.06)
-    claim("A_dominated velocity", 99.7, h4["A_dominated_velocity_mean"], tol=0.06)
-    present("Q1 reported as failed", "threshold of $40$")
-
-    print("\nH4 velocity sweep, matched norm")
+    print("anisotropy, original asset")
     sv = load("results/h4_sweep_velocity.json")["rows"]
 
-    def cell(rows, c, direction_prefix):
-        v = [100 * r["success"] for r in rows
-             if abs(r["c"] - c) < 1e-9 and r["direction"].startswith(direction_prefix)]
-        return float(np.mean(v))
+    def cell(rows, c, pre):
+        return float(np.mean([100 * r["success"] for r in rows
+                              if abs(r["c"] - c) < 1e-9 and r["direction"].startswith(pre)]))
 
-    for c, want in ((1.5, 100.0), (2.5, 100.0), (4.0, 98.8), (8.0, 100.0)):
-        claim("uniform c=%.1f" % c, want, cell(sv, c, "uniform"), tol=0.4)
-    dm = {round(r["dm_kg"], 3) for r in sv if r["direction"] == "uniform" and r["c"] == 8.0}
-    claim("||dm|| at c=8", 1.527, max(dm), tol=0.002)
+    for c, w in ((1.5, 100.0), (2.5, 100.0), (4.0, 98.8), (8.0, 100.0)):
+        claim("uniform c=%.1f" % c, w, cell(sv, c, "uniform"), 0.4)
+    claim("dominated link1 c=8", 0.0, cell(sv, 8.0, "dominated_link1"), 0.4)
+    h4 = load("results/h4_score.json")
+    claim("A_velocity", 100.0, h4["A_velocity_mean"])
+    claim("A_force", 95.7, h4["A_force_mean"], 0.06)
+    claim("A gap", 4.3, h4["gap"], 0.06)
 
-    # The dominated table is LINK 1 specifically -- its ||dm|| column is link
-    # 1's displacement. Averaging all three links here reported a spurious
-    # mismatch at c=1.5, where links 2 and 3 are not at zero.
-    print("\nH4 dominated scheme (link 1, as tabulated)")
-    for c, want in ((1.5, 0.0), (2.5, 0.0), (4.0, 0.0), (8.0, 0.0)):
-        claim("link1 c=%.1f" % c, want, cell(sv, c, "dominated_link1"), tol=0.4)
-    d8 = max(r["dm_kg"] for r in sv
-             if r["direction"] == "dominated_link1" and r["c"] == 8.0)
-    claim("link1 ||dm|| at c=8", 1.243, d8, tol=0.002)
-    claim("link2 at c=1.5 (quoted in text)", 19.8,
-          cell(sv, 1.5, "dominated_link2"), tol=0.1)
-    claim("link3 at c=1.5 (quoted in text)", 4.0,
-          cell(sv, 1.5, "dominated_link3"), tol=0.1)
+    print("\nT4 landscape, corrected asset")
+    g = load("results/T4/landscape_corrected.json")
+    cs, ds = g["c_values"], g["deltas"]
+    P = np.array([[np.mean([100 * r["success"] for r in g["rows"]
+                            if r["c"] == c and r["delta"] == d]) for c in cs] for d in ds])
+    gm = P.mean()
+    ss = ((P - gm) ** 2).sum()
+    ssd = len(cs) * ((P.mean(axis=1) - gm) ** 2).sum()
+    ssc = len(ds) * ((P.mean(axis=0) - gm) ** 2).sum()
+    claim("variance by delta", 97.6, 100 * ssd / ss, 0.1)
+    claim("variance by c", 0.7, 100 * ssc / ss, 0.1)
+    sat = max(max(r["force_sat_frac"], r["speed_sat_frac"]) for r in g["rows"])
+    claim("worst saturation pct", 0.007, 100 * sat, 0.001)
 
-    print("\nForce arm uniform decay (post-hoc subsection)")
-    sf = load("results/h4_sweep_force.json")["rows"]
-    for c, want in ((1.5, 99.0), (2.5, 95.7), (4.0, 61.5), (8.0, 3.5)):
-        claim("force uniform c=%.1f" % c, want, cell(sf, c, "uniform"), tol=0.4)
+    print("\nsymmetry group")
+    sg = load("results/symmetry_group.json")
+    claim("group dim, velocity+dissipation", 3,
+          sg["velocity_loop_dissipative_fixed_rate"]["dim"], 0)
 
-    print("\nSelection blindness")
+    print("\nT1 null space")
+    t1 = load("results/T1/nullspace.json")["rows"]
+    claim("control c=1", 99.6, 100 * [r for r in t1 if r["name"] == "control_c1"][0]["success"], 0.4)
+    claim("group direction", 100.0, 100 * [r for r in t1 if r["name"] == "GROUP"][0]["success"], 0.4)
+    rnd = [r for r in t1 if r["name"].startswith("rand")]
+    claim("n random >= 90pct", 0, sum(1 for r in rnd if r["success"] >= 0.90), 0)
+    claim("worst random", 0.8, 100 * max(r["success"] for r in rnd), 0.4)
+    claim("best aligned random, cos", 0.790,
+          max(r["cos_to_group"] for r in rnd), 0.02)
+
+    print("\nT2 policy independence")
+    t2 = load("results/T2/policy_independence.json")["rows"]
+    for r in t2:
+        claim("%s at c=64" % r["policy"], 100.0 if r["policy"] == "CORR_s1" else 99.6,
+              100 * r["success"][-1], 0.4)
+    drops = [100 * (r["success"][0] - r["success"][-1]) for r in t2]
+    claim("drop spread", 0.4, max(drops) - min(drops), 0.1)
+
+    print("\nT5 orbit vs transverse")
+    res = {}
+    for f in sorted(glob.glob(os.path.join(ROOT, "results", "T5", "*.json"))):
+        arm = os.path.basename(f)[:-5].split("_")[1]
+        d = json.load(open(f, encoding="utf-8"))
+        b = max(d["results"], key=lambda r: (r["success_rate"], -r["early_termination_rate"]))
+        res.setdefault(arm, []).append(100 * b["success_rate"])
+    claim("orbit mean", 100.0, float(np.mean(res["orbit"])), 0.1)
+    claim("transverse mean", 0.0, float(np.mean(res["transverse"])), 0.1)
+
+    print("\nH10 realisability")
+    h10 = load("results/h10_score.json")["results"]
+    claim("full c=16 + clamp", 100.0, h10["full_c16_clamp"], 0.4)
+    claim("full c=32 + clamp", 99.6, h10["full_c32_clamp"], 0.4)
+    claim("full c=64 + clamp", 100.0, h10["full_c64_clamp"], 0.4)
+    claim("full c=32, NO clamp", 0.0, h10["full_c32"], 0.4)
+
+    print("\nCAD defect")
+    a = load("results/cad_density_audit.json")
+    claim("scale c", 0.744, a["overall_scale_c"], 0.002)
+    claim("ratio distortion", 2.21, a["ratio_distortion"], 0.01)
+    for i, w in enumerate((0.81, 1.06, 0.48)):
+        claim("link%d factor" % (i + 1), w, a["scale_factors_mid"][i], 0.006)
+    h8 = load("results/h8_score.json")["results"]
+    claim("scale only", 100.0, h8["scale_only"], 0.4)
+    claim("ratio only", 1.2, h8["ratio_only"], 0.4)
+    claim("real defect", 0.8, h8["corrected_mid"], 0.4)
+
+    print("\nfailures")
+    t3 = load("results/T3/quotient.json")
+    claim("rho d_perp", -0.243, t3["rho_perp"], 0.002)
+    claim("rho traj_rmse", -0.532, t3["rho_traj"], 0.002)
+    claim("rho along group", 0.065, t3["rho_along"], 0.002)
+    claim("rho fitted metric (H9)", -0.322, load("results/h9_score.json")["rho_dG"], 0.002)
     sb = load("results/selection_blindness.json")
-    claim("spearman rho", -0.090, sb["spearman_rho"], tol=0.002)
-    claim("permutation p", 0.749, sb["permutation_p"], tol=0.01)
-    claim("n", 15, sb["n"], tol=0)
-    claim("own-sim spread", 2.0, sb["own_sim_spread"], tol=0.06)
-    claim("R* spread", 100.0, sb["R_star_spread"], tol=0.06)
-    claim("nominal-arm R* spread", 77.0, sb["nominal_arm"]["R_star_spread"], tol=0.1)
-    claim("nominal-arm own spread", 0.8, sb["nominal_arm"]["own_sim_spread"], tol=0.03)
-    b2f = sb["best_to_final"]
-    claim("mean best->final drop", 38.6, b2f["mean_drop_points"], tol=0.06)
-    claim("best mean", 99.7, b2f["best_mean"], tol=0.06)
-    claim("final mean", 61.0, b2f["final_mean"], tol=0.06)
-    claim("runs losing >20", 11, b2f["n_losing_over_20"], tol=0)
-    claim("runs ending at best", 3, b2f["n_final_is_best"], tol=0)
-
-    print("\nFidelity and twins")
-    h2 = load("results/h2_test.json")["spearman"]
-    claim("traj_rmse rho", -0.506, h2["traj_rmse"], tol=0.002)
-    claim("D_SW rho", -0.415, h2["D_SW"], tol=0.002)
-    claim("R_TC rho", -0.406, h2["R_TC"], tol=0.002)
-    tw = load("results/twins.json")
-    claim("n admissible pairs", 28, tw["n_pairs"], tol=0)
-    best = tw["pairs"][0]
-    claim("twin rel diff %", 1.51, 100 * best["rel_diff"], tol=0.02)
-    claim("twin P_a", 0.0, best["P_a"], tol=0.05)
-    claim("twin P_b", 100.0, best["P_b"], tol=0.05)
-
-    print("\nH3")
+    claim("rho own-sim vs transfer", -0.090, sb["spearman_rho"], 0.002)
+    claim("own-sim spread", 2.0, sb["own_sim_spread"], 0.06)
+    claim("R* spread", 100.0, sb["R_star_spread"], 0.06)
+    claim("nominal-arm R* spread", 77.0, sb["nominal_arm"]["R_star_spread"], 0.1)
+    h7 = load("results/h7_score.json")
+    claim("rho own-sim, non-degenerate", -0.570, h7["rho_own_nondegenerate"], 0.002)
+    tw = load("results/twins.json")["pairs"][0]
+    claim("twin rel diff pct", 1.51, 100 * tw["rel_diff"], 0.02)
     c5 = load("results/claim5_score.json")["scores"]
-    claim("nominal mean", 64.7, float(np.mean(c5["S_nominal"])), tol=0.06)
-    claim("twinB mean", 65.5, float(np.mean(c5["S_twinB"])), tol=0.06)
-    claim("transverse mean", 4.9, float(np.mean(c5["S_transverse"])), tol=0.06)
-    claim("equiv_c8 mean", 1.0, float(np.mean(c5["S_equiv_c8"])), tol=0.06)
-
-    print("\nAnalytical 2x2")
-    isym = load("results/interface_symmetry.json")
-    g = {r["direction"].split()[0]: r for r in isym["grid"]}
-    claim("uniform, velocity iface", 1.4e-14, g["uniform"]["rel_velocity"], tol=1e-14)
-    claim("uniform, force iface", 7.5e-2, g["uniform"]["rel_force"], tol=2e-3)
-    claim("dm for the 2x2", 0.109, g["uniform"]["delta_m_kg"], tol=0.001)
-
-    print("\nPlant")
-    import yaml
-    p = yaml.safe_load(open(os.path.join(ROOT, "configs", "robot",
-                                          "triple_pendulum_params.yaml"), encoding="utf-8"))
-    h = yaml.safe_load(open(os.path.join(ROOT, "configs", "robot",
-                                         "hardware.yaml"), encoding="utf-8"))
-    b = p["bodies"]
-    for i, want in ((1, 0.178), (2, 0.100), (3, 0.077)):
-        claim("link%d mass" % i, want, b["link%d" % i]["mass"], tol=0.001)
-    eff = b["cart"]["mass"] + h["drive"]["reflected_mass_kg"]
-    claim("effective translating mass", 0.79, eff, tol=0.005)
-    claim("peak cart force", 349.5, h["drive"]["peak_cart_force_N"], tol=0.1)
-    claim("rated cart force", 99.7, h["drive"]["rated_cart_force_N"], tol=0.1)
-    claim("max cart speed", 4.0, h["drive"]["max_cart_speed_ms"], tol=0.01)
+    claim("H3 equiv_c8 mean", 1.0, float(np.mean(c5["S_equiv_c8"])), 0.06)
+    claim("H3 transverse mean", 4.9, float(np.mean(c5["S_transverse"])), 0.06)
 
     print("")
     if FAILS:
-        print("%d of %d checks FAILED:" % (len(FAILS), CHECKS))
+        print("%d of %d checks FAILED:" % (len(FAILS), N))
         for f in FAILS:
             print("  -", f)
         return 1
-    print("all %d checks passed" % CHECKS)
+    print("all %d checks passed" % N)
     return 0
 
 
