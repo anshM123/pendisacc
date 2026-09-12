@@ -158,3 +158,29 @@ identification is withdrawn.
 **Stated limitation.** If `k_v` is measured on the hardware, the confound goes
 away, and so does any identification argument. That would be reported as a
 condition on the claim.
+
+---
+
+## Addendum (2026-09-12, before any section-2 training): section 2 not run
+
+A CPU proof (`tools/pi_prove.py`, `results/PI_prove/prove.json`), run with no
+Isaac and before any randomisation policy was trained, shows the section-2
+comparison cannot test the representational claim:
+
+* **Exact gauge.** Scaling masses, inertias, cart, k_v and F_clamp together by
+  c in {0.25, 0.5, 2, 4} changes a 12 s closed-loop trajectory by at most
+  7.3e-12.
+* **Raw DR is the same as quotient DR without rescaling.** A raw log-box draw
+  and its quotient projection give trajectories within 2.8e-7 over 24 draws.
+* **Equal-budget quotient DR is only a width change.** It equals raw DR with
+  the quotient part widened by 1.107x.
+* **The inertials-only common scale (drive held fixed) is also behaviourally
+  neutral** for the frozen policy: 100% success at every c. So
+  `transverse` vs `raw` is likewise a ~1.08x width change.
+
+The section-2 arms are therefore width variants of one distribution, not
+different representations. They are withdrawn rather than run.
+
+Caveat: the CPU model reproduces nominal success for CORR_s1 (100%) but not
+CORR_s2 or CORR_s3 (0%). The two identities above are algebraic and hold for any
+policy. The sensitivity map (E) is for CORR_s1 only.
