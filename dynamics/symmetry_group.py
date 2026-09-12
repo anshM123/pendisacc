@@ -42,7 +42,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "results", "symmetry_group.json")
 
 
-def build(n: int, with_drive: bool):
+def build(n: int, with_drive: bool, with_dissipation: bool = False):
     """Algebraic equations of motion for an n-link chain on a cart.
 
     Coordinates and their derivatives are plain symbols, so the scaling
@@ -55,6 +55,7 @@ def build(n: int, with_drive: bool):
     L = sp.symbols("L1:%d" % (n + 1), positive=True)
     lc = sp.symbols("lc1:%d" % (n + 1), positive=True)
     mc, kv, vc = sp.symbols("m_cart kv v_cmd", positive=True)
+    bj, fj, bc = sp.symbols("b_joint fc_joint b_cart", positive=True)
 
     th = sp.symbols("th1:%d" % (n + 1))
     w = sp.symbols("w1:%d" % (n + 1))          # dth/dt
@@ -102,12 +103,26 @@ def build(n: int, with_drive: bool):
     eqs = []
     if with_drive:
         e = ddt(sp.diff(lag, V)) - sp.diff(lag, X)
-        eqs.append(sp.expand(e - kv * (vc - V)))
+        e = e - kv * (vc - V)
+        if with_dissipation:
+            # viscous drag on the cart. Coulomb on the cart would need sgn(V),
+            # which is not polynomial; it scales identically to b_cart*V so it
+            # is represented by the same generator.
+            e = e + bc * V
+        eqs.append(sp.expand(e))
     for i in range(n):
         e = ddt(sp.diff(lag, w[i])) - sp.diff(lag, th[i])
+        if with_dissipation:
+            # viscous b*w and Coulomb f*sgn(w); sgn is dimensionless in the
+            # scaling sense, so fc enters exactly like a coefficient of w^0
+            e = e + bj * w[i] + fj
         eqs.append(sp.expand(e))
 
     params = {"g": g}
+    if with_dissipation:
+        params.update({"b_joint": bj, "fc_joint": fj})
+        if with_drive:
+            params["b_cart"] = bc
     for i in range(n):
         params["m%d" % (i + 1)] = m[i]
         params["I%d" % (i + 1)] = I[i]
@@ -176,17 +191,18 @@ def report(tag, eqs, params, deriv, freeze_time):
 
 def main() -> int:
     out = {}
-    cases = (("prescribed_base_fixed_rate", 3, False, True),
-             ("prescribed_base_free_time", 3, False, False),
-             ("velocity_loop_fixed_rate", 3, True, True),
-             ("velocity_loop_free_time", 3, True, False))
-    for tag, n, drive, freeze in cases:
+    cases = (("prescribed_base_fixed_rate", 3, False, True, False),
+             ("velocity_loop_fixed_rate", 3, True, True, False),
+             ("velocity_loop_dissipative_fixed_rate", 3, True, True, True),
+             ("velocity_loop_dissipative_free_time", 3, True, False, True))
+    for tag, n, drive, freeze, diss in cases:
         print("=" * 70)
-        print("%s   (n=%d, drive=%s, time %s)"
-              % (tag, n, drive, "FROZEN" if freeze else "free"))
-        eqs, params, deriv = build(n, drive)
+        print("%s" % tag)
+        print("  (n=%d, drive=%s, dissipation=%s, time %s)"
+              % (n, drive, diss, "FROZEN" if freeze else "free"))
+        eqs, params, deriv = build(n, drive, diss)
         basis, free = report(tag, eqs, params, deriv, freeze)
-        out[tag] = {"n_links": n, "with_drive": drive,
+        out[tag] = {"n_links": n, "with_drive": drive, "dissipation": diss,
                     "time_frozen": freeze, "dim": len(basis),
                     "free_exponents": free, "basis": basis}
     json.dump(out, open(OUT, "w", encoding="utf-8"), indent=1)
