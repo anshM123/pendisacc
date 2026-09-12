@@ -111,6 +111,9 @@ def checkpoints() -> list[str]:
             run = line.strip()
             if not run:
                 continue
+            if run.endswith(".pt"):          # an explicit checkpoint, not a run dir
+                cks.append(run)
+                continue
             fs = [f for f in os.listdir(run) if f.startswith("model_") and f.endswith(".pt")]
             fs.sort(key=lambda f: int("".join(c for c in f if c.isdigit()) or 0))
             cks.append(os.path.join(run, fs[-1]))
