@@ -35,6 +35,9 @@ parser.add_argument("--task", type=str, default="TIP-SwingUp-Play-v0")
 parser.add_argument("--experiment", type=str, default="tip_swingup")
 parser.add_argument("--run", type=str, default=None, help="run dir; evaluates its checkpoints")
 parser.add_argument("--checkpoint", type=str, default=None, help="single checkpoint")
+parser.add_argument("--run_list", type=str, default=None,
+                    help="text file of run dirs; evaluates the FINAL checkpoint of each "
+                         "in one process (hidden-suite evaluation, PREREGISTRATION_PI.md)")
 parser.add_argument("--stride", type=int, default=100, help="evaluate every Nth checkpoint")
 parser.add_argument("--num_envs", type=int, default=256)
 parser.add_argument("--upright", type=float, default=0.9, help="tip height counting as upright")
@@ -102,6 +105,16 @@ def link_lengths():
 def checkpoints() -> list[str]:
     if args_cli.checkpoint:
         return [args_cli.checkpoint]
+    if args_cli.run_list:
+        cks = []
+        for line in open(args_cli.run_list, encoding="utf-8"):
+            run = line.strip()
+            if not run:
+                continue
+            fs = [f for f in os.listdir(run) if f.startswith("model_") and f.endswith(".pt")]
+            fs.sort(key=lambda f: int("".join(c for c in f if c.isdigit()) or 0))
+            cks.append(os.path.join(run, fs[-1]))
+        return cks
     run = args_cli.run
     if run is None:
         root = os.path.join(ROOT, "logs", "rsl_rl", args_cli.experiment)
@@ -259,6 +272,7 @@ def main() -> int:
 
         results.append({
             "checkpoint": os.path.basename(ck),
+            "run": os.path.basename(os.path.dirname(ck)),
             "success_rate": rate,
             "early_termination_rate": early,
             "ever_reached_upright": everup,

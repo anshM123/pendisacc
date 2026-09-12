@@ -36,7 +36,7 @@ parser.add_argument("--interface", type=str, default="velocity", choices=("veloc
                          "action interface -- plant, servo lag, delay, clamp, speed limit, "
                          "observation, reward and PPO settings are untouched. See "
                          "experiments/interfaces.py.")
-parser.add_argument("--dr", type=str, default="none", choices=("none", "box", "geom", "orbit", "transverse"),
+parser.add_argument("--dr", type=str, default="none", choices=("none", "box", "geom", "orbit", "transverse", "raw"),
                     help="link-mass domain randomisation (H5). 'box' is isotropic over all "
                          "three link masses; 'geom' spends the SAME expected budget "
                          "E||dm|| confined transverse to the uniform equivalence direction. "
@@ -225,7 +225,9 @@ def main() -> None:
         # 7-D block it is the all-ones direction. "orbit" randomises ONLY
         # along it; "transverse" randomises only in its complement. H5 used
         # the FITTED geometry and failed; this uses the proved one.
-        if args_cli.dr in ("orbit", "transverse"):
+        # "raw" (PREREGISTRATION_PI.md) is the SAME log-space draw used as is:
+        # isotropic in raw log-parameters, budget equal by construction.
+        if args_cli.dr in ("orbit", "transverse", "raw"):
             _u = _np.ones(7) / _np.sqrt(7.0)
             _rng = _np.random.default_rng(args_cli.seed)
             _w = args_cli.dr_width
@@ -233,7 +235,7 @@ def main() -> None:
             _ref = float(_np.linalg.norm(_d, axis=1).mean())
             if args_cli.dr == "orbit":
                 _d = _np.outer(_d @ _u, _u)          # keep ONLY the orbit part
-            else:
+            elif args_cli.dr == "transverse":
                 _d = _d - _np.outer(_d @ _u, _u)     # remove the orbit part
             _cur = float(_np.linalg.norm(_d, axis=1).mean())
             _d *= _ref / max(_cur, 1e-12)            # equal budget
@@ -297,7 +299,7 @@ def main() -> None:
         # overwrote dr_applied.json -- so the transverse arm received a
         # strictly larger total displacement than the orbit arm, which is
         # exactly the confound the equal-budget design exists to remove.
-        if args_cli.dr in ("orbit", "transverse"):
+        if args_cli.dr in ("orbit", "transverse", "raw"):
             pass                                   # already applied above
         else:
           _rng = _np.random.default_rng(args_cli.seed)
