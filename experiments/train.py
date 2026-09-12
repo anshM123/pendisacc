@@ -36,7 +36,7 @@ parser.add_argument("--interface", type=str, default="velocity", choices=("veloc
                          "action interface -- plant, servo lag, delay, clamp, speed limit, "
                          "observation, reward and PPO settings are untouched. See "
                          "experiments/interfaces.py.")
-parser.add_argument("--dr", type=str, default="none", choices=("none", "box", "geom"),
+parser.add_argument("--dr", type=str, default="none", choices=("none", "box", "geom", "orbit", "transverse"),
                     help="link-mass domain randomisation (H5). 'box' is isotropic over all "
                          "three link masses; 'geom' spends the SAME expected budget "
                          "E||dm|| confined transverse to the uniform equivalence direction. "
@@ -220,7 +220,41 @@ def main() -> None:
         _n_env = _m2.shape[0]
 
         _null = _np.zeros((7, 0))
-        if args_cli.dr == "geom":
+        # T5: the EXACT symmetry orbit. In log-coordinates the derived
+        # generator scales every inertial parameter equally, so within this
+        # 7-D block it is the all-ones direction. "orbit" randomises ONLY
+        # along it; "transverse" randomises only in its complement. H5 used
+        # the FITTED geometry and failed; this uses the proved one.
+        if args_cli.dr in ("orbit", "transverse"):
+            _u = _np.ones(7) / _np.sqrt(7.0)
+            _rng = _np.random.default_rng(args_cli.seed)
+            _w = args_cli.dr_width
+            _d = _rng.uniform(-_w, _w, size=(_n_env, 7))
+            _ref = float(_np.linalg.norm(_d, axis=1).mean())
+            if args_cli.dr == "orbit":
+                _d = _np.outer(_d @ _u, _u)          # keep ONLY the orbit part
+            else:
+                _d = _d - _np.outer(_d @ _u, _u)     # remove the orbit part
+            _cur = float(_np.linalg.norm(_d, axis=1).mean())
+            _d *= _ref / max(_cur, 1e-12)            # equal budget
+            _scale = _np.exp(_d)                     # log-coordinates
+            for _k2, _b2 in enumerate(_li):
+                _m2[:, _b2] *= torch.tensor(_scale[:, _k2], dtype=_m2.dtype, device=_m2.device)
+                _I2[:, _b2] *= torch.tensor(_scale[:, 3 + _k2],
+                                            dtype=_I2.dtype, device=_I2.device).unsqueeze(-1)
+            _m2[:, _ci] *= torch.tensor(_scale[:, 6], dtype=_m2.dtype, device=_m2.device)
+            _v2.set_masses(_m2, torch.arange(_v2.count, dtype=torch.int32))
+            _v2.set_inertias(_I2, torch.arange(_v2.count, dtype=torch.int32))
+            print("[train] dr       : %s  E||dlog|| = %.6f  (ref %.6f)"
+                  % (args_cli.dr, float(_np.linalg.norm(_d, axis=1).mean()), _ref))
+            with open(os.path.join(log_dir, "dr_applied.json"), "w", encoding="utf-8") as fh:
+                json.dump({"mode": args_cli.dr, "width": _w, "coords": _DRN,
+                           "orbit_direction": _u.tolist(),
+                           "E_norm_dlog": float(_np.linalg.norm(_d, axis=1).mean()),
+                           "E_norm_reference": _ref, "n_envs": int(_n_env),
+                           "scale_min": float(_scale.min()),
+                           "scale_max": float(_scale.max())}, fh, indent=1)
+        elif args_cli.dr == "geom":
             _gp = os.path.join(ROOT, "results", "geometry_discover.json")
             if not os.path.exists(_gp):
                 raise SystemExit("[train] --dr geom needs results/geometry_discover.json; "
