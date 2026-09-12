@@ -139,15 +139,17 @@ structure:
   extrusion: AutomationDirect
   shafts: MISUMI NSFMR8-80, 2x NSFMR8-35 (8 mm h9); McMaster 4138N78 8x50 return shaft
   joint_bearings: 6x PGN 608 OPEN (8x22x7); KFL08 8 mm flange pair; 6x McMaster 6056N16 8 mm collars
-  links: metal (steel shafting + joint hardware), NOT PETG
-  # An earlier revision of this file said PETG printed. That was stale: the
-  # CAD-derived masses in triple_pendulum_params.yaml were always metallic.
-  # Implied linear density is 0.710 / 0.401 / 0.245 kg/m for links 1-3,
-  # against 0.395 kg/m for solid 8 mm steel rod and 0.064 kg/m for PETG --
-  # link2 matches bare steel stock almost exactly, link1 is heavier because
-  # it carries seven CAD bodies of bearings and collars. link3's figure uses
-  # 2*l_com for its length since it has no distal joint, so treat it as
-  # approximate.
+  # Terminology: a LINK is the 8 mm steel shaft between arms (joint axle);
+  # an ARM is the swinging member, 3D-printed PETG.
+  links: 8 mm steel shafts (h9) with bearings and collars -- being purchased
+  arms: 3D-printed PETG, 25% infill
+  arm_effective_density_kg_m3: [400, 480, 570]   # bracket used for the model; mid 480
+  # An earlier revision said "links: metal, NOT PETG". That was wrong: it read
+  # the SolidWorks default density (1000 kg/m^3) off the CAD and took the
+  # resulting masses as evidence. Masses in triple_pendulum_params.yaml were
+  # regenerated with steel 7850 for shafts/hardware and PETG 480 for printed
+  # parts (tools/cad_density_audit.py, tools/apply_density_correction.py);
+  # the default-density original is kept as bodies_raw_ORIGINAL_default_density.csv.
   links_weighed_kg: null          # MEASURE  weigh each link on assembly and
                                   # reconcile against the CAD masses above
 
