@@ -1,0 +1,266 @@
+{
+ "seed": 20260912,
+ "per_family": 4,
+ "targets": [
+  {
+   "name": "HT_00",
+   "family": "ratio",
+   "xi": {
+    "mass_scale": [
+     1.0754,
+     0.9014,
+     1.0316
+    ]
+   },
+   "sha256": "de15c0ca2df2ca6da108dd8ef5dd393be7dcab86115a30954c038c30bed795e0"
+  },
+  {
+   "name": "HT_01",
+   "family": "ratio",
+   "xi": {
+    "mass_scale": [
+     1.364,
+     0.9569,
+     0.7662
+    ]
+   },
+   "sha256": "cda91d34eb1cee3dfe104ea393d1ea38c7f72301da7d882f2865894e4d9401fa"
+  },
+  {
+   "name": "HT_02",
+   "family": "ratio",
+   "xi": {
+    "mass_scale": [
+     1.1157,
+     1.1848,
+     0.7565
+    ]
+   },
+   "sha256": "dab43bfb69f4d87d3d1da4c8756021a53575491275fb28fbba88c27d84dabdfd"
+  },
+  {
+   "name": "HT_03",
+   "family": "ratio",
+   "xi": {
+    "mass_scale": [
+     1.0073,
+     1.0311,
+     0.9627
+    ]
+   },
+   "sha256": "a393cb4b7115300dcdbb55df24d4dca30bea77b14e8a91bce93c5ce056341b2c"
+  },
+  {
+   "name": "HT_04",
+   "family": "ratio_scale",
+   "xi": {
+    "mass_scale": [
+     0.9674,
+     1.0005,
+     1.0586
+    ],
+    "cart_mass_scale": 1.2459
+   },
+   "sha256": "cdb554f68e22f4f44695d35b8b93659e543122db013596d812d097ebe31a729a"
+  },
+  {
+   "name": "HT_05",
+   "family": "ratio_scale",
+   "xi": {
+    "mass_scale": [
+     1.5404,
+     1.3558,
+     1.336
+    ],
+    "cart_mass_scale": 1.1489
+   },
+   "sha256": "054daf228617ce9f07f276d6ae8b7a018c72966573b87155ebb66bd070032b17"
+  },
+  {
+   "name": "HT_06",
+   "family": "ratio_scale",
+   "xi": {
+    "mass_scale": [
+     0.5951,
+     0.7259,
+     0.6231
+    ],
+    "cart_mass_scale": 1.0725
+   },
+   "sha256": "b4cea08e1611475132c1356bf3bbf3a5cfb6ea4d4c4f0389b7cc2be375072f1e"
+  },
+  {
+   "name": "HT_07",
+   "family": "ratio_scale",
+   "xi": {
+    "mass_scale": [
+     1.0724,
+     1.0983,
+     0.8532
+    ],
+    "cart_mass_scale": 1.1053
+   },
+   "sha256": "9bca88d2b63d594aad7fa2d936e9329c118e04a5adae9ce82e725190ae85bd78"
+  },
+  {
+   "name": "HT_08",
+   "family": "dissipation",
+   "xi": {
+    "joint_damping": 0.00116,
+    "joint_friction": 0.00815
+   },
+   "sha256": "0fccc7a0bfa9ace1b59d868878d4bb343db5a960681833120550c9250136e557"
+  },
+  {
+   "name": "HT_09",
+   "family": "dissipation",
+   "xi": {
+    "joint_damping": 0.00385,
+    "joint_friction": 0.00333
+   },
+   "sha256": "74623a6699d983dbe9dfd751fc9dc12376227698e14afa2e382b3f0a57eb79ba"
+  },
+  {
+   "name": "HT_10",
+   "family": "dissipation",
+   "xi": {
+    "joint_damping": 0.00548,
+    "joint_friction": 0.004
+   },
+   "sha256": "d7bd65dcd77897f98ae83103a8a8434002c4345ee49879c1bbd2e762ce60409c"
+  },
+  {
+   "name": "HT_11",
+   "family": "dissipation",
+   "xi": {
+    "joint_damping": 0.00453,
+    "joint_friction": 0.00854
+   },
+   "sha256": "eae744310471d3d04d7bdf90b3113532ce17487eff7afc77e0d128d8c1a2b9c7"
+  },
+  {
+   "name": "HT_12",
+   "family": "actuator",
+   "xi": {
+    "tau": 0.0788,
+    "delay_s": 0.004
+   },
+   "sha256": "d68aa6f224689ed44a6bac6163255101cdb282eea4fd89ec1b359c7f3a5d1926"
+  },
+  {
+   "name": "HT_13",
+   "family": "actuator",
+   "xi": {
+    "tau": 0.096,
+    "delay_s": 0.004
+   },
+   "sha256": "509b94e92d5b16f3ee82bc7a2da52b564c4b4f93b2914aa82701efe69bb000ca"
+  },
+  {
+   "name": "HT_14",
+   "family": "actuator",
+   "xi": {
+    "tau": 0.0957,
+    "delay_s": 0.004
+   },
+   "sha256": "9f8f9aae4be6af4ba7d335711fb880a103b09f1c872136dc16400fd39259abfc"
+  },
+  {
+   "name": "HT_15",
+   "family": "actuator",
+   "xi": {
+    "tau": 0.1117,
+    "delay_s": 0.0
+   },
+   "sha256": "089ad6d2c427dbaa0d29730f5f0b94c8c88891c69e5ab7e41168802ed77d4e3b"
+  },
+  {
+   "name": "HT_16",
+   "family": "drive",
+   "xi": {
+    "kv": 468.94,
+    "f_clamp": 315.61
+   },
+   "sha256": "497a98700df8c3d9b73642add6a31d218d50edb24047a7af089f0f9ffeee6245"
+  },
+  {
+   "name": "HT_17",
+   "family": "drive",
+   "xi": {
+    "kv": 465.5,
+    "f_clamp": 296.5
+   },
+   "sha256": "cbfe1a6f2962c618dfa83b4ad5693e3a196cd88d4f9f0eb677e5c94008234e77"
+  },
+  {
+   "name": "HT_18",
+   "family": "drive",
+   "xi": {
+    "kv": 244.07,
+    "f_clamp": 377.07
+   },
+   "sha256": "371ac686473f76a080f7ec0313354790281302d86fa7ca8b891bdd264fb8c708"
+  },
+  {
+   "name": "HT_19",
+   "family": "drive",
+   "xi": {
+    "kv": 681.52,
+    "f_clamp": 355.76
+   },
+   "sha256": "6a40e7f8cd9accfd4b52b349ca88bbc1461dd655a217930d162fe5ac35f44e30"
+  },
+  {
+   "name": "HT_20",
+   "family": "build",
+   "xi": {
+    "mass_scale": [
+     1.0739,
+     1.0542,
+     1.1305
+    ],
+    "cart_mass_scale": 1.0138
+   },
+   "sha256": "394252efbb70620f08262052fbf3711abf5ee4d5b1b3f361de13071249e1ee05"
+  },
+  {
+   "name": "HT_21",
+   "family": "build",
+   "xi": {
+    "mass_scale": [
+     1.1013,
+     1.0742,
+     1.1788
+    ],
+    "cart_mass_scale": 0.9483
+   },
+   "sha256": "384818d28833f180a7914d194f6d0607fb7b6978cc3da87f726e2642caece3a9"
+  },
+  {
+   "name": "HT_22",
+   "family": "build",
+   "xi": {
+    "mass_scale": [
+     0.9346,
+     0.9521,
+     0.8845
+    ],
+    "cart_mass_scale": 0.9942
+   },
+   "sha256": "f282de155a7ab1358216780f286acd7336237892b3f66ee47dc6b2e1b12c8898"
+  },
+  {
+   "name": "HT_23",
+   "family": "build",
+   "xi": {
+    "mass_scale": [
+     0.9338,
+     0.9515,
+     0.883
+    ],
+    "cart_mass_scale": 1.0056
+   },
+   "sha256": "6c55728c55a5dd22cf3b9840b95a76b9f1f65af8fd9ca01741eeaa8a1a935b11"
+  }
+ ]
+}
