@@ -1,0 +1,142 @@
+{
+  "task": "TIP-SwingUp-Play-v0",
+  "num_envs": 256,
+  "perturbed": false,
+  "init_ranges": "PLAY default (near-fixed dead hang)",
+  "obs_noise_std": 0.0,
+  "servo_tau_override": null,
+  "servo_order": null,
+  "xi": {
+    "mass_scale": [
+      1.219,
+      0.8404,
+      0.8339
+    ]
+  },
+  "applied": {
+    "interface": {
+      "interface": "velocity",
+      "changed": false
+    },
+    "masses": {
+      "base_link": 5.8249,
+      "cart": 0.996395,
+      "link1": 0.174797,
+      "link2": 0.089342,
+      "link3": 0.031008
+    }
+  },
+  "servo_wn": null,
+  "servo_zeta": 0.9,
+  "upright_threshold": 0.9,
+  "results": [
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_02-04-09_VOIDT5_orbit_s2",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.7729508280754089
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_10-36-32_VOIDT5_orbit_s3",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.7253152132034302
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_11-16-18_VOIDT5_orbit_s4",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.7344247102737427
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_01-19-36_VOIDT5_orbit_s1",
+      "success_rate": 0.921875,
+      "early_termination_rate": 0.07421875,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9984687566757202,
+      "mean_tip_height": 0.6755598783493042
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_13-48-55_T5_orbit_s2",
+      "success_rate": 0.87890625,
+      "early_termination_rate": 0.00390625,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9459166526794434,
+      "mean_tip_height": 0.7367115020751953
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-11_19-37-34_CORR_s2",
+      "success_rate": 0.62109375,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.7888541221618652,
+      "mean_tip_height": 0.5489485859870911
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_13-07-55_T5_orbit_s1",
+      "success_rate": 0.60546875,
+      "early_termination_rate": 0.19140625,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.7723698019981384,
+      "mean_tip_height": 0.4972739815711975
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-11_22-27-54_CORR_s1",
+      "success_rate": 0.05078125,
+      "early_termination_rate": 0.09375,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.3203958570957184,
+      "mean_tip_height": 0.37598252296447754
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_03-30-46_VOIDT5_transverse_s2",
+      "success_rate": 0.01171875,
+      "early_termination_rate": 0.84765625,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.31760936975479126,
+      "mean_tip_height": 0.10877643525600433
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-11_20-20-38_CORR_s3",
+      "success_rate": 0.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.46243226528167725,
+      "mean_tip_height": 0.4515283405780792
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_12-00-41_VOIDT5_orbit_s5",
+      "success_rate": 0.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.3874948024749756,
+      "mean_tip_height": 0.45391643047332764
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_02-45-02_VOIDT5_transverse_s1",
+      "success_rate": 0.0,
+      "early_termination_rate": 0.015625,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.3622083365917206,
+      "mean_tip_height": 0.3501579761505127
+    }
+  ]
+}

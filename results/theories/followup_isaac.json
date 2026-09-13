@@ -1,0 +1,79 @@
+[
+ {
+  "id": "A20",
+  "stage": "isaac",
+  "claim": "REPLICATION of A14 on fresh Isaac data: min damping ratio ranks policies' mean confirmation-suite success",
+  "stat": "spearman",
+  "op": ">=",
+  "thr": 0.5,
+  "fn": "A20",
+  "value": 0.07042428152039987,
+  "n": 12,
+  "detail": {
+   "damping": [
+    0.21086490744367206,
+    0.23945194645917395,
+    0.3744359865872776,
+    0.28040879839231464,
+    0.10724709130629227,
+    0.28249464377590133,
+    0.014597740953805557,
+    0.17261535886957052,
+    0.23365618526444198,
+    0.21351687995977614,
+    0.1495643957824356,
+    -0.28701159445770774
+   ],
+   "mean_success": [
+    0.4013671875,
+    0.869384765625,
+    0.0,
+    0.85107421875,
+    0.828125,
+    0.905517578125,
+    0.903076171875,
+    0.875,
+    0.863037109375,
+    0.0,
+    0.0,
+    0.02587890625
+   ]
+  },
+  "passed": false,
+  "seconds": 0.1
+ },
+ {
+  "id": "A21",
+  "stage": "isaac",
+  "claim": "REPLICATION of A01 on fresh Isaac data: exact-condition CPU margin classifies success>=50%",
+  "stat": "AUC",
+  "op": ">=",
+  "thr": 0.8,
+  "fn": "A21",
+  "value": 0.8423721340388007,
+  "n": 192,
+  "detail": {
+   "n_pos": 108
+  },
+  "passed": true,
+  "seconds": 0.1
+ },
+ {
+  "id": "F06",
+  "stage": "isaac",
+  "claim": "Fresh Isaac: -|d . u*_p| classifies success on mass conditions (AUC >= 0.8) and beats raw distance by >= 0.10",
+  "stat": "AUC",
+  "op": ">=",
+  "thr": 0.8,
+  "fn": "F06",
+  "value": 0.0,
+  "n": 120,
+  "detail": {
+   "auc_u": 0.5831447963800905,
+   "auc_raw": 0.5271493212669683,
+   "n_pos": 68
+  },
+  "passed": false,
+  "seconds": 0.6
+ }
+]

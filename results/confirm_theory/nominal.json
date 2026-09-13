@@ -1,0 +1,129 @@
+{
+  "task": "TIP-SwingUp-Play-v0",
+  "num_envs": 256,
+  "perturbed": false,
+  "init_ranges": "PLAY default (near-fixed dead hang)",
+  "obs_noise_std": 0.0,
+  "servo_tau_override": null,
+  "servo_order": null,
+  "xi": {},
+  "applied": {
+    "interface": {
+      "interface": "velocity",
+      "changed": false
+    }
+  },
+  "servo_wn": null,
+  "servo_zeta": 0.9,
+  "upright_threshold": 0.9,
+  "results": [
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-11_22-27-54_CORR_s1",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.7704856395721436
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-11_19-37-34_CORR_s2",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.7844406366348267
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_13-07-55_T5_orbit_s1",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.8153228759765625
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_13-48-55_T5_orbit_s2",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.7837206125259399
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_01-19-36_VOIDT5_orbit_s1",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.7552002668380737
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_02-04-09_VOIDT5_orbit_s2",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.7931298017501831
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_10-36-32_VOIDT5_orbit_s3",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.7283142805099487
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_11-16-18_VOIDT5_orbit_s4",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.7422240972518921
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-11_20-20-38_CORR_s3",
+      "success_rate": 0.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.6244791746139526,
+      "mean_tip_height": 0.5822874307632446
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_12-00-41_VOIDT5_orbit_s5",
+      "success_rate": 0.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.3862135410308838,
+      "mean_tip_height": 0.44210919737815857
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_02-45-02_VOIDT5_transverse_s1",
+      "success_rate": 0.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.40403643250465393,
+      "mean_tip_height": 0.33874252438545227
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_03-30-46_VOIDT5_transverse_s2",
+      "success_rate": 0.0,
+      "early_termination_rate": 0.82421875,
+      "ever_reached_upright": 0.95703125,
+      "mean_hold_fraction": 0.41504165530204773,
+      "mean_tip_height": 0.13418371975421906
+    }
+  ]
+}

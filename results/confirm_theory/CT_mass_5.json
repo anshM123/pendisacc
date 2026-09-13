@@ -1,0 +1,142 @@
+{
+  "task": "TIP-SwingUp-Play-v0",
+  "num_envs": 256,
+  "perturbed": false,
+  "init_ranges": "PLAY default (near-fixed dead hang)",
+  "obs_noise_std": 0.0,
+  "servo_tau_override": null,
+  "servo_order": null,
+  "xi": {
+    "mass_scale": [
+      0.9444,
+      0.8903,
+      0.9147
+    ]
+  },
+  "applied": {
+    "interface": {
+      "interface": "velocity",
+      "changed": false
+    },
+    "masses": {
+      "base_link": 5.8249,
+      "cart": 0.996395,
+      "link1": 0.135421,
+      "link2": 0.094646,
+      "link3": 0.034013
+    }
+  },
+  "servo_wn": null,
+  "servo_zeta": 0.9,
+  "upright_threshold": 0.9,
+  "results": [
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-11_22-27-54_CORR_s1",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.770841121673584
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-11_19-37-34_CORR_s2",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.7804178595542908
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_13-07-55_T5_orbit_s1",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.816021203994751
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_13-48-55_T5_orbit_s2",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.7833889722824097
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_01-19-36_VOIDT5_orbit_s1",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.7521628141403198
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_02-04-09_VOIDT5_orbit_s2",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.794721245765686
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_10-36-32_VOIDT5_orbit_s3",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.7278084754943848
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_11-16-18_VOIDT5_orbit_s4",
+      "success_rate": 0.9921875,
+      "early_termination_rate": 0.00390625,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9942187070846558,
+      "mean_tip_height": 0.6831579804420471
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-11_20-20-38_CORR_s3",
+      "success_rate": 0.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.7896093726158142,
+      "mean_tip_height": 0.6191601753234863
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_12-00-41_VOIDT5_orbit_s5",
+      "success_rate": 0.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.33848437666893005,
+      "mean_tip_height": 0.43363073468208313
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_02-45-02_VOIDT5_transverse_s1",
+      "success_rate": 0.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.41014063358306885,
+      "mean_tip_height": 0.34657663106918335
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_03-30-46_VOIDT5_transverse_s2",
+      "success_rate": 0.0,
+      "early_termination_rate": 0.7890625,
+      "ever_reached_upright": 0.71484375,
+      "mean_hold_fraction": 0.3990989625453949,
+      "mean_tip_height": 0.144851952791214
+    }
+  ]
+}

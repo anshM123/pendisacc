@@ -1,0 +1,131 @@
+{
+  "task": "TIP-SwingUp-Play-v0",
+  "num_envs": 256,
+  "perturbed": false,
+  "init_ranges": "PLAY default (near-fixed dead hang)",
+  "obs_noise_std": 0.0,
+  "servo_tau_override": null,
+  "servo_order": null,
+  "xi": {
+    "delay_s": 0.008
+  },
+  "applied": {
+    "interface": {
+      "interface": "velocity",
+      "changed": false
+    }
+  },
+  "servo_wn": null,
+  "servo_zeta": 0.9,
+  "upright_threshold": 0.9,
+  "results": [
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_13-07-55_T5_orbit_s1",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.773114800453186
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_13-48-55_T5_orbit_s2",
+      "success_rate": 1.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9986666440963745,
+      "mean_tip_height": 0.7856128215789795
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-11_19-37-34_CORR_s2",
+      "success_rate": 0.95703125,
+      "early_termination_rate": 0.04296875,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9987239837646484,
+      "mean_tip_height": 0.7570618391036987
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-11_22-27-54_CORR_s1",
+      "success_rate": 0.953125,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9898228645324707,
+      "mean_tip_height": 0.7609652876853943
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_01-19-36_VOIDT5_orbit_s1",
+      "success_rate": 0.80078125,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.9225364923477173,
+      "mean_tip_height": 0.7069967985153198
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_02-04-09_VOIDT5_orbit_s2",
+      "success_rate": 0.51171875,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.8250677585601807,
+      "mean_tip_height": 0.5851262211799622
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_11-16-18_VOIDT5_orbit_s4",
+      "success_rate": 0.09375,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.6735885143280029,
+      "mean_tip_height": 0.5466368198394775
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_03-30-46_VOIDT5_transverse_s2",
+      "success_rate": 0.01953125,
+      "early_termination_rate": 0.37890625,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.6071770787239075,
+      "mean_tip_height": 0.4247307777404785
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_12-00-41_VOIDT5_orbit_s5",
+      "success_rate": 0.0,
+      "early_termination_rate": 0.0,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.3363229036331177,
+      "mean_tip_height": 0.43891966342926025
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-11_20-20-38_CORR_s3",
+      "success_rate": 0.0,
+      "early_termination_rate": 0.00390625,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.7119947671890259,
+      "mean_tip_height": 0.5741308927536011
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_02-45-02_VOIDT5_transverse_s1",
+      "success_rate": 0.0,
+      "early_termination_rate": 0.00390625,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.3519114553928375,
+      "mean_tip_height": 0.3450905680656433
+    },
+    {
+      "checkpoint": "model_999.pt",
+      "run": "2026-09-12_10-36-32_VOIDT5_orbit_s3",
+      "success_rate": 0.0,
+      "early_termination_rate": 0.015625,
+      "ever_reached_upright": 1.0,
+      "mean_hold_fraction": 0.44013020396232605,
+      "mean_tip_height": 0.5344011783599854
+    }
+  ]
+}
