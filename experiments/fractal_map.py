@@ -34,6 +34,8 @@ parser.add_argument("--cy", type=float, default=0.0)
 parser.add_argument("--half", type=float, default=0.6)
 parser.add_argument("--seed", type=int, default=20260914)
 parser.add_argument("--out", required=True)
+parser.add_argument("--yparam", choices=("m3", "tau"), default="m3",
+                    help="second axis: log m3 scale (default) or log servo-lag scale, tau = 0.1 s * exp(y)")
 AppLauncher.add_app_launcher_args(parser)
 args_cli = parser.parse_args()
 args_cli.headless = True
@@ -119,7 +121,7 @@ def main() -> int:
     m, I = view.get_masses().clone(), view.get_inertias().clone()
     sx = torch.tensor(np.exp(P[:, 0]), dtype=m.dtype)
     sy = torch.tensor(np.exp(P[:, 1]), dtype=m.dtype)
-    for name, s in (("link1", sx), ("link3", sy)):
+    for name, s in ((("link1", sx), ("link3", sy)) if args_cli.yparam == "m3" else (("link1", sx),)):
         b = names.index(name)
         m[:, b] *= s.to(m.device)
         I[:, b] *= s.to(I.device).unsqueeze(-1)
@@ -129,6 +131,14 @@ def main() -> int:
     got = view.get_masses()
     mass_check = float(torch.max(torch.abs(got[:, names.index("link1")] - m[:, names.index("link1")])))
 
+    if args_cli.yparam == "tau":
+        # per-environment first-order servo lag: the action term applies
+        # filtered += alpha * (cmd - filtered), so a (num_envs, 1) alpha broadcasts
+        terms = [t for t in env.unwrapped.action_manager._terms.values() if hasattr(t, "_alpha")]
+        assert len(terms) == 1 and getattr(terms[0], "_order", 1) == 1, "expected one first-order lagged action term"
+        dt = float(env.unwrapped.step_dt)
+        tau = torch.tensor(0.1 * np.exp(P[:, 1]), dtype=torch.float32, device=env.unwrapped.device)
+        terms[0]._alpha = (dt / (dt + tau)).unsqueeze(-1)
     env = RslRlVecEnvWrapper(env, clip_actions=getattr(agent_cfg, "clip_actions", None))
     runner = OnPolicyRunner(env, agent_cfg.to_dict(), log_dir=None, device=agent_cfg.device)
     runner.load(args_cli.checkpoint)
@@ -160,7 +170,7 @@ def main() -> int:
         hold = held / (steps - hold_from)
         success = (~early) & up & (hold > 0.95)
     ic_spread = float((q0 - q0[0:1]).abs().max())
-    out = {"checkpoint": args_cli.checkpoint, "mode": args_cli.mode, "num_envs": num_envs,
+    out = {"checkpoint": args_cli.checkpoint, "mode": args_cli.mode, "num_envs": num_envs, "yparam": args_cli.yparam,
            "window": {"cx": args_cli.cx, "cy": args_cli.cy, "half": args_cli.half},
            "ic": {"link1": IC_LINK1, "links23": IC_LINK23, "max_spread_rad": ic_spread},
            "mass_write_max_err": mass_check, "meta": meta, "params": P.tolist(),

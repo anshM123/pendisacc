@@ -99,3 +99,30 @@ Also recorded, exploratory and post hoc: on the full window, "power law + consta
 |0.315 − 0.282| = 0.03 ≤ 0.15 → **Z2 passes**. Reported with zoom-1's failure.
 Exploratory small-ε run: f plateaus near the simulator's slot-noise floor for
 ε ≤ 3e-4, so the measurable scaling range is ε ∈ [1e-3, 0.3] (~2.5 decades).
+
+---
+
+## Addendum 2 (2026-09-14, before the runs it governs)
+
+Registered here, with the same pair design, ε set, noise floor and α estimator as G2.
+
+**P2 — actuator plane.** x = log m1 scale, y = log servo-lag scale (τ = 0.1 s · e^y,
+set per environment). Policy CORR_s1 model_800, window ±0.6.
+- *Why τ and not delay:* transport delay is quantised to whole 4 ms control steps
+  in this simulator, so ε-scaling in delay is impossible.
+- *Prediction:* α_P2 ≤ 0.5 with ≥ 4 usable scales, i.e. the rough boundary is not a
+  mass-only artefact.
+- *Failure:* α_P2 ≥ 0.8, or < 3 usable scales.
+
+**C1 — control system.** Stock Isaac-Cartpole-v0, trained 150 iterations with
+stock settings, frozen.
+- *Setup:* pole IC 0.25 rad; x = log pole-mass scale, y = log cart-mass scale.
+  Window ±1.5, widened once to ±3 if the grid is > 98% or < 2% success. 292 pairs
+  per ε (4096-env limit).
+- *Prediction:* the cartpole boundary is smooth, α_C1 ≥ 0.8. If α_C1 ≤ 0.5 the
+  roughness is not specific to the triple pendulum, and that is reported as such.
+- *No boundary:* if the window has no boundary after widening, C1 is reported as
+  uninformative.
+
+**FTLE (diagnostic, no threshold).** 256 twin pairs at ε ∈ {0, 1e-5, 1e-4, 1e-3} in
+log m1; median log separation vs time; growth rate between separations 1e-5 and 1e-2.
