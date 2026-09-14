@@ -94,3 +94,8 @@ criterion are unchanged.
 Also recorded, exploratory and post hoc: on the full window, "power law + constant floor"
 (β 0.57, floor 4.8%) fits better than a pure power law (χ² 2.5 vs 8.3).
 `results/fractal/pairs_small_EXPLORATORY.json` (ε 1e-3 … 1e-5) tests for that floor.
+
+**Z2 outcome (19:37):** α = 0.315 over 6 usable scales at centre (0.124, 0.029);
+|0.315 − 0.282| = 0.03 ≤ 0.15 → **Z2 passes**. Reported with zoom-1's failure.
+Exploratory small-ε run: f plateaus near the simulator's slot-noise floor for
+ε ≤ 3e-4, so the measurable scaling range is ε ∈ [1e-3, 0.3] (~2.5 decades).
