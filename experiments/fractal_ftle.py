@@ -50,7 +50,7 @@ sys.path.insert(0, ROOT)
 sys.path.insert(0, os.path.join(ROOT, "source"))
 import triple_project.tasks  # noqa: E402,F401
 sys.path.insert(0, os.path.join(ROOT, "experiments"))
-from fractal_map import IC_LINK1, IC_LINK23  # noqa: E402  (same fixed IC as the map)
+IC_LINK1, IC_LINK23 = math.pi + 0.03, 0.01   # same fixed IC as experiments/fractal_map.py (importing it would re-run its CLI)
 from interfaces import apply_interface  # noqa: E402
 
 
