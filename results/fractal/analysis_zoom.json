@@ -1,0 +1,79 @@
+{
+ "pairs": {
+  "rows": [
+   {
+    "eps": 0.0,
+    "f": 0.005,
+    "se": 0.0028795254238618328,
+    "flips": 3,
+    "straddle_frac": 0.0,
+    "base_success": 0.02
+   },
+   {
+    "eps": 0.3,
+    "f": 0.03666666666666667,
+    "se": 0.007672702937711741,
+    "flips": 22,
+    "straddle_frac": 0.0,
+    "base_success": 0.01
+   },
+   {
+    "eps": 0.1,
+    "f": 0.035,
+    "se": 0.007502777263564918,
+    "flips": 21,
+    "straddle_frac": 0.0,
+    "base_success": 0.023333333333333334
+   },
+   {
+    "eps": 0.03,
+    "f": 0.023333333333333334,
+    "se": 0.006162911769730399,
+    "flips": 14,
+    "straddle_frac": 0.0,
+    "base_success": 0.011666666666666667
+   },
+   {
+    "eps": 0.01,
+    "f": 0.03666666666666667,
+    "se": 0.007672702937711741,
+    "flips": 22,
+    "straddle_frac": 0.0,
+    "base_success": 0.02
+   },
+   {
+    "eps": 0.003,
+    "f": 0.03333333333333333,
+    "se": 0.0073282810879294,
+    "flips": 20,
+    "straddle_frac": 0.0,
+    "base_success": 0.02
+   },
+   {
+    "eps": 0.001,
+    "f": 0.028333333333333332,
+    "se": 0.006773792088576328,
+    "flips": 17,
+    "straddle_frac": 0.0,
+    "base_success": 0.015
+   }
+  ],
+  "p0": 0.005,
+  "usable_eps": [
+   0.3,
+   0.1,
+   0.01,
+   0.003,
+   0.001
+  ],
+  "alpha": 0.040581912373996276,
+  "D": 1.9594180876260037,
+  "straddle_at_smallest_usable": 0.0
+ },
+ "lockin_zoom_criterion": {
+  "required": "alpha within +-0.15 of full-window 0.282",
+  "alpha_zoom": 0.040581912373996276,
+  "passed": false,
+  "note": "zoom window (chosen by the registered rule) sits on an isolated success island; base success 1-2%, flip rate ~3% flat from eps 0.3 to 0.001, i.e. outcomes there behave like independent coin flips"
+ }
+}
