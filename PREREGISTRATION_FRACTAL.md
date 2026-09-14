@@ -67,3 +67,30 @@ dynamics.
     full window
 
 Only then: finite-time Lyapunov exponents, delay × mass plane, cartpole control.
+
+---
+
+## Addendum 1 (2026-09-14 19:36, before the run it governs)
+
+Outcome of the registered lock-in so far:
+- **Full window:** α = 0.282, 6 usable scales. Passes.
+- **Second policy (T5_orbit_s1):** α = 0.271. Passes.
+- **Zoom: FAILS.** α = 0.041 against the required 0.28 ± 0.15.
+
+The registered zoom centre was an isolated success island inside the failure
+region (base success 1–2%). **The fractal claim is therefore NOT locked in, and
+this addendum does not change that.**
+
+A new, separately reported test (**Z2**) is registered here. The only thing
+that changes is the centre rule; half-width, pairs, ε set and the ±0.15
+criterion are unchanged.
+- **Centre rule:** take the largest 4-connected success component of grid_A.
+  Among its cells that have a failing 4-neighbour, pick the one closest (in
+  (x, y)) to the mean position of all such cells.
+- **Report:** Z2 is reported alongside the failed zoom, never instead of it.
+  If Z2 passes, the claim is at most "the full-window exponent reproduces at
+  the main boundary but not at isolated islands".
+
+Also recorded, exploratory and post hoc: on the full window, "power law + constant floor"
+(β 0.57, floor 4.8%) fits better than a pure power law (χ² 2.5 vs 8.3).
+`results/fractal/pairs_small_EXPLORATORY.json` (ε 1e-3 … 1e-5) tests for that floor.
