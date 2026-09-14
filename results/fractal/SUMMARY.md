@@ -20,7 +20,7 @@ file in `results/fractal/`.
 | Z2 zoom (addendum 1) | main boundary | **0.315** | 6 | 10.5% | 2.0% | pass |
 | Second policy | m1 × m3, T5_orbit_s1 | **0.271** | 6 | 7.2% | 0.33% | pass (≤ 0.6) |
 | P2 actuator plane (addendum 2) | m1 × servo lag τ, CORR_s1 | **0.246** | 6 | 9.3% | 2.2% | pass (≤ 0.5) |
-| C1 cartpole control (addendum 2) | pole mass × cart mass | pending | | | | predicted smooth (α ≥ 0.8) |
+| C1 cartpole control (addendum 2) | pole mass × cart mass, window ±3 | n/a (1 usable ε) | 0.3 | 0.0% (0 flips at ε ≤ 0.01) | 0.0% | **uninformative on α**; boundary 2.9% of cells vs 21–31%, no islands, no floor |
 
 **Noise and repeatability**
 - **Run-to-run:** 0.0%. The same grid in a separate process is identical.

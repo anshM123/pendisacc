@@ -126,3 +126,17 @@ stock settings, frozen.
 
 **FTLE (diagnostic, no threshold).** 256 twin pairs at ε ∈ {0, 1e-5, 1e-4, 1e-3} in
 log m1; median log separation vs time; growth rate between separations 1e-5 and 1e-2.
+
+**C1 outcome (19:44):** the grid was 98.9% success at ±1.5, so the window was
+widened to ±3 (85.7% success).
+- **Pairs:** flips 3.1% at ε = 0.3, 1.0% at 0.1, 0.7% at 0.03, and 0 at ε ≤ 0.01;
+  floor 0.
+- **α criterion:** only 1 usable ε, so α is inestimable and C1 is **uninformative
+  on α as registered**.
+- **Descriptive:** the boundary is 2.9% of grid cells (triple pendulum: 21–31%), with
+  no isolated cells and no noise floor. That is qualitatively consistent with the
+  smooth-boundary prediction.
+- **Caveat:** the task is not difficulty-matched (a 5 s balance from 0.25 rad) and
+  292 pairs per ε.
+
+**P2 outcome (19:42):** α = 0.246 over 6 usable ε. Prediction holds.
