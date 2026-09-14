@@ -1,0 +1,13 @@
+{
+ "grid": {
+  "success_frac": 0.205322265625,
+  "d0_within_run": 0.0234375,
+  "boundary_cell_frac": 0.20703125,
+  "zoom_centre": [
+   -0.5619047619047619,
+   0.5047619047619046
+  ],
+  "zoom_centre_disagreeing_neighbours": 4,
+  "hold_mean": 0.3836339157680868
+ }
+}
