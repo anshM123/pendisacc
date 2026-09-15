@@ -65,7 +65,25 @@ def pair_stats(pz):
         x = np.log([r["eps"] for r in usable])
         y = np.log([r["f"] - p0["f"] for r in usable])
         alpha = float(np.polyfit(x, y, 1)[0])
+    ci = None
+    if alpha is not None:
+        rng = np.random.default_rng(0)
+        flips = [(S[2 * i * P: 2 * i * P + P] != S[2 * i * P + P: 2 * (i + 1) * P]) for i in range(len(eps))]
+        ue = [eps.index(e) for e in [r["eps"] for r in usable]]
+        boots = []
+        for _ in range(1000):
+            f0 = flips[0][rng.integers(0, P, P)].mean()
+            ys, xs = [], []
+            for i in ue:
+                fi = flips[i][rng.integers(0, P, P)].mean() - f0
+                if fi > 0:
+                    ys.append(np.log(fi)); xs.append(np.log(eps[i]))
+            if len(xs) >= 2:
+                boots.append(np.polyfit(xs, ys, 1)[0])
+        if boots:
+            ci = [float(np.percentile(boots, 2.5)), float(np.percentile(boots, 97.5))]
     return {"rows": rows, "p0": p0["f"], "usable_eps": [r["eps"] for r in usable], "alpha": alpha,
+            "alpha_ci95": ci, "C_half": (2 ** (1 / alpha)) if alpha else None,
             "D": (2 - alpha) if alpha is not None else None,
             "straddle_at_smallest_usable": (min(usable, key=lambda r: r["eps"])["straddle_frac"] if usable else None)}
 

@@ -140,3 +140,58 @@ widened to ±3 (85.7% success).
   292 pairs per ε.
 
 **P2 outcome (19:42):** α = 0.246 over 6 usable ε. Prediction holds.
+
+---
+
+## Addendum 3 (2026-09-15, before any run it governs): final replication tests
+
+All tests use the G2 α estimator, with a bootstrap 95% CI over pairs (1000
+resamples, usable-ε set fixed from the point estimate). Success criterion,
+episode length, policy (CORR_s1 model_800), ε set {0.3, 0.1, 0.03, 0.01, 0.003, 0.001}
+and seed 20260914 are unchanged unless stated. No window or threshold is changed
+after outcomes.
+
+**R1 — independent dynamics (CPU).**
+- *Setup:* the corrected analytical model (`dynamics/closed_loop.py`, explicit 0.4 ms
+  substeps, no PhysX), with the **same 600 × 7 parameter pairs** as G2 (same RNG
+  layout). IC in absolute angles: θ1 = π + 0.03, θ2 = θ1 + 0.01, θ3 = θ2 + 0.01. Success
+  criterion as Isaac (|x| ≤ 0.6 throughout, tip > 0.9 at some time, tip > 0.9 for
+  > 95% of the final quarter).
+- *Supports:* α ≤ 0.6 with ≥ 4 usable ε, and CI upper bound < 0.8.
+- *Weakens the paper to Isaac-specific:* α ≥ 0.8.
+- *Ambiguous:* anything else; reported as such.
+
+**R2 — initial conditions (Isaac).** Five fixed ICs frozen here, as (link-1 absolute
+offset from hanging, joints 2–3 relative offset):
+- IC0: (+0.030, +0.010) (= G2)
+- IC1: (−0.030, +0.010)
+- IC2: (+0.045, −0.015)
+- IC3: (−0.045, +0.015)
+- IC4: (+0.010, −0.020)
+
+Pairs on the m1 × m3 plane, window ±0.6.
+- *Supports:* median α < 0.5 and ≥ 4 of 5 ICs with α < 0.8.
+- *Reporting:* every IC is reported, including any with < 3 usable ε.
+- *Mechanism check:* ICs are now applied through a per-environment IC table.
+  IC0 must reproduce G2's outcomes exactly; if not, that is reported as a failure
+  of the new mechanism.
+
+**R3 — state-space outcome boundary (Isaac).** Physics nominal.
+- *Plane:* x = initial link-1 angle offset added to IC0, y = initial joint-2 relative
+  offset added to IC0 (rad).
+- *Window:* grid 64×64 at half-width 0.05 rad. Widen ×4 (0.2, then 0.8) at most
+  twice while grid success is > 98% or < 2%. Then pairs in the final window,
+  same ε set in rad.
+- *Supports:* α ≤ 0.6 with ≥ 4 usable ε.
+- *Smooth:* α ≥ 0.8.
+- *Uninformative:* the window is still degenerate after two widenings.
+
+**R4 — numerical resolution (Isaac).** Primary plane, pairs, with physics dt
+halved (1/1000 s, decimation 4, so the control rate stays 250 Hz and the policy
+is unchanged).
+- *Supports:* α within ±0.15 of 0.282 with ≥ 4 usable ε. The ε = 0 floor is
+  reported and may move.
+- *Indicates the exponent depends on integration:* |α − 0.282| > 0.15.
+
+**Reporting.** Every α goes in one table with CI and C_½ = 2^(1/α). C_½ is valid
+only over the resolved ε range.

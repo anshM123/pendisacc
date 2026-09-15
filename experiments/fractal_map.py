@@ -36,6 +36,12 @@ parser.add_argument("--seed", type=int, default=20260914)
 parser.add_argument("--out", required=True)
 parser.add_argument("--yparam", choices=("m3", "tau"), default="m3",
                     help="second axis: log m3 scale (default) or log servo-lag scale, tau = 0.1 s * exp(y)")
+parser.add_argument("--plane", choices=("physics", "state"), default="physics",
+                    help="physics: (x,y) = log m1, log m3 (or tau); state: (x,y) = IC offsets of link 1 and joint 2 [rad]")
+parser.add_argument("--ic_link1", type=float, default=math.pi + 0.03)
+parser.add_argument("--ic_link23", type=float, default=0.01)
+parser.add_argument("--sim_dt", type=float, default=None, help="physics dt; control dt kept at 4 ms")
+parser.add_argument("--decimation", type=int, default=None)
 AppLauncher.add_app_launcher_args(parser)
 args_cli = parser.parse_args()
 args_cli.headless = True
@@ -62,8 +68,21 @@ import triple_project.tasks  # noqa: E402,F401
 sys.path.insert(0, os.path.join(ROOT, "experiments"))
 from interfaces import apply_interface  # noqa: E402
 
-IC_LINK1 = math.pi + 0.03
-IC_LINK23 = 0.01
+IC_LINK1 = args_cli.ic_link1
+IC_LINK23 = args_cli.ic_link23
+IC_TABLE = None          # (num_envs, 3) initial offsets for joint1, joint2, joint3, set in main()
+
+
+def table_reset(env, env_ids):
+    """Reset event: every environment gets its own deterministic initial joint state."""
+    robot = env.scene["robot"]
+    jn = list(robot.joint_names)
+    pos = robot.data.default_joint_pos[env_ids].clone()
+    vel = torch.zeros_like(pos)
+    T = IC_TABLE.to(pos.device)[env_ids]
+    for c, j in enumerate(("joint1", "joint2", "joint3")):
+        pos[:, jn.index(j)] += T[:, c]
+    robot.write_joint_state_to_sim(pos, vel, env_ids=env_ids)
 
 
 def link_lengths():
@@ -106,6 +125,17 @@ def main() -> int:
     agent_cfg = handle_deprecated_rsl_rl_cfg(agent_cfg, metadata.version("rsl-rl-lib"))
     agent_cfg.device = args_cli.device if args_cli.device is not None else agent_cfg.device
     apply_interface(env_cfg, "velocity")
+    global IC_TABLE
+    if args_cli.plane == "state":
+        IC_TABLE = torch.tensor(np.stack([IC_LINK1 + P[:, 0], IC_LINK23 + P[:, 1], np.full(len(P), IC_LINK23)], 1),
+                                dtype=torch.float32)
+    else:
+        IC_TABLE = torch.tensor(np.tile([IC_LINK1, IC_LINK23, IC_LINK23], (len(P), 1)), dtype=torch.float32)
+    if args_cli.sim_dt:
+        env_cfg.sim.dt = args_cli.sim_dt
+        env_cfg.decimation = args_cli.decimation
+        env_cfg.sim.render_interval = args_cli.decimation
+        assert abs(args_cli.sim_dt * args_cli.decimation - 1 / 250) < 1e-9, "control rate must stay 250 Hz"
     ev = env_cfg.events
     ev.reset_link1.params["position_range"] = (IC_LINK1, IC_LINK1)
     ev.reset_link1.params["velocity_range"] = (0.0, 0.0)
@@ -113,6 +143,9 @@ def main() -> int:
     ev.reset_links23.params["velocity_range"] = (0.0, 0.0)
     ev.reset_cart.params["position_range"] = (0.0, 0.0)
     ev.reset_cart.params["velocity_range"] = (0.0, 0.0)
+    # reset_links23 runs last among the reset terms; it now writes the whole IC from the table
+    ev.reset_links23.func = table_reset
+    ev.reset_links23.params = {}
 
     env = gym.make(args_cli.task, cfg=env_cfg)
     robot = env.unwrapped.scene["robot"]
@@ -121,7 +154,8 @@ def main() -> int:
     m, I = view.get_masses().clone(), view.get_inertias().clone()
     sx = torch.tensor(np.exp(P[:, 0]), dtype=m.dtype)
     sy = torch.tensor(np.exp(P[:, 1]), dtype=m.dtype)
-    for name, s in ((("link1", sx), ("link3", sy)) if args_cli.yparam == "m3" else (("link1", sx),)):
+    scaled = () if args_cli.plane == "state" else ((("link1", sx), ("link3", sy)) if args_cli.yparam == "m3" else (("link1", sx),))
+    for name, s in scaled:
         b = names.index(name)
         m[:, b] *= s.to(m.device)
         I[:, b] *= s.to(I.device).unsqueeze(-1)
@@ -131,7 +165,7 @@ def main() -> int:
     got = view.get_masses()
     mass_check = float(torch.max(torch.abs(got[:, names.index("link1")] - m[:, names.index("link1")])))
 
-    if args_cli.yparam == "tau":
+    if args_cli.plane == "physics" and args_cli.yparam == "tau":
         # per-environment first-order servo lag: the action term applies
         # filtered += alpha * (cmd - filtered), so a (num_envs, 1) alpha broadcasts
         terms = [t for t in env.unwrapped.action_manager._terms.values() if hasattr(t, "_alpha")]
@@ -170,9 +204,9 @@ def main() -> int:
         hold = held / (steps - hold_from)
         success = (~early) & up & (hold > 0.95)
     ic_spread = float((q0 - q0[0:1]).abs().max())
-    out = {"checkpoint": args_cli.checkpoint, "mode": args_cli.mode, "num_envs": num_envs, "yparam": args_cli.yparam,
+    out = {"checkpoint": args_cli.checkpoint, "mode": args_cli.mode, "num_envs": num_envs, "yparam": args_cli.yparam, "plane": args_cli.plane, "sim_dt": args_cli.sim_dt,
            "window": {"cx": args_cli.cx, "cy": args_cli.cy, "half": args_cli.half},
-           "ic": {"link1": IC_LINK1, "links23": IC_LINK23, "max_spread_rad": ic_spread},
+           "ic": {"link1": IC_LINK1, "links23": IC_LINK23, "max_spread_rad": ic_spread, "mechanism": "per-env IC table"},
            "mass_write_max_err": mass_check, "meta": meta, "params": P.tolist(),
            "success": success.cpu().numpy().astype(int).tolist(),
            "hold": hold.cpu().numpy().round(4).tolist(), "early": early.cpu().numpy().astype(int).tolist()}
