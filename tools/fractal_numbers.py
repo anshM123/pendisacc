@@ -79,6 +79,11 @@ def main():
     else:
         M["stateSucc"] = "??"
     pairs("fine", "R4_fine_pairs.json", "alphaFine")
+    fine = J("R4_fine_pairs.json")
+    if fine and J("pairs.json"):
+        M["changeFine"] = pct(float(np.mean(np.array(fine["success"]) != np.array(J("pairs.json")["success"]))))
+    else:
+        M["changeFine"] = "??"
 
     # mechanism check: IC0 through the per-environment IC table must reproduce G2 exactly
     ic0, gp = J("R2_ic0_pairs.json"), J("pairs.json")

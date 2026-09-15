@@ -10,6 +10,13 @@
 \usepackage{booktabs}
 \usepackage{url}
 \usepackage[hidelinks]{hyperref}
+\usepackage{iftex}
+\ifXeTeX
+  % Tectonic builds with XeTeX, where IEEEtran's Times (ptm) is unavailable; use the Times clone
+  \usepackage{fontspec}
+  \setmainfont{texgyretermes}[Extension=.otf, UprightFont=*-regular, BoldFont=*-bold,
+    ItalicFont=*-italic, BoldItalicFont=*-bolditalic]
+\fi
 
 \input{numbers}
 \newcommand{\repo}{\url{https://github.com/anshM123/pendisacc}}
@@ -190,7 +197,9 @@ analytical model (explicit integration, no PhysX), give $\alpha=\alphaCPU$ $[\al
 Isaac and the analytical model agree on $\agreeCPU$ of individual outcomes.
 
 \emph{Resolution.} Halving the physics step at a fixed $250$\,Hz control rate gives $\alphaFine$
-$[\alphaFinelo,\alphaFinehi]$, with floor $\alphaFinefloor$.
+$[\alphaFinelo,\alphaFinehi]$, with floor $\alphaFinefloor$. The step change alters $\changeFine$ of
+individual outcomes on the same parameter pairs. Which simulators succeed depends on integration detail,
+but how predictability scales with $\epsilon$ does not change regime.
 
 \emph{Initial state (contrast).} Holding the physics nominal, we perturbed the initial angles of link~1
 and joint~2. The registered rule widened the window from $\pm0.05$ to $\pm0.2$ and then $\pm0.8$\,rad while
@@ -210,6 +219,7 @@ $C_{1/2}=2^{1/\alpha}$: precision gain needed to halve outcome ambiguity.}
 \label{tab:repl}
 \centering\footnotesize
 \setlength{\tabcolsep}{3pt}
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{@{}llccc@{}}
 \toprule
 Test & Plane / condition & $\alpha$ [95\% CI] & $n$ & $C_{1/2}$\\
@@ -224,7 +234,7 @@ Resolution            & physics d$t/2$            & $\alphaFine$ [$\alphaFinelo$
 Initial state         & $\pm0.8$\,rad, nominal plant & \multicolumn{3}{c}{uninformative: $\stateSucc$ success}\\
 IC 0--4               & $m_1\times m_3$           & \multicolumn{3}{c}{$\alphaICa$, $\alphaICb$, $\alphaICc$, $\alphaICd$, $\alphaICe$}\\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \end{table}
 
 \begin{figure*}[t]
