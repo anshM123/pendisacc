@@ -55,3 +55,15 @@ file in `results/fractal/`.
 - **Novelty.** Not established. The closest known work finds fractal boundaries in
   policy-parameter space (NeurIPS 2023) and hyperparameter space (2024). A dedicated
   literature pass is still needed.
+
+## Final replication tests (addendum 3, 2026-09-15)
+
+| Test | α [95% CI] | Usable ε | Verdict |
+|---|---|---|---|
+| R1 independent analytical dynamics (no PhysX), same 4200 pairs | **0.36** [0.31, 0.43] | 6 | supports. Floor 0.0% (deterministic), 4.0% flips at ε = 1e-3, 83% outcome agreement with Isaac |
+| R2 five initial conditions | 0.28, 0.29, 0.33, 0.32, 0.33 (median 0.32) | 6 each | supports. The IC-table mechanism reproduces G2 exactly |
+| R3 initial-state plane (nominal physics) | n/a | n/a | uninformative. Success 100%, 100% and 99.9% at ±0.05, ±0.2 and ±0.8 rad |
+| R4 physics dt halved | **0.38** [0.30, 0.48] | 5 | supports. 12% of individual outcomes change |
+
+Paper: `paper/main.tex`, "When Better Models Barely Help: Predictability Limits in
+Learned Nonlinear Robot Control". It builds with Tectonic: 5 pages, no unresolved numbers.

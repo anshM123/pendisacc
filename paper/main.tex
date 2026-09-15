@@ -204,7 +204,10 @@ median $\alpha=\alphaICmed$ (range $\alphaICmin$--$\alphaICmax$). $\nICbelow$ of
 
 \emph{Dynamics implementation.} The same policy and the same $4200$ parameter pairs, run in an independent
 analytical model (explicit integration, no PhysX), give $\alpha=\alphaCPU$ $[\alphaCPUlo,\alphaCPUhi]$.
-Isaac and the analytical model agree on $\agreeCPU$ of individual outcomes.
+Isaac and the analytical model agree on $\agreeCPU$ of individual outcomes. The analytical model is
+exactly deterministic, so its same-parameter floor is $\alphaCPUfloor$, yet $\alphaCPUflip$ of pairs
+still flip at $\epsilon=10^{-3}$. The slow scaling therefore does not come from batch nondeterminism in
+the physics engine.
 
 \emph{Resolution.} Halving the physics step at a fixed $250$\,Hz control rate gives $\alphaFine$
 $[\alphaFinelo,\alphaFinehi]$, with floor $\alphaFinefloor$. The step change alters $\changeFine$ of

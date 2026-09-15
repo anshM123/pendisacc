@@ -210,3 +210,15 @@ range.
 |0.376 − 0.282| = 0.094 ≤ 0.15, so R4 **supports** as registered.
 Recorded as exploratory: with physics dt halved, 12.2% of individual outcomes on the
 same parameter pairs change, yet the exponent stays in the same regime.
+
+**R1 outcome (16:5x):** independent analytical dynamics, same 4200 pairs:
+α = 0.362, CI [0.307, 0.429], 6 usable ε, floor 0.0% (deterministic).
+α ≤ 0.6, ≥ 4 usable ε and CI upper bound < 0.8, so R1 **supports**.
+Outcome agreement with Isaac on identical pairs is 83.0% (success rate: CPU 28.9%, Isaac 21.0%).
+
+**Final registered tally for addendum 3:**
+- **Supports:** R1, R2, R4.
+- **Uninformative:** R3.
+
+Together with the earlier gate (G2 pass; zoom-1 FAIL; Z2 pass; second policy pass;
+P2 pass; C1 uninformative).
