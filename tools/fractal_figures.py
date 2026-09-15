@@ -71,31 +71,44 @@ def grid_img(ax, fname, xlabel, ylabel, title, ytrans=None):
 
 def main():
     os.makedirs(FIG, exist_ok=True)
-    fig = plt.figure(figsize=(7.1, 2.25))
-    gs = fig.add_gridspec(1, 4, width_ratios=[1, 1, 1, 1.25], wspace=0.45)
+    fig = plt.figure(figsize=(7.1, 2.35), constrained_layout=True)
+    gs = fig.add_gridspec(1, 4, width_ratios=[0.9, 1, 1, 1.25])
     ax = fig.add_subplot(gs[0])
-    hero = os.path.join(FIG, "hero.png")
-    if os.path.exists(hero):
-        img = plt.imread(hero)
-        ax.imshow(img)
+    try:  # strobe of the frozen policy's swing-up on the corrected model
+        sys.path.insert(0, os.path.join(ROOT, "experiments"))
+        import dynalever_cpu as DL
+        from pi_prove import L as LL
+        Z, _, _ = DL.nominal()
+        for tt, a in ((0.0, 0.25), (0.3, 0.35), (0.55, 0.45), (0.75, 0.55), (1.0, 0.7), (1.6, 1.0)):
+            z = Z[int(tt * 250)]
+            x0, th = z[0], z[1:4]
+            xs = [x0] + list(x0 + np.cumsum(LL * np.sin(th)))
+            ys = [0.0] + list(np.cumsum(LL * np.cos(th)))
+            ax.plot(xs, ys, "-o", color="C0", alpha=a, lw=1.4, ms=2)
+            ax.plot([x0 - 0.05, x0 + 0.05], [0, 0], "k-", lw=3, alpha=a)
+        ax.plot([-0.6, 0.6], [0, 0], color="0.5", lw=0.8)
+        ax.set_aspect("equal")
+        ax.set_xlim(-0.65, 0.65)
+    except Exception as ex:  # the figure must still build without the CPU model
+        ax.text(0.5, 0.5, "robot schematic\nunavailable: %s" % ex, ha="center", fontsize=5, transform=ax.transAxes)
     ax.set_axis_off()
-    ax.set_title("(a) triple pendulum, frozen PPO")
-    grid_img(fig.add_subplot(gs[1]), "grid_A.json", "$\\log(m_1/m_1^0)$", "$\\log(m_3/m_3^0)$", "(b) mass plane (white = success)")
-    grid_img(fig.add_subplot(gs[2]), "P2_grid.json", "$\\log(m_1/m_1^0)$", "servo lag $\\tau$ [s]", "(c) mass $\\times$ servo lag",
+    ax.set_title("(a) frozen PPO swing-up")
+    grid_img(fig.add_subplot(gs[1]), "grid_A.json", r"$\log(m_1/m_1^0)$", r"$\log(m_3/m_3^0)$", "(b) mass plane")
+    grid_img(fig.add_subplot(gs[2]), "P2_grid.json", r"$\log(m_1/m_1^0)$", r"servo lag $\tau$ [s]", r"(c) mass $\times$ servo lag",
              ytrans=lambda y: 0.1 * np.exp(y))
     ax = fig.add_subplot(gs[3])
     curve(ax, "pairs.json", "mass plane", "C0")
-    curve(ax, "P2_pairs.json", "mass$\\times$lag", "C3", "s")
-    ax.plot([1e-3, 0.3], [0.004, 1.2], "k:", lw=0.8, label="smooth boundary ($\\alpha$=1)")
+    curve(ax, "P2_pairs.json", r"mass$\times$lag", "C3", "s")
+    ax.plot([1e-3, 0.3], [0.004, 1.2], "k:", lw=0.8, label=r"smooth ($\alpha$=1)")
     ax.set_xscale("log"); ax.set_yscale("log")
-    ax.set_xlabel("perturbation size $\\epsilon$ (log units)")
-    ax.set_ylabel("$P$(outcome flips) $-$ floor")
+    ax.set_xlabel(r"perturbation size $\epsilon$")
+    ax.set_ylabel("$P$(flip) $-$ floor")
     ax.set_title("(d) outcome predictability")
     ax.legend(loc="lower right", frameon=False)
     fig.savefig(os.path.join(FIG, "fig_pred_main.png"), dpi=300, bbox_inches="tight")
     plt.close(fig)
 
-    fig, axs = plt.subplots(1, 3, figsize=(7.1, 2.2))
+    fig, axs = plt.subplots(1, 3, figsize=(7.1, 2.3), constrained_layout=True)
     ax = axs[0]
     curve(ax, "pairs.json", "Isaac, policy A", "C0")
     curve(ax, "pairs_T5orbit.json", "Isaac, policy B", "C1", "^")
@@ -116,11 +129,10 @@ def main():
         ax.set_xlabel("$\\epsilon$")
         ax.legend(loc="lower right", frameon=False)
     axs[0].set_ylabel("$P$(flip) $-$ floor")
-    fig.tight_layout()
     fig.savefig(os.path.join(FIG, "fig_pred_repl.png"), dpi=300, bbox_inches="tight")
     plt.close(fig)
 
-    fig, axs = plt.subplots(1, 3, figsize=(7.1, 2.1))
+    fig, axs = plt.subplots(1, 3, figsize=(7.1, 2.2), constrained_layout=True)
     z = os.path.join(R, "ftle_CORR_s1.npz")
     if os.path.exists(z):
         d = np.load(z)
@@ -145,7 +157,6 @@ def main():
     axs[1].set_xscale("log"); axs[1].set_yscale("log"); axs[1].set_xlabel("$\\epsilon$")
     axs[1].set_ylabel("$P$(flip)"); axs[1].set_title("(b) resolved range and floor"); axs[1].legend(frameon=False)
     grid_img(axs[2], "cartpole/grid.json", "$\\log$ pole mass", "$\\log$ cart mass", "(c) stock cartpole control")
-    fig.tight_layout()
     fig.savefig(os.path.join(FIG, "fig_pred_mech.png"), dpi=300, bbox_inches="tight")
     plt.close(fig)
     print("wrote figures/fig_pred_main.png, fig_pred_repl.png, fig_pred_mech.png")

@@ -72,6 +72,12 @@ def main():
     M["nICbelow"] = str(sum(a < 0.8 for a in got)) if got else "??"
     st = pairs("state", "R3_state_pairs.json", "alphaState")
     M["stateHalf"] = f2(st["_raw"]["window"]["half"], 2) if st else "??"
+    sg = J("R3_state_grid_h0.8.json")
+    if sg:
+        n = sg["meta"]["n"]
+        M["stateSucc"] = pct(float(np.mean(sg["success"][: n * n])))
+    else:
+        M["stateSucc"] = "??"
     pairs("fine", "R4_fine_pairs.json", "alphaFine")
 
     # mechanism check: IC0 through the per-environment IC table must reproduce G2 exactly

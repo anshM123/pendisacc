@@ -195,3 +195,13 @@ is unchanged).
 
 **Reporting.** Every α goes in one table with CI and C_½ = 2^(1/α). C_½ is valid
 only over the resolved ε range.
+
+**R2 outcome (16:35):** α = 0.28, 0.29, 0.33, 0.32, 0.33 for IC0–IC4 (median 0.32),
+each with 6 usable ε. 5 of 5 are below 0.8. **Supports.** The IC-table mechanism
+reproduced G2's 8400 outcomes exactly.
+
+**R3 outcome (16:39):** the initial-state grid had 100.0% success at ±0.05 and at
+±0.2, and 99.9% at ±0.8 rad, so it was still degenerate after two widenings.
+**Uninformative as registered.** The pairs run at ±0.8 was also 99.9% success.
+Reported as a contrast: the swing-up is insensitive to the initial state over this
+range.

@@ -29,8 +29,8 @@ amitosh.mishra81@gmail.com}}
 Sim-to-real practice assumes that a more accurate model buys proportionally more
 certainty about whether a policy will work. We measure that payoff directly.
 For a frozen reinforcement-learning swing-up controller on a triple inverted
-pendulum we sample pairs of simulators, or of initial states, that differ by a
-perturbation of size $\epsilon$. We record how often one member of a pair
+pendulum we sample pairs of simulators that differ by a perturbation of size
+$\epsilon$. We record how often one member of a pair
 succeeds and the other fails. Over the resolved range this outcome-flip
 probability falls only as $\epsilon^{\alpha}$ with $\alpha=\alphaG$
 ($95\%$ CI $[\alphaGlo,\alphaGhi]$), where a smooth success boundary would give
@@ -40,8 +40,9 @@ mass precision, $\alphaGflip$ of perturbation pairs still disagree. The exponent
 reproduces across a second policy ($\alphaPol$), a mass--actuator-lag
 plane ($\alphaAct$), a zoom on the main boundary ($\alphaZoomTwo$), five initial
 conditions (median $\alphaICmed$), an independent non-PhysX dynamics implementation
-($\alphaCPU$), a halved physics step ($\alphaFine$), and perturbations of the initial
-state rather than the model ($\alphaState$). Outcome-divergent trajectories
+($\alphaCPU$), and a halved physics step ($\alphaFine$). By contrast, the same policy
+is almost insensitive to its initial state: $\stateSucc$ success over $\pm0.8$\,rad of
+initial link offsets. The unpredictability lives in the model, not the start. Outcome-divergent trajectories
 separate at $\lamLo$--$\lamHi$\,s$^{-1}$, which explains a floor set by
 the simulator's own numerical precision. Every test was pre-registered before it
 ran. A registered zoom onto an isolated success island failed, and we report it.
@@ -54,7 +55,7 @@ sim-to-real transfer, predictability, nonlinear dynamics, reinforcement learning
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/fig_pred_main.png}
+\includegraphics[width=\textwidth]{../figures/fig_pred_main.png}
 \caption{\textbf{Outcome predictability of a learned controller.}
 (a)~Triple inverted pendulum on a velocity-servoed cart; one frozen PPO swing-up policy.
 (b)~Success (white) over link-1 and link-3 mass, from one fixed initial condition.
@@ -79,18 +80,18 @@ under a perturbation of size $\epsilon$ scales as $\epsilon^{\alpha}$~\cite{greb
 $\alpha=1$ for a smooth boundary. $\alpha<1$ means predictability improves slowly with
 precision. We apply this measure to a quantity robotics cares about, whether a deployed
 learned policy \emph{succeeds}, in the space robotics actually calibrates: simulator
-parameters, as well as initial states.
+parameters.
 
 On a triple inverted pendulum swing-up controlled by a frozen PPO policy, the answer is
 $\alpha\approx\alphaG$ over two and a half decades of $\epsilon$. A $10\times$ better model removes
 less than half of the ambiguity about the outcome. Contributions:
 \begin{enumerate}
-\item \textbf{An empirical law} relating model and state uncertainty to outcome uncertainty for a
+\item \textbf{An empirical law} relating model uncertainty to outcome uncertainty for a
 learned controller, with a direct engineering translation: $C_{1/2}=2^{1/\alpha}$, the precision
 gain needed to halve outcome ambiguity.
 \item \textbf{Pre-registered replication} across policies, physical and actuator uncertainty,
-initial conditions, an independent dynamics implementation, numerical resolution, and state space.
-Registered failures are reported.
+initial conditions, an independent dynamics implementation and numerical resolution. A contrasting
+null in initial-state space and the registered failures are reported.
 \item \textbf{A mechanism}: finite-time amplification along outcome-divergent trajectories, which
 also sets a numerical floor below which a simulator cannot resolve transfer at all.
 \item \textbf{Measurement practice}: $f(\epsilon)$ is cheap to measure with vectorised simulation and
@@ -107,8 +108,8 @@ models~\cite{cnops2015}. We do not claim that rough boundaries in state space ar
 fractal as functions of \emph{policy} parameters, which obstructs gradient
 estimation~\cite{wang2023}. Sohl-Dickstein finds fractal trainability boundaries in
 \emph{hyperparameter} space~\cite{sohldickstein2024}. Our object differs. We hold the policy fixed and ask
-about the success boundary over \emph{simulator} parameters and initial states, the axes along which
-sim-to-real transfer is calibrated.
+about the success boundary over \emph{simulator} parameters, the axes along which sim-to-real transfer
+is calibrated.
 
 \emph{Sim-to-real.} Domain randomisation~\cite{tobin2017,peng2018} widens the training distribution, and
 system identification narrows the model error~\cite{gautier1990}. Neither literature, to our knowledge,
@@ -191,9 +192,11 @@ Isaac and the analytical model agree on $\agreeCPU$ of individual outcomes.
 \emph{Resolution.} Halving the physics step at a fixed $250$\,Hz control rate gives $\alphaFine$
 $[\alphaFinelo,\alphaFinehi]$, with floor $\alphaFinefloor$.
 
-\emph{State space.} Holding the physics nominal and perturbing the initial angles of link~1 and joint~2
-(window $\pm\stateHalf$\,rad) gives $\alpha=\alphaState$ $[\alphaStatelo,\alphaStatehi]$. The same slow
-payoff therefore applies to state estimation, not only to model calibration.
+\emph{Initial state (contrast).} Holding the physics nominal, we perturbed the initial angles of link~1
+and joint~2. The registered rule widened the window from $\pm0.05$ to $\pm0.2$ and then $\pm0.8$\,rad while
+success stayed above $98\%$. At $\pm0.8$\,rad it was still $\stateSucc$, so the test is uninformative on
+$\alpha$. There is almost no boundary to measure. The swing-up funnels a wide range of starting states
+into success, while tiny changes to the plant decide it.
 
 \emph{Zoom.} The registered zoom was centred on the grid cell with the most disagreeing neighbours. That cell
 was an isolated success island, where base success is $1$--$2\%$ and outcomes flip at the same rate at
@@ -218,7 +221,7 @@ Zoom, main boundary   & $\pm0.06$ window          & $\alphaZoomTwo$ [$\alphaZoom
 Zoom, isolated island & \textbf{failed}           & $\alphaZoomOne$ & $\alphaZoomOnen$ & --\\
 Independent dynamics  & analytical, no PhysX      & $\alphaCPU$ [$\alphaCPUlo$, $\alphaCPUhi$] & $\alphaCPUn$ & $\alphaCPUC$\\
 Resolution            & physics d$t/2$            & $\alphaFine$ [$\alphaFinelo$, $\alphaFinehi$] & $\alphaFinen$ & $\alphaFineC$\\
-Initial state         & $\delta\theta_1\times\delta\theta_2$ & $\alphaState$ [$\alphaStatelo$, $\alphaStatehi$] & $\alphaStaten$ & $\alphaStateC$\\
+Initial state         & $\pm0.8$\,rad, nominal plant & \multicolumn{3}{c}{uninformative: $\stateSucc$ success}\\
 IC 0--4               & $m_1\times m_3$           & \multicolumn{3}{c}{$\alphaICa$, $\alphaICb$, $\alphaICc$, $\alphaICd$, $\alphaICe$}\\
 \bottomrule
 \end{tabular}
@@ -226,12 +229,11 @@ IC 0--4               & $m_1\times m_3$           & \multicolumn{3}{c}{$\alphaIC
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/fig_pred_repl.png}
+\includegraphics[width=\textwidth]{../figures/fig_pred_repl.png}
 \caption{\textbf{Replication.} Floor-subtracted flip probability with fits over usable scales.
 (a)~Second policy, independent analytical dynamics, and halved physics step.
 (b)~Five fixed initial conditions.
-(c)~Initial-state plane with nominal physics; zoom on the main boundary; the failed zoom on an
-isolated island, which is flat.}
+(c)~Zoom on the main boundary, and the failed zoom on an isolated island, which is flat.}
 \label{fig:repl}
 \end{figure*}
 
@@ -258,7 +260,7 @@ comparison is qualitative only.
 
 \begin{figure*}[t]
 \centering
-\includegraphics[width=\textwidth]{figures/fig_pred_mech.png}
+\includegraphics[width=\textwidth]{../figures/fig_pred_mech.png}
 \caption{\textbf{Mechanism and limits.} (a)~Median separation of outcome-divergent twin episodes.
 (b)~Flip probability down to $\epsilon=10^{-5}$: the power law ends at the simulator's own floor (dotted).
 (c)~Stock cartpole: a clean boundary.}
@@ -272,8 +274,9 @@ improvement removes less than half the ambiguity. Identification effort can ther
 diminishing returns, not because the model stays wrong but because the outcome is intrinsically hard to
 predict near the boundary.
 
-\emph{For state estimation.} The initial-state plane shows the same payoff. Better estimates of the
-starting configuration buy little certainty about success for states near the boundary.
+\emph{Model versus state.} For this task the ambiguity is concentrated in the plant, not the start. The
+policy tolerates large initial-state errors but not $0.1\%$ model errors near the boundary. Effort spent on
+state estimation at the start would be wasted, and effort on model accuracy pays off slowly.
 
 \emph{For practice.} $f(\epsilon)$ is cheap to measure: one vectorised run of a few thousand
 environments. It can tell a practitioner whether to invest in model accuracy or in moving the policy's
@@ -295,9 +298,8 @@ rough outcome boundary should not generalise.
 
 \emph{Novelty.} Rough and fractal basins in state space and fractal structure in learning landscapes are
 known~\cite{grebogi1983,mcdonald1985,cnops2015,wang2023,sohldickstein2024}. Our claim is narrow: we measure
-the outcome-predictability exponent of a \emph{fixed learned controller} over \emph{simulator parameters}
-and initial states, show that it replicates, and translate it into what calibration can and cannot
-buy.
+the outcome-predictability exponent of a \emph{fixed learned controller} over \emph{simulator parameters},
+show that it replicates, and translate it into what calibration can and cannot buy.
 
 \section{Conclusion}
 For a learned controller on a strongly nonlinear robot, the probability of mispredicting success falls
