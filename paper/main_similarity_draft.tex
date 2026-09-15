@@ -1,0 +1,494 @@
+%% Raw physical parameters are the wrong coordinates for sim-to-real uncertainty.
+%%
+%% Default build is IEEEtran (ICRA). For ICLR, see paper/README.md: the body is
+%% deliberately free of two-column-specific markup, so the switch is a preamble
+%% change plus figure resizing, not a rewrite.
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{booktabs}
+\usepackage{url}
+\usepackage[hidelinks]{hyperref}
+
+\newcommand{\repo}{\url{https://github.com/anshM123/pendisacc}}
+
+\begin{document}
+
+\title{Raw Physical Parameters Are the Wrong Coordinates\\
+for Sim-to-Real Uncertainty}
+
+\author{\IEEEauthorblockN{Amitosh Mishra}
+\IEEEauthorblockA{\textit{Independent Researcher}\\
+amitosh.mishra81@gmail.com}}
+
+\maketitle
+
+\begin{abstract}
+Domain randomisation and system identification for sim-to-real transfer
+usually represent model uncertainty as a distribution over raw simulator
+parameters: masses, inertias, damping coefficients, gains. We give evidence
+that these are the wrong coordinates. For a learned swing-up controller on a
+triple inverted pendulum, model errors of identical Euclidean size in link-mass
+space differ by 100 percentage points in success depending only on their
+direction, and a uniform error of $1.53$\,kg is harmless while a $1.24$\,kg
+error confined to one link is fatal. Over a 90-cell landscape, mass-ratio
+distortion explains $97.6\%$ of the variance in success and overall scale
+$0.7\%$. The redundant directions are not new: we verify that they are exactly
+the dimensional-similarity classes of Buckingham-$\Pi$, which include
+controller gains and actuator limits and which dimensionless-policy methods
+already exploit to transfer controllers between similar systems. What that line
+of work leaves open, and what this evidence motivates, is using the similarity
+quotient as the coordinate system in which simulator uncertainty is
+\emph{represented, randomised and identified}. We report a naturally occurring
+test of that view: a CAD export in which no materials had been assigned
+produced a real model error of $26\%$ in overall scale and $2.21\times$ in mass
+ratio, and a landscape measured before the defect was discovered correctly
+predicted that the scale component would cost nothing ($100.0\%$ success) and
+the ratio component would destroy the task ($1.2\%$; the full defect
+$0.8\%$). We also report five pre-registered hypotheses that failed, including
+attempts to turn this geometry into a scalar predictor of transfer, which
+conventional trajectory fidelity still outperforms. \textbf{All validation is
+in simulation}: the machine is not yet assembled, and the hardware test is
+specified in advance. Code, pre-registrations and raw results: \repo.
+\end{abstract}
+
+\begin{IEEEkeywords}
+sim-to-real transfer, domain randomisation, system identification,
+dimensional analysis, reinforcement learning, underactuated systems
+\end{IEEEkeywords}
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=0.92\textwidth]{figures/hero.png}
+\caption{Parameter-space distance does not order risk. \textbf{Left:} the tip
+trace of the nominal plant (grey) and of a plant in which every mass, inertia,
+damping and friction coefficient, together with the velocity loop's gain and
+force limit, has been multiplied by $1000$ (green). The two plants are
+dynamically similar in the Buckingham-$\Pi$ sense, and the traces coincide to
+$6\times10^{-12}$\,rad. \textbf{Right:} the same overlay when a \emph{single}
+link mass is multiplied by $1.5$---an error smaller by every norm---which
+diverges by $34.7$\,rad and fails. Same frozen policy, commanded inputs and
+initial condition in all four traces. The similarity itself is classical; the
+point is what it implies for how uncertainty should be parameterised.}
+\label{fig:task}
+\end{figure*}
+
+\section{Introduction}
+
+Sim-to-real pipelines describe what they do not know about a robot in the
+simulator's own parameters. Domain randomisation samples masses, inertias and
+friction coefficients from per-parameter ranges \cite{tobin2017,peng2018,
+openai2020}; system identification estimates the same quantities from data.
+Both implicitly treat a large error in any of them as more dangerous than a
+small one.
+
+For the learned controller studied here that ordering is not merely
+imprecise; it is reversed along identifiable directions (Fig.~\ref{fig:task}).
+Some very large parameter errors are provably invisible to the closed loop,
+while much smaller errors of a different kind destroy it. The invisible
+directions are the classical similarity classes of dimensional analysis. What
+is not classical is the consequence we draw from them: \emph{if a family of
+parameter vectors describes one plant, uncertainty over that family is not
+uncertainty at all, and should not be represented, sampled, or estimated as if
+it were.}
+
+The plant is a triple inverted pendulum on a velocity-controlled cart,
+performing swing-up with a PPO policy (\S\ref{sec:setup}).
+
+\subsection*{Contributions}
+\begin{enumerate}
+\item \textbf{Evidence that raw-parameter distance misorders transfer risk}
+for a learned controller (\S\ref{sec:aniso}): a 100-point success gap between
+directions at identical Euclidean distance, and a landscape in which ratio
+distortion explains $97.6\%$ of variance and overall scale $0.7\%$.
+\item \textbf{Identification of the redundant directions with the
+dimensional-similarity quotient} (\S\ref{sec:quot}). We check, rather than
+assume, that the null generators of the closed-loop equations are exactly the
+mass- and length-unit scalings plus a parameter that never enters; that
+actuator limits must be included in the class for it to be physically
+realisable; and that a random search finds no other null direction.
+\item \textbf{A prospective decomposition of an accidental real modelling
+defect} (\S\ref{sec:cad}), predicted by a landscape measured before the defect
+was known.
+\item \textbf{Five pre-registered negative results} that bound the claim
+(\S\ref{sec:fail}).
+\item \textbf{A pre-specified hardware and identification protocol}
+(\S\ref{sec:hw}) that tests the representational claim, rather than similarity
+transfer, which prior work has already demonstrated on a physical pendulum
+\cite{pascoa2025}.
+\end{enumerate}
+
+Every hypothesis was registered in the public repository, with thresholds and
+kill conditions, in a commit preceding its data.
+
+\section{Related Work}
+
+\textbf{Domain randomisation} trains across a distribution over simulator
+parameters so that reality lies inside the training support
+\cite{tobin2017,peng2018,openai2020}. The distribution is specified in raw
+physical coordinates, and choosing it well is widely recognised as the hard
+part of the method.
+
+\textbf{Dimensional analysis in control and learning.} Girard showed that
+control policies restated in dimensionless variables transfer exactly between
+dimensionally similar systems and involve fewer parameters \cite{girard2024}.
+Pascoa \emph{et al.} use Buckingham-$\Pi$ scaling of observations and actions
+for zero-shot RL policy transfer, including on a physical pendulum, assuming
+the target system's context parameters are known \cite{pascoa2025}. Charvet
+\emph{et al.} define dimensionless MDPs whose policies are equivariant to
+context changes, train in a single environment, and name the need to measure
+the perturbation variables as the approach's main weakness
+\cite{charvet2025}. Kir~Hromatko \emph{et al.} transfer dimensionless MPC
+controllers across scales \cite{hromatko2025}. None of these, to our knowledge,
+uses the similarity quotient as the space in which simulator uncertainty is
+randomised or identified; a systematic review should precede any claim of
+priority.
+
+\textbf{Identifiability.} Classical robot identification recovers only base
+inertial parameters, the linear combinations to which the inverse-dynamics
+regressor is sensitive \cite{gautier1990}, and recent work characterises
+observability geometrically \cite{wensing2024}. Control-oriented identification
+argues for fidelity in closed-loop-relevant properties
+\cite{gevers2005,hjalmarsson2009}. The similarity quotient is related but
+distinct: it identifies plants that are behaviourally indistinguishable under a
+fixed control law and actuator limits, and it includes gains and limits that no
+inertial regressor contains.
+
+\textbf{Behavioural equivalence} in RL, via bisimulation metrics
+\cite{ferns2004,castro2020}, quotients the \emph{state} space; the quotient
+here is on physical parameters.
+
+\section{System and Protocol}\label{sec:setup}
+
+A triple inverted pendulum on a belt-driven cart, modelled from CAD of a
+physical build. The policy commands the cart at $250\,$Hz through a velocity
+loop, $F = \mathrm{clip}(k_v(v_{\rm cmd}-\dot x), \pm F_{\rm clamp})$, with
+$k_v = 400\,$N\,s/m and $F_{\rm clamp} = 349.5\,$N; a first-order actuator lag
+of $100\,$ms and a $4.0\,$m/s speed limit are always present. The upright
+equilibrium has $\lambda_{\max} = 15.5\,$rad/s.
+
+PPO (\texttt{rsl-rl}) in Isaac Lab: $[256,256,128]$ MLPs, ELU, $\gamma=0.999$,
+$\lambda=0.95$, clip $0.2$, lr $3\!\times\!10^{-4}$, entropy $0.006$, 4096
+environments, 1000 iterations, frozen across every experiment. An episode
+succeeds when it never terminates early, the tip reaches upright, and the tip
+is \emph{still} upright over the final quarter. Reward is never used as a
+success metric: one run reached reward 58 while never lifting the tip.
+
+\textbf{The experimental unit is the policy seed.} \S\ref{sec:fail} reports a
+77-point transfer spread across seeds at otherwise identical settings.
+
+\textbf{Two assets.} Results in \S\ref{sec:aniso} use the original CAD
+extraction for the matched-magnitude sweep and the corrected asset for the
+landscape; \S\ref{sec:cad} explains the difference. We state which is used
+throughout.
+
+\section{Raw Distance Misorders Transfer Risk}\label{sec:aniso}
+
+To ask whether direction matters, magnitude must be held fixed. For uniform
+scaling by $c$ the displacement in link-mass space is $(c-1)m_0$; each
+transverse condition places that same norm into a single link. Every condition
+at a given $c$ is then exactly equidistant from nominal.
+
+\begin{table}[t]
+\caption{Matched-magnitude sweep, original asset, mean over three seeds. Each
+row holds $\|\Delta m\|$ fixed and varies only direction.}
+\label{tab:matched}
+\centering
+\begin{tabular}{rrrrrr}
+\toprule
+$c$ & $\|\Delta m\|$ [kg] & uniform & trans.\ L1 & trans.\ L2 & trans.\ L3\\
+\midrule
+1.5 & 0.109 & $100.0\%$ & $0.0\%$ & $0.1\%$ & $2.1\%$\\
+2.5 & 0.327 & $100.0\%$ & $0.0\%$ & $0.0\%$ & $0.0\%$\\
+4.0 & 0.654 & $98.8\%$  & $0.0\%$ & $0.0\%$ & $0.0\%$\\
+8.0 & 1.527 & $100.0\%$ & $0.0\%$ & $0.0\%$ & $0.0\%$\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:matched} gives the sweep. The anisotropy
+$A = P(\text{uniform}) - \overline{P(\text{transverse})}$ is $+100.0$ points at
+$c=2.5$, with a seed spread of $2.2$. Removing the matching question entirely,
+uniform $\times 8$ displaces $1.53\,$kg and scores $100.0\%$, while link~1
+$\times 8$ displaces $1.24\,$kg---smaller in $L_1$, $L_2$ and $L_\infty$---and
+scores $0.0\%$.
+
+On the corrected asset, sweeping $m = m_0\cdot[c(1+\delta),c,c]$ over
+$6\times5$ cells and two seeds, a two-way decomposition gives
+\[
+\text{ratio distortion } \delta: 97.6\%, \qquad
+\text{overall scale } c: 0.7\%.
+\]
+Across a $5\times$ range of overall scale (Fig.~\ref{fig:landscape}), success
+barely moves. Drive saturation never exceeds $0.007\%$ of any cell, so this is
+not an actuator-authority artefact.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/landscape_corrected.png}
+\caption{Transfer landscape on the corrected asset,
+$m=m_0\cdot[c(1+\delta),c,c]$. Rows are nearly flat: success depends on ratio
+distortion $\delta$ and hardly at all on overall scale $c$.}
+\label{fig:landscape}
+\end{figure}
+
+\section{The Redundant Directions Are Dynamic Similarity}\label{sec:quot}
+
+\subsection{What the null directions are}
+We solved for every exponent scaling $p\to\lambda^{k_p}p$ of parameters,
+coordinates and time that leaves the closed-loop equations of motion
+invariant, by requiring every additive term of each equation to acquire the
+same power of $\lambda$. At the fixed control rate the policy runs at, the
+solution space is three-dimensional for chains of $N=1$ to $4$ links. We then
+checked each basis element against a table of physical dimensions. The three
+generators are exactly (i) a change of mass unit, (ii) a change of length unit
+together with gravity, and (iii) $L_3$, the length of the free end link, which
+never enters the equations; freeing time adds (iv) a change of time unit.
+Nothing in the group goes beyond Buckingham-$\Pi$. The solver is a convenience,
+not a result \cite{girard2024}.
+
+The mass-unit generator is the one relevant to modelling error:
+\begin{equation}
+\big(m_i,\,I_i,\,b_{\rm joint},\,f_{c,\rm joint},\,b_{\rm cart},\,
+m_{\rm cart},\,k_v,\,F_{\rm clamp}\big)\;\longmapsto\;c\,(\cdot),
+\label{eq:gen}
+\end{equation}
+every quantity with mass dimension one. The corresponding invariance is
+elementary: the unclamped equations are homogeneous of degree one in these
+quantities, and $\mathrm{clip}(c\,k_v e,\pm cF_{\rm clamp}) =
+c\,\mathrm{clip}(k_v e,\pm F_{\rm clamp})$. Integrated outside the simulator
+with the same policy and commands, trajectories under \eqref{eq:gen} agree to
+$\sim\!10^{-11}$\,rad for $c$ up to $1000$, and removing any single component
+from the scaling breaks agreement by radians.
+
+\subsection{Why this matters for uncertainty representation}
+Two consequences are practical rather than mathematical.
+
+\textbf{The class includes the controller.} A randomisation or identification
+scheme over raw parameters that varies masses while holding gains and limits
+fixed leaves the similarity class, even when every mass is scaled together. In
+Isaac, with a policy scoring $100.0\%$ at $c=1$ on the corrected asset,
+\eqref{eq:gen} holds at $c=16$ ($100.0\%$), $c=32$ ($99.6\%$) and $c=64$
+($100.0\%$), but the same scaling \emph{without} $F_{\rm clamp}$ gives
+$0.0\%$. Force demand scales with the plant, and a similar plant the actuator
+cannot drive is not similar in practice.
+
+\textbf{Nothing else was found to be free.} We sampled 24 random unit
+directions in the 8-dimensional log-parameter block
+$[m_{1..3},I_{1..3},m_{\rm cart},k_v]$ at the magnitude of a $32\times$ scaling,
+scaling $F_{\rm clamp}$ with each direction's $k_v$ component so that
+authority is never the reason one fails.
+
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+control, $c=1$ & $99.6\%$\\
+similarity direction & $100.0\%$\\
+24 random directions & $0.0$--$0.8\%$\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\columnwidth]{figures/nullspace.png}
+\caption{Every direction is applied at the same magnitude, with the force limit
+scaled per direction. Partial alignment with the similarity direction does not
+help; no other tested direction is null.}
+\label{fig:null}
+\end{figure}
+
+A direction $79\%$ aligned with the similarity direction still scores $0.0\%$
+(Fig.~\ref{fig:null}). This is a search, not a proof: 24 directions cannot
+exclude a nonlinear, discrete or state-dependent equivalence elsewhere in a
+continuous parameter space. What is proved is that the \emph{scaling} null
+space is exactly dimensional similarity; what is observed is that nothing else
+was free. Invariance under \eqref{eq:gen} is also, as expected,
+policy-independent: two independently trained policies lose at most $0.4$
+points at $c=64$.
+
+%% ===================================================================
+%% RANDOMISATION EXPERIMENT WITHHELD PENDING RE-MEASUREMENT.
+%% An equal-budget comparison of randomising along versus transverse to the
+%% similarity direction was invalidated by a control-flow bug: both arms fell
+%% through to a second isotropic draw, giving the transverse arm a strictly
+%% larger total displacement. Fixed; re-running at 5 seeds per arm. It returns
+%% only when the new data exists. Voided results: results/T5_VOID_fallthrough/
+%% ===================================================================
+
+\section{A Real Defect, Decomposed in Advance}\label{sec:cad}
+
+Midway through this work we found that the CAD export underlying the simulator
+had no materials assigned: $122$ of $130$ bodies carried SolidWorks' default
+$1000\,$kg/m$^3$, including \emph{all} 16 bodies composing the three links.
+Steel shafts, bearings and collars were $7.9\times$ too light; PETG arms printed
+at $25\%$ infill were $\sim\!2.1\times$ too heavy. Correcting both changes the
+link masses by $[0.81, 1.06, 0.48]$ and shifts $l_{\rm com}$ by $+53.6\%$ on
+link~1.
+
+This is the commonest kind of simulator construction error, and it arose
+independently of the analysis. It is a \emph{model-to-model} discrepancy---the
+corrected asset is our best estimate of the machine, not the machine---so what
+it tests is whether an uncertainty representation decomposes an error it did
+not design. By magnitude the defect is dominated by overall scale; in similarity
+coordinates it is almost pure ratio distortion:
+\[
+\text{overall scale } c = 0.744,\qquad
+\text{ratio distortion } 2.21\times .
+\]
+The landscape of \S\ref{sec:aniso}, measured before the defect was known,
+therefore predicted the scale component to be free and the ratio component
+fatal. Measured, with the frozen policy:
+
+\begin{center}
+\begin{tabular}{lr}
+\toprule
+scale component alone & $100.0\%$\\
+ratio component alone & $1.2\%$\\
+the real defect & $0.8\%$\\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Removing the scale component from the real defect changes the outcome by $0.4$
+points. A raw-parameter error budget would have ranked this defect as a modest
+$26\%$ mass error. Policies retrained on the corrected asset recover $100.0\%$
+on two of three seeds.
+
+\section{What Did Not Work}\label{sec:fail}
+
+Five pre-registered hypotheses failed, and they bound the claim.
+
+\textbf{The geometry yields no predictive scalar.} Ranking a 38-condition
+heterogeneous suite by a geometry-derived distance---once with a fitted metric
+tensor ($\rho = -0.322$) and once with exact distance to the similarity orbit
+($\rho = -0.243$)---loses to conventional short-window trajectory RMSE
+($\rho = -0.532$). Similarity coordinates say which errors are free; they do not
+rank the ones that are not, and trajectory fidelity remains the better tool for
+that. The component of each condition \emph{along} the similarity direction is
+uncorrelated with success ($\rho = +0.065$, $p=0.76$), as the analysis
+predicts.
+
+\textbf{The action interface does not reorder behaviour.} Replacing velocity
+command with force command was pre-registered to change the anisotropy by
+$\geq 40$ points; it changed it by $4.3$ ($100.0$ vs $95.7$).
+
+\textbf{Training in a similar simulator did not help as predicted.} Training at
+uniform $\times 8$ transferred \emph{worse} than training at a transverse error
+($1.0\%$ vs $4.9\%$), opposite to prediction.
+
+\textbf{In-simulator success is uninformative, and worse.} Across 15 policies
+selected by best success in their own training simulator, that success spans
+$2.0$ points while transfer spans $100.0$; $\rho = -0.090$ ($p=0.75$). Among the
+12 policies strictly between $2\%$ and $98\%$, $\rho = -0.570$. Within one
+simulator, seed alone moves transfer by $77.0$ points while moving in-simulator
+success by $0.8$.
+
+\textbf{Fidelity cannot certify.} Two conditions $1.51\%$ apart in trajectory
+RMSE transfer at $0.0\%$ and $100.0\%$.
+
+\section{Hardware Protocol, Specified in Advance}\label{sec:hw}
+
+Similarity transfer on a physical pendulum has already been demonstrated
+\cite{pascoa2025}; repeating it on this machine would not test the paper's
+claim. The hardware protocol instead tests the \emph{representation}, and is
+registered before the robot exists.
+
+\textbf{Test 1: decomposition of a real mismatch.} After weighing every link and
+measuring the drive, a physical configuration change is applied and decomposed
+into similarity and ratio components using the pre-registered landscape. The
+predicted success ordering is committed before deployment. The change set
+includes a large similarity-preserving modification---added mass on every link
+and the carriage, with the velocity-loop gain and current limit scaled
+accordingly---and a much smaller ratio-breaking one, with the same frozen
+policy, matched initial conditions and repeated trials.
+
+\textbf{Test 2: identification in similarity coordinates.} From a fixed budget
+of hardware trajectories, fit (i) every raw parameter and (ii) only the
+dimensionless coordinates. Train a policy on each identified model and deploy
+both frozen. The representational claim predicts that (ii) reaches equal or
+higher success from fewer trajectories. A result the other way falsifies it.
+
+\section{Limitations}
+
+\textbf{No hardware.} Every number here is simulation; the strongest available
+claim is model-to-model.
+
+\textbf{The representational claim is motivated, not yet demonstrated.}
+\S\ref{sec:aniso} and \S\ref{sec:cad} show that raw coordinates misrank risk
+and that similarity coordinates decompose a real error correctly. Whether
+randomising or identifying in those coordinates yields a measurable saving has
+not been shown: the randomisation experiment is being re-run after an
+invalidating bug, and \S\ref{sec:hw} is unexecuted.
+
+\textbf{The similarity analysis is classical.} Its content is Buckingham-$\Pi$;
+the search in \S\ref{sec:quot} is evidence, not a proof, that nothing else is
+free.
+
+\textbf{One robot class.} No second system has been tested experimentally.
+
+\textbf{Densities are estimated, not weighed.} PETG at $25\%$ infill is
+bracketed $400$--$570\,$kg/m$^3$; the \S\ref{sec:cad} conclusion holds across
+that bracket.
+
+\section{Conclusion}
+
+For a learned controller on an underactuated robot, the size of a simulator
+error in raw physical parameters is a poor guide to its consequence. A large
+part of raw parameter space is redundant by dynamic similarity, that
+redundancy includes the controller's gains and limits, and a real modelling
+defect that looked like a modest mass error was correctly identified in
+similarity coordinates as almost pure ratio distortion. The implication we
+draw, and have not yet fully tested, is that simulator uncertainty should be
+represented in the similarity quotient rather than in the raw parameters that
+happen to define the simulator.
+
+\section*{Reproducibility}
+All code, pre-registrations, raw results and the analysis producing every
+number here are at \repo. Each hypothesis appears in a commit preceding its
+data; rejected and voided results are retained.
+
+\begin{thebibliography}{00}
+\bibitem{tobin2017} J. Tobin \emph{et al.}, ``Domain randomization for
+transferring deep neural networks from simulation to the real world,'' in
+\emph{IROS}, 2017.
+\bibitem{peng2018} X. B. Peng \emph{et al.}, ``Sim-to-real transfer of robotic
+control with dynamics randomization,'' in \emph{ICRA}, 2018.
+\bibitem{openai2020} OpenAI \emph{et al.}, ``Solving Rubik's cube with a robot
+hand,'' arXiv:1910.07113, 2019.
+\bibitem{girard2024} A. Girard, ``Dimensionless policies based on the
+Buckingham $\pi$ theorem: Is this a good way to generalize numerical
+results?'' \emph{Mathematics}, vol.~12, no.~5, p.~709, 2024.
+\bibitem{pascoa2025} F. Pascoa, I. Lalonde and A. Girard, ``Zero-shot policy
+transfer in reinforcement learning using Buckingham's Pi theorem,''
+arXiv:2510.08768, 2025.
+\bibitem{charvet2025} V. Charvet, S. Stein and R. Murray-Smith, ``Improving
+controller generalization with dimensionless Markov decision processes,''
+arXiv:2504.10006, 2025.
+\bibitem{hromatko2025} J. Kir Hromatko, S. Sawant, \v{S}. Ile\v{s} and
+S. Gros, ``Direct transfer of optimized controllers to similar systems using
+dimensionless MPC,'' arXiv:2512.08667, 2025.
+\bibitem{gautier1990} M. Gautier and W. Khalil, ``Direct calculation of minimum
+set of inertial parameters of serial robots,'' \emph{IEEE Trans. Robot.
+Autom.}, vol.~6, no.~3, pp.~368--373, 1990.
+\bibitem{wensing2024} P. M. Wensing, G. Niemeyer and J.-J. E. Slotine, ``A
+geometric characterization of observability in inertial parameter
+identification,'' \emph{Int. J. Robot. Res.}, 2024.
+\bibitem{gevers2005} M. Gevers, ``Identification for control: from the early
+achievements to the revival of experiment design,'' \emph{European Journal of
+Control}, vol.~11, no.~4--5, pp.~335--352, 2005.
+\bibitem{hjalmarsson2009} H. Hjalmarsson, ``System identification of complex and
+structured systems,'' \emph{European Journal of Control}, vol.~15, no.~3--4,
+pp.~275--310, 2009.
+\bibitem{ferns2004} N. Ferns, P. Panangaden and D. Precup, ``Metrics for finite
+Markov decision processes,'' in \emph{UAI}, 2004.
+\bibitem{castro2020} P. S. Castro, ``Scalable methods for computing state
+similarity in deterministic Markov decision processes,'' in \emph{AAAI},
+vol.~34, no.~6, pp.~10069--10076, 2020.
+\end{thebibliography}
+
+\end{document}
