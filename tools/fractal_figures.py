@@ -120,10 +120,9 @@ def main():
         curve(ax, "R2_ic%d_pairs.json" % i, "IC%d" % i, "C%d" % i, "o", fit=False)
     ax.set_title("(b) five initial conditions")
     ax = axs[2]
-    curve(ax, "R3_state_pairs.json", "initial-state plane", "C5", "o")
     curve(ax, "pairs_zoomZ2.json", "zoom, main boundary", "C6", "s")
-    curve(ax, "pairs_zoom.json", "zoom, isolated island", "C7", "x", fit=False)
-    ax.set_title("(c) state space and zoom windows")
+    curve(ax, "pairs_zoom.json", "zoom, isolated island (failed)", "C7", "x", fit=False)
+    ax.set_title("(c) zoom windows")
     for ax in axs:
         ax.set_xscale("log"); ax.set_yscale("log")
         ax.set_xlabel("$\\epsilon$")
