@@ -1,58 +1,46 @@
 # Paper build
 
-`main.tex` is the single source: *Raw Physical Parameters Are the Wrong
-Coordinates for Sim-to-Real Uncertainty.* It builds as an IEEE conference
-paper (ICRA) by default and switches to ICLR with a preamble change.
+`main.tex`: *When Better Models Barely Help: Predictability Limits in Learned
+Nonlinear Robot Control* (IEEE conference format, ICRA).
 
-## Build (ICRA / IEEE)
+The previous draft, on similarity coordinates, is preserved as
+`main_similarity_draft.tex`.
 
-```
-cd paper
-pdflatex main && pdflatex main
-```
+## Regenerate numbers and figures, then build
 
-Needs `IEEEtran.cls` (ships with TeX Live and MiKTeX). References are a
-`thebibliography` block, so no bibliography tool is needed.
-
-**Page count has never been checked** -- there is no LaTeX toolchain on the
-machine this was written on. ICRA allows 8 pages including references.
-
-## Before submitting
+Every number in the paper is a macro in `numbers.tex`. Figures live in `../figures/`.
+Neither is edited by hand.
 
 ```
-run.cmd tools/tex_lint.py            # environments, refs, cites, figure files
-run.cmd tools/check_paper_numbers.py # every number re-read from results/*.json
-run.cmd tools/dimensional_check.py   # the "nothing beyond Buckingham-Pi" claim
+run.cmd tools/fractal_numbers.py    # results/fractal/*.json -> paper/numbers.tex
+run.cmd tools/fractal_figures.py    # -> figures/fig_pred_{main,repl,mech}.png
+run.cmd tools/paper_check.py        # undefined or missing macros, citations, figure files
+cd paper && pdflatex main && pdflatex main
 ```
 
-## What the paper claims, and what it deliberately does not
+**The page count has not been checked.** There is no LaTeX toolchain on the machine
+this was written on. ICRA allows 8 pages including references; build once
+(for example on Overleaf) before submitting.
 
-**Claims.** Raw-parameter distance misorders transfer risk for a learned
-controller; the redundant directions are exactly dimensional similarity
-(verified, not assumed); similarity coordinates correctly decomposed a real,
-accidental CAD defect before it was measured.
+## What the paper claims
 
-**Does not claim.**
-- *A new symmetry.* The solved group is Buckingham-Pi plus one parameter that
-  never enters the equations. An earlier draft said otherwise; that was wrong.
-- *Dimensionless control or similarity transfer.* Prior work owns both
-  (Girard 2024; Pascoa, Lalonde & Girard 2025; Charvet, Stein & Murray-Smith
-  2025; Kir Hromatko et al. 2025). The open question is using the similarity
-  quotient as the space in which uncertainty is randomised and identified.
-- *That random search proves there is no other null direction.* It is evidence.
-- *Hardware results.* The machine is not assembled. Section IX is the protocol,
-  registered in advance.
-- *The randomisation result.* It was voided by a fall-through bug and is
-  withheld until the 5-seed re-run completes (`results/T5_VOID_fallthrough/`).
+- **Outcome-flip scaling.** For a frozen PPO swing-up policy, the probability that two
+  simulators ε apart disagree on success falls as ε^α with α ≈ 0.28 over about
+  2.5 decades. That gives C_½ = 2^(1/α) ≈ 12× precision to halve outcome ambiguity.
+- **Replication**, all pre-registered in `../PREREGISTRATION_FRACTAL.md`: a second
+  policy, a mass × servo-lag plane, a zoom on the main boundary, five initial
+  conditions, independent CPU dynamics, and a halved physics step.
+- **Mechanism.** Finite-time amplification of outcome-divergent twins, which sets
+  a numerical floor.
 
-## References
+## What it does not claim
 
-All thirteen were checked against the publications on 2026-09-12. The four
-2025 dimensionless-control entries are arXiv preprints and should be updated
-if they acquire a venue.
-
-## Switching to ICLR
-
-Single column, 9 pages, **double blind**. Replace the preamble and author block
-with the ICLR style, redirect `\repo` (defined once at the top) to an
-anonymised mirror, and change `\columnwidth` to `\textwidth` in figures.
+- **"Fractal".** Only about 2.5 decades are resolved, and the first registered zoom
+  failed.
+- **Chaos.**
+- **Hardware results.**
+- **A state-space effect.** The initial-state test was uninformative, with success
+  near 100% over ±0.8 rad.
+- **A quantitative cartpole exponent.**
+- **Novelty beyond** the fixed-policy, simulator-parameter-space measurement and
+  its calibration consequence.
