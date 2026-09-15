@@ -205,3 +205,8 @@ reproduced G2's 8400 outcomes exactly.
 **Uninformative as registered.** The pairs run at ±0.8 was also 99.9% success.
 Reported as a contrast: the swing-up is insensitive to the initial state over this
 range.
+
+**R4 outcome (16:41):** α = 0.376, CI [0.303, 0.477], 5 usable ε, floor 0.83%.
+|0.376 − 0.282| = 0.094 ≤ 0.15, so R4 **supports** as registered.
+Recorded as exploratory: with physics dt halved, 12.2% of individual outcomes on the
+same parameter pairs change, yet the exponent stays in the same regime.
