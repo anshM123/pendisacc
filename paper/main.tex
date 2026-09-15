@@ -171,6 +171,16 @@ with its number of usable scales.
 We do not call the boundary fractal. The resolved range is about $2.5$ decades, bounded below by
 simulator precision (Sec.~\ref{sec:floor}), and one registered zoom test failed.
 
+\smallskip\noindent\fbox{\parbox{0.96\columnwidth}{\small
+\textbf{Procedure: outcome predictability of a frozen policy}\\[2pt]
+1.~Fix the initial state, success criterion, window $W$ in log-parameter space, scales $\{\epsilon_k\}$, and $N$.\\
+2.~Draw $N$ base points in $W$; pair each with $\theta+\epsilon_k u$ for each $k$, and with an identical copy ($\epsilon=0$).\\
+3.~Run all pairs in one vectorised batch; also re-run once in a new process.\\
+4.~$f_k$ = fraction of pairs with different outcomes; $f_0$ from identical copies.\\
+5.~Keep scales with $f_k-f_0>3\,\mathrm{SE}$; fit $\alpha$ = slope of $\log(f_k-f_0)$ against $\log\epsilon_k$; bootstrap pairs.\\
+6.~Report $\alpha$, CI, usable scales, $f_0$, and $C_{1/2}=2^{1/\alpha}$ for the resolved range only.}}
+\smallskip
+
 \section{Results}\label{sec:results}
 
 \subsection{A rough transfer boundary}
@@ -292,6 +302,18 @@ state estimation at the start would be wasted, and effort on model accuracy pays
 environments. It can tell a practitioner whether to invest in model accuracy or in moving the policy's
 operating point away from the boundary (robustness margin). The same machinery also exposes the
 simulator's resolution limit for a given task.
+
+\section{Threats to Validity}
+\emph{Success threshold.} Flips could come from episodes sitting on the hold-fraction cut. Fewer than $3\%$ of
+flips at any usable scale had both episodes within $0.05$ of the cut.
+\emph{Simulator artefact.} The same pairs in an independent explicit integrator give $\alphaCPU$, and halving
+the PhysX step gives $\alphaFine$. Neither exponent returns to the smooth value $1$.
+\emph{Batch nondeterminism.} Identical parameters in different environment slots disagree at a rate $f_0$,
+measured and subtracted for every exponent. Full re-runs are identical.
+\emph{Window choice.} Windows and centres were fixed before each run. The one zoom whose registered rule landed
+on an isolated island failed and is reported.
+\emph{Single initial state.} Five registered initial conditions give exponents within $\alphaICmin$--$\alphaICmax$.
+\emph{Sampling.} Exponents use $600$ pairs per scale, with bootstrap intervals over pairs.
 
 \section{Limitations and What Failed}
 \emph{Scope.} One robot and one task family, with two policies, all in simulation. The hardware is under
